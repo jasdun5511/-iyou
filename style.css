@@ -4,25 +4,30 @@ body {
     flex-direction: column;
     align-items: center;
     background-color: #f0f0f0;
-    margin-top: 20px;
+    margin-top: 10px; /* 减少顶部外边距 */
+}
+
+h1 {
+    font-size: 1.5em; /* 缩小标题 */
 }
 
 #game-board {
     display: grid;
-    /* 这里的列数将在 JS 中设置 */
+    /* 这里的列数在 JS 中设置 */
     border: 3px solid #333;
     background-color: #ccc;
-    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* 关键修改：缩小方块尺寸 */
 .square {
-    width: 60px;
-    height: 60px;
+    width: 40px; 
+    height: 40px;
     border: 1px solid #777;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 30px;
+    font-size: 20px; /* 缩小字体 */
     font-weight: bold;
     cursor: pointer;
     transition: transform 0.1s ease-out;
@@ -44,8 +49,9 @@ body {
 }
 
 #game-info {
-    margin-bottom: 20px;
+    margin-bottom: 10px; /* 减少间距 */
     text-align: center;
+    font-size: 0.9em; /* 缩小信息字体 */
 }
 
 #hint {
