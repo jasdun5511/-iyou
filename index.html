@@ -4,17 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>消！</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>消邦的野区</h1>
-    <div id="game-info">
-        <p>得分: <span id="score">0</span></p>
-        <p>提示: <span id="hint">点击并拖动两个相邻方块进行交换</span></p>
-    </div>
+    <audio id="bgMusic" loop>
+        <source src="assets/bg_music.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
 
-    <div id="game-board"></div>
+    <div class="game-container">
+        <header>
+            <h1>💎 消邦的野区 💎</h1>
+            <div id="game-info">
+                <div class="score-box">
+                    <span>得分:</span> <span id="score">0</span>
+                </div>
+                <div class="hint-box">
+                    <span>提示:</span> <span id="hint">点击两个相邻宝石进行交换</span>
+                </div>
+                <button id="musicToggle" class="control-button">🎶 开/关音乐</button>
+            </div>
+        </header>
+
+        <div id="game-board-wrapper">
+            <div id="game-board"></div>
+        </div>
+        
+    </div>
 
     <script src="script.js"></script>
 </body>
