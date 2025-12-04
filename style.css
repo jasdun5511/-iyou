@@ -5,44 +5,43 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(to bottom right, #87CEEB, #F0FFFF); /* 天空渐变 */
+    background: linear-gradient(to bottom right, #87CEEB, #F0FFFF); 
     background-size: cover;
     color: #333;
-    overflow: hidden; 
+    overflow: auto; /* 允许在小屏幕上滚动 */
+    padding: 10px; /* 增加 body 的内边距，防止内容贴边 */
 }
 
 .game-container {
-    background: rgba(255, 255, 255, 0.9); /* 略微减少透明度 */
-    border-radius: 10px; /* 减小圆角 */
-    padding: 15px; /* 减小内边距 */
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9); 
+    border-radius: 8px; 
+    padding: 10px; /* 减小容器内边距 */
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.15);
     text-align: center;
-    max-width: 95%; /* 增加最大宽度占比 */
+    max-width: 100%; /* 允许使用所有宽度 */
     max-height: 98vh;
-    overflow-y: auto; 
 }
 
 header h1 {
     color: #4CAF50; 
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-    margin-bottom: 15px;
-    font-size: 1.8em; /* 缩小标题 */
+    margin-bottom: 10px;
+    font-size: 1.5em; /* 进一步缩小标题 */
 }
 
 #game-info {
     display: flex;
     flex-wrap: wrap; 
     justify-content: center;
-    gap: 10px; /* 减小间距 */
-    margin-bottom: 15px;
-    font-size: 0.9em; /* 缩小信息字体 */
+    gap: 8px; /* 减小间距 */
+    margin-bottom: 10px;
+    font-size: 0.8em; /* 进一步缩小信息字体 */
 }
 
 .score-box, .hint-box {
     background-color: #f7f7f7;
     border: 1px solid #ddd;
-    border-radius: 6px; /* 减小圆角 */
-    padding: 8px 12px; /* 减小内边距 */
+    border-radius: 5px; 
+    padding: 5px 10px; /* 减小信息框内边距 */
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -55,18 +54,14 @@ header h1 {
     font-weight: bold;
 }
 
-#hint {
-    color: #007bff;
-}
-
 .control-button {
     background-color: #28a745; 
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 6px 12px; /* 缩小按钮 */
+    padding: 5px 10px; /* 缩小按钮 */
+    font-size: 0.8em;
     cursor: pointer;
-    font-size: 0.9em;
     transition: background-color 0.3s ease;
 }
 
@@ -76,60 +71,48 @@ header h1 {
 
 #game-board-wrapper {
     background: linear-gradient(to top left, #6B4226, #A0522D); 
-    padding: 10px; /* 减小边框厚度 */
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    padding: 6px; /* 减小边框厚度 */
+    border-radius: 6px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
     display: inline-block; 
 }
 
 #game-board {
     display: grid;
-    border: 2px solid #555; 
+    border: 1px solid #555; /* 减小内部边框 */
     background-color: #333; 
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden; 
 }
 
-/* 关键修改：再次缩小方块尺寸 */
+/* 关键修改：最终缩小方块尺寸 */
 .square {
-    width: 40px; /* 缩小到 40px */
-    height: 40px;
+    width: 32px; /* 缩小到 32px */
+    height: 32px;
     border: 1px solid rgba(255, 255, 255, 0.2); 
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 24px; /* 相应缩小图标大小 */
+    font-size: 18px; /* 相应缩小图标大小 */
     color: white; 
     cursor: pointer;
     position: relative; 
     transition: transform 0.1s ease-out, opacity 0.3s ease-in-out;
-    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2); 
-    border-radius: 4px; /* 减小方块圆角 */
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.15); 
+    border-radius: 3px; 
 }
-
-/* 不同的方块颜色和图标 */
-.type-1 { background-color: #ff595e; } 
-.type-2 { background-color: #ff924c; } 
-.type-3 { background-color: #ffc84c; } 
-.type-4 { background-color: #8ac926; } 
-.type-5 { background-color: #1982c4; } 
-.type-6 { background-color: #6a0dad; } 
 
 /* 选中时的效果 */
 .selected {
-    border: 3px solid #FFD700; 
-    box-shadow: 0 0 10px #FFD700;
-    transform: scale(1.05); /* 稍微减小放大比例 */
+    border: 2px solid #FFD700; /* 减小选中边框厚度 */
+    box-shadow: 0 0 8px #FFD700;
+    transform: scale(1.03); 
     z-index: 10;
 }
 
-/* 消除动画 */
+/* 消除动画保持不变 */
 .fade-out {
     opacity: 0;
     transform: scale(0.1);
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
-
-.dropping {
-    transition: transform 0.3s ease-in; 
 }
