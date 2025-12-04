@@ -1,0 +1,53 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f0f0;
+    margin-top: 20px;
+}
+
+#game-board {
+    display: grid;
+    /* 这里的列数将在 JS 中设置 */
+    border: 3px solid #333;
+    background-color: #ccc;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.square {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #777;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s ease-out;
+}
+
+/* 不同的方块颜色 */
+.type-1 { background-color: #ff595e; } /* 红色 */
+.type-2 { background-color: #ff924c; } /* 橙色 */
+.type-3 { background-color: #ffc84c; } /* 黄色 */
+.type-4 { background-color: #8ac926; } /* 绿色 */
+.type-5 { background-color: #1982c4; } /* 蓝色 */
+
+/* 选中时的效果 */
+.selected {
+    border: 3px solid white;
+    box-shadow: 0 0 10px white;
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+#game-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#hint {
+    color: #007bff;
+}
