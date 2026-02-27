@@ -3,41 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Vocabulário - 葡文词汇</title>
+    <title>Meu Vocabulário</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div id="app">
-        <header>
-            <div class="avatar-container">
-                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Avatar" class="avatar">
-                <div class="notification-dot"></div>
-            </div>
-        </header>
-
-        <main>
-            <h1 class="greeting">Splendid</h1>
-            
-            <div class="cards-container">
-                <div class="glass-card" id="btn-learn">
-                    <h2>Learn</h2>
-                    <p class="count">69</p>
+        
+        <div id="home-view" class="view active">
+            <header>
+                <div class="avatar-container">
+                    <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="Avatar" class="avatar">
+                    <div class="notification-dot"></div>
                 </div>
-                <div class="glass-card" id="btn-review">
-                    <h2>Review</h2>
-                    <p class="count">0</p>
-                </div>
-            </div>
-        </main>
+            </header>
 
-        <nav class="bottom-nav">
-            <i class="fa-solid fa-layer-group active"></i>
-            <i class="fa-solid fa-box-archive"></i>
-            <i class="fa-solid fa-chart-line"></i>
-        </nav>
+            <main>
+                <h1 class="greeting">Splendid</h1>
+                <div class="cards-container">
+                    <div class="glass-card" id="btn-learn">
+                        <h2>Learn</h2>
+                        <p class="count" id="learn-count">0</p>
+                    </div>
+                    <div class="glass-card" id="btn-review">
+                        <h2>Review</h2>
+                        <p class="count">0</p>
+                    </div>
+                </div>
+            </main>
+
+            <nav class="bottom-nav">
+                <i class="fa-solid fa-layer-group active"></i>
+                <i class="fa-solid fa-box-archive"></i>
+                <i class="fa-solid fa-chart-line"></i>
+            </nav>
+        </div>
+
+        <div id="learning-view" class="view hidden">
+            <header class="learning-header">
+                <i class="fa-solid fa-chevron-left" id="btn-back"></i>
+                <span>学习中</span>
+                <i class="fa-solid fa-ellipsis"></i>
+            </header>
+
+            <main class="flashcard-container">
+                <div class="flashcard glass-card" id="flashcard">
+                    <h2 id="word-pt" class="word-large">Carregando...</h2>
+                    
+                    <div id="word-details" class="details-hidden">
+                        <p id="word-zh" class="word-translation">加载中...</p>
+                        <hr class="divider">
+                        <p id="word-example" class="word-example">Exemplo...</p>
+                        <p class="hint-text">点击卡片任意处可隐藏/显示</p>
+                    </div>
+                </div>
+            </main>
+
+            <div class="action-buttons">
+                <button class="action-btn btn-unknown" id="btn-unknown">
+                    <i class="fa-solid fa-xmark"></i> 不认识
+                </button>
+                <button class="action-btn btn-known" id="btn-known">
+                    <i class="fa-solid fa-check"></i> 认识
+                </button>
+            </div>
+        </div>
+
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
