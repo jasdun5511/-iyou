@@ -1,52 +1,16 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-body, html {
-    height: 100%;
-    width: 100%;
-    background-color: #1a1a2e;
-}
-
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body, html { height: 100%; width: 100%; background-color: #1a1a2e; }
 #app {
-    background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1080&auto=format&fit=crop');
-    background-size: cover;
-    background-position: center;
-    height: 100vh;
-    color: white;
-    position: relative;
-    overflow: hidden; /* 防止切换视图时出现滚动条 */
+    background-image: linear-gradient(rgba(40,50,60,0.8), rgba(20,30,40,0.9)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1080&auto=format&fit=crop');
+    background-size: cover; background-position: center; height: 100vh; color: white; position: relative; overflow: hidden;
 }
 
-/* 视图切换逻辑 */
-.view {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 30px 20px;
-    transition: transform 0.4s ease, opacity 0.4s ease;
-}
+/* 视图控制 */
+.view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 30px 20px; transition: transform 0.4s ease, opacity 0.4s ease; }
+.view.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; }
+.view.active { transform: translateX(0); opacity: 1; pointer-events: all; }
 
-.view.hidden {
-    transform: translateX(100%);
-    opacity: 0;
-    pointer-events: none;
-}
-
-.view.active {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: all;
-}
-
-/* 首页独有样式 */
+/* 首页旧样式保留 */
 #home-view main { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; padding-bottom: 20px; }
 .greeting { text-align: center; font-size: 2.8rem; font-weight: 600; margin-bottom: 80px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 .cards-container { display: flex; gap: 15px; margin-top: auto; margin-bottom: 20px; }
@@ -56,56 +20,53 @@ body, html {
 .bottom-nav { display: flex; justify-content: space-around; align-items: center; padding: 10px 0; }
 .bottom-nav i { font-size: 1.4rem; color: rgba(255, 255, 255, 0.6); cursor: pointer; transition: color 0.3s; }
 .bottom-nav i.active, .bottom-nav i:hover { color: white; }
-
-/* 毛玻璃基础类 */
-.glass-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 20px 15px;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-}
+.glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px 15px; cursor: pointer; transition: transform 0.2s; }
 #home-view .glass-card { flex: 1; }
-#home-view .glass-card:active { transform: scale(0.96); }
 #home-view .glass-card h2 { font-size: 1.1rem; font-weight: 500; margin-bottom: 5px; }
 #home-view .glass-card .count { color: #f39c12; font-size: 1.2rem; font-weight: 600; }
 
-/* --- 学习视图样式 --- */
-.learning-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; margin-bottom: 30px; }
-.learning-header i { cursor: pointer; padding: 10px; }
-.flashcard-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 30px; }
+/* --- 全新学习视图样式 --- */
+.learning-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-bottom: 30px; }
+.learning-header .left-action, .learning-header .right-action { display: flex; align-items: center; gap: 15px; }
+.learning-header i { cursor: pointer; }
 
-.flashcard {
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 40px 20px;
+.word-container { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; padding-bottom: 60px; }
+.word-header { margin-bottom: 30px; }
+.word-title { font-size: 2.8rem; font-weight: 700; margin-bottom: 15px; letter-spacing: 1px; }
+
+/* 音标和词性 */
+.word-phonetic { font-size: 0.95rem; color: rgba(255,255,255,0.7); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+.accent-tag { background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+.word-pos-zh { font-size: 1.1rem; font-weight: 500; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 15px; display: inline-block; }
+.pos-tag { color: rgba(255,255,255,0.6); margin-right: 5px; font-size: 0.9rem; }
+
+/* 测验区 (垂直选项) */
+.hint-text { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+.options-vertical { display: flex; flex-direction: column; gap: 12px; }
+.option-btn { 
+    background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: none; border-radius: 12px; 
+    padding: 18px 20px; color: white; font-size: 1rem; text-align: left; cursor: pointer; transition: all 0.2s; 
+    display: flex; flex-direction: column; gap: 5px;
 }
+.option-btn .opt-pos { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+.option-btn:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.15); }
 
-.word-large { font-size: 2.8rem; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px; }
-.word-translation { font-size: 1.4rem; color: #f39c12; margin-bottom: 15px; font-weight: 500; }
-.divider { width: 50px; border: 0; height: 2px; background: rgba(255,255,255,0.3); margin: 15px auto; }
-.word-example { font-size: 1.1rem; color: rgba(255,255,255,0.8); font-style: italic; line-height: 1.5; }
-.hint-text { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 30px; }
+/* 错误提示文字样式 */
+.show-wrong-pt { color: #ff6b6b; font-weight: bold; font-size: 1.1rem; text-align: center; width: 100%; }
 
-/* 翻译内容的显示/隐藏控制 */
-.details-hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-.details-visible { opacity: 1; pointer-events: all; transition: opacity 0.3s ease; }
+/* 详情卡片 */
+.detail-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
+.example-pt { font-size: 1.1rem; font-weight: 500; margin-bottom: 8px; line-height: 1.4; }
+.example-zh { font-size: 0.95rem; color: rgba(255,255,255,0.6); }
+.phrase-item { margin-bottom: 12px; }
+.phrase-item:last-child { margin-bottom: 0; }
+.phrase-pt { font-size: 1rem; font-weight: 500; margin-bottom: 3px; }
+.phrase-zh { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
 
-/* 底部操作按钮 */
-.action-buttons { display: flex; gap: 20px; padding-bottom: 20px; }
-.action-btn {
-    flex: 1; padding: 16px 0; border: none; border-radius: 12px;
-    font-size: 1.1rem; font-weight: 600; color: white; cursor: pointer;
-    backdrop-filter: blur(10px); transition: transform 0.1s;
-    display: flex; justify-content: center; align-items: center; gap: 8px;
-}
-.action-btn:active { transform: scale(0.95); }
-.btn-unknown { background: rgba(231, 76, 60, 0.4); border: 1px solid rgba(231, 76, 60, 0.6); }
-.btn-known { background: rgba(46, 204, 113, 0.4); border: 1px solid rgba(46, 204, 113, 0.6); }
+/* 底部按钮 */
+.footer-actions { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; }
+.bottom-text-btn { background: none; border: none; color: white; font-size: 1rem; cursor: pointer; position: relative; padding: 10px; }
+.underline-red { width: 12px; height: 3px; background-color: #e74c3c; border-radius: 2px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); }
+.underline-green { width: 12px; height: 3px; background-color: #2ecc71; border-radius: 2px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); }
+
+.hidden { display: none !important; }
