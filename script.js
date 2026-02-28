@@ -1,4 +1,4 @@
-// 升级版数据：扩展了词汇量（包含物理、编程），保证 4 选 1 选项能填满
+// 升级版数据：扩展了词汇量，包含真实的派生、词根和近义词数据
 const vocabularyData = [
     { 
         pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿；促进，刺激", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
@@ -56,6 +56,7 @@ let totalWords = 0;
 let currentWordObj = null;
 let currentOptionsData = [];
 
+// DOM 元素获取字典
 const views = { home: document.getElementById('home-view'), learning: document.getElementById('learning-view') };
 const els = {
     app: document.getElementById('app'),
@@ -72,8 +73,8 @@ const els = {
     recognizeArea: document.getElementById('recognize-area'),
     defArea: document.getElementById('definition-area'),
     detailArea: document.getElementById('detail-area'),
-    options: document.querySelectorAll('.option'), // 获取整个 option 按钮
-    optContents: document.querySelectorAll('.option .opt-content'), // 获取内容区
+    options: document.querySelectorAll('.option'), 
+    optContents: document.querySelectorAll('.option .opt-content'), 
     exPt: document.getElementById('word-example-pt'),
     exZh: document.getElementById('word-example-zh'),
     tabContent: document.getElementById('tab-content-container'),
@@ -86,32 +87,40 @@ const els = {
     fDetail: document.getElementById('footer-detail')
 };
 
+// 初始化首页单词数
 document.getElementById('learn-count').innerText = vocabularyData.length;
 
+// 语音播报
 function playAudio(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'pt-BR'; window.speechSynthesis.speak(utterance);
+        utterance.lang = 'pt-BR'; // 巴西葡语
+        window.speechSynthesis.speak(utterance);
     }
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
+// 进入学习模式
 document.getElementById('btn-learn').addEventListener('click', () => {
     if (vocabularyData.length === 0) return;
+    // 生成学习队列，每个词初始 stage 为 0
     learningQueue = vocabularyData.map(word => ({ ...word, stage: 0 }));
     totalWords = learningQueue.length;
     learnedCount = 0;
+    
     views.home.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
     loadNextState();
 });
 
+// 返回首页
 document.getElementById('btn-back').addEventListener('click', () => {
     views.learning.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
 });
 
+// 数组打乱算法
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -120,10 +129,11 @@ function shuffleArray(array) {
     return array;
 }
 
+// 更新三个点与满级对勾
 function updateDots(stage) {
     if (stage >= 3) {
         els.dotsContainer.classList.add('hidden');
-        els.successBadge.classList.remove('hidden');
+        els.successBadge.classList.remove('hidden'); // 显示满级绿勾
     } else {
         els.dotsContainer.classList.remove('hidden');
         els.successBadge.classList.add('hidden');
@@ -134,6 +144,7 @@ function updateDots(stage) {
     }
 }
 
+// 加载下一个状态
 window.loadNextState = function() {
     if (learningQueue.length === 0) {
         alert("今日完毕！");
@@ -142,12 +153,14 @@ window.loadNextState = function() {
     }
 
     currentWordObj = learningQueue.shift();
+    
     els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
     els.wordPt.innerText = currentWordObj.pt; 
     els.phonetic.innerText = currentWordObj.phonetic;
     els.pos.innerText = currentWordObj.pos;
     els.zh.innerText = currentWordObj.zh;
     
+    // 初始化所有区块为隐藏状态
     els.defArea.classList.add('hidden');
     els.detailArea.classList.add('hidden');
     els.quizArea.classList.add('hidden');
@@ -166,6 +179,7 @@ window.loadNextState = function() {
     playAudio(currentWordObj.pt);
 }
 
+// 阶段 0：四选一测验
 function renderStage0() {
     els.app.className = 'bg-blur';
     els.quizArea.classList.remove('hidden');
@@ -175,28 +189,28 @@ function renderStage0() {
     let wrongCandidates = vocabularyData.filter(w => w.pt !== currentWordObj.pt);
     shuffleArray(wrongCandidates);
     
-    // 如果词库少于4个词，只取现有的错误选项
+    // 动态取错误选项，防止词库数量少于4个时报错
     for (let i = 0; i < 3 && i < wrongCandidates.length; i++) {
         options.push({ wordObj: wrongCandidates[i], isCorrect: false });
     }
     shuffleArray(options);
     currentOptionsData = options;
 
-    // 安全渲染机制：如果没有数据，隐藏多余的选项按钮
     els.options.forEach((optContainer, index) => {
         const contentEl = els.optContents[index];
         if (currentOptionsData[index]) {
             const data = currentOptionsData[index].wordObj;
             contentEl.innerHTML = `<span class="opt-pos">${data.pos}</span><span class="opt-zh">${data.zh}</span>`;
             optContainer.style.display = 'flex'; // 确保显示
-            optContainer.style.pointerEvents = 'auto';
-            optContainer.classList.remove('active');
+            optContainer.style.pointerEvents = 'auto'; // 恢复可点击
+            optContainer.classList.remove('active'); // 移除高亮
         } else {
             optContainer.style.display = 'none'; // 隐藏多余按钮
         }
     });
 }
 
+// 阶段 1：例句测验
 function renderStage1() {
     els.app.className = 'bg-green';
     els.skeletonBars.classList.remove('hidden');
@@ -207,6 +221,7 @@ function renderStage1() {
     els.fRecog.classList.remove('hidden');
 }
 
+// 阶段 2：盲测
 function renderStage2() {
     els.app.className = 'bg-green';
     els.skeletonBars.classList.remove('hidden');
@@ -216,19 +231,20 @@ function renderStage2() {
     els.fRecog.classList.remove('hidden');
 }
 
+// 选项点击事件
 window.checkAnswer = function(selectedIndex) {
     els.options.forEach(el => el.style.pointerEvents = 'none');
     
     const selectedData = currentOptionsData[selectedIndex];
     const clickedBtn = els.options[selectedIndex];
     
-    clickedBtn.classList.add('active');
+    clickedBtn.classList.add('active'); // 按下态高亮
     
     if (selectedData.isCorrect) {
         currentWordObj.stage = 1; 
         learningQueue.push(currentWordObj);
         updateDots(1);
-        setTimeout(() => showDetails(), 400);
+        setTimeout(() => showDetails(), 400); // 物理延迟手感
     } else {
         currentWordObj.stage = 0; 
         learningQueue.push(currentWordObj);
@@ -240,6 +256,7 @@ window.checkAnswer = function(selectedIndex) {
     }
 }
 
+// “认识”按钮
 document.getElementById('btn-recognize').addEventListener('click', () => {
     if (currentWordObj.stage === 1) {
         currentWordObj.stage = 2; learningQueue.push(currentWordObj); updateDots(2);
@@ -249,6 +266,7 @@ document.getElementById('btn-recognize').addEventListener('click', () => {
     setTimeout(() => showDetails(), 150);
 });
 
+// “不认识”和“提示一下”按钮
 document.getElementById('btn-not-recognize').addEventListener('click', punishAndShow);
 document.getElementById('btn-hint').addEventListener('click', punishAndShow);
 
@@ -257,6 +275,7 @@ function punishAndShow() {
     setTimeout(() => showDetails(), 150);
 }
 
+// “直接看答案”按钮
 window.showAnswerDirectly = function() {
     currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
     setTimeout(() => showDetails(), 150);
@@ -275,8 +294,13 @@ function renderTabContent(targetType) {
     els.tabContent.innerHTML = ''; 
     let contentData = currentWordObj[targetType] || [];
     
+    // 无数据时的完美居中显示
     if (contentData.length === 0) {
-        els.tabContent.innerHTML = `<p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; text-align: center; padding: 10px 0;">暂无数据</p>`;
+        els.tabContent.innerHTML = `
+            <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                <p style="color: rgba(255,255,255,0.4); font-size: 0.9rem;">暂无数据</p>
+            </div>
+        `;
         return;
     }
 
@@ -293,6 +317,7 @@ function renderTabContent(targetType) {
     });
 }
 
+// 详情页展示
 function showDetails() {
     els.app.className = 'bg-blur'; 
     els.skeletonBars.classList.add('hidden');
@@ -308,16 +333,19 @@ function showDetails() {
     els.exPt.innerHTML = currentWordObj.example.pt;
     els.exZh.innerText = currentWordObj.example.zh;
 
+    // 默认点击激活第一个Tab（词组搭配）
     els.tabs[0].click(); 
 }
 
+// 下一词
 document.getElementById('btn-next').addEventListener('click', () => {
     setTimeout(() => loadNextState(), 150);
 });
 
+// 记错了
 document.getElementById('btn-forgot').addEventListener('click', () => {
     if (currentWordObj.stage === 3) {
-        learnedCount--; 
+        learnedCount--; // 如果已经满级，需要扣除已学数量
     }
     currentWordObj.stage = 0;
     learningQueue.push(currentWordObj);
