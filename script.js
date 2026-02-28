@@ -1,19 +1,28 @@
-// 数据带 displayPt，用于像 re·union 一样拆分显示，如果不拆就写普通单词
+// 升级版数据：去掉了强加的音节拆分点，加入了真实的派生、词根和近义词数据
 const vocabularyData = [
     { 
-        displayPt: "re·union", pt: "reunion", pos: "n.", zh: "聚会，重聚，重逢；再联合", phonetic: "/ˌriːˈjuːniən/", 
-        example: { pt: "Patrick was going to have that <strong>reunion</strong> with his mother.", zh: "帕特里克想和他母亲团聚。" },
-        phrases: ["a family reunion 家庭聚会", "a mother-daughter reunion 母女重逢"]
-    },
-    { 
-        displayPt: "mesmo", pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", 
-        example: { pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil de encontrar.", zh: "即使在城市里，工作也很难找。" },
-        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"]
-    },
-    { 
-        displayPt: "en·cour·age", pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿；促进，刺激", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
+        pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿；促进，刺激", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
         example: { pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
-        phrases: ["encorajar a violência 助长暴力", "encorajar o investimento 促进投资"]
+        phrases: ["encorajar a violência 助长暴力", "encorajar o investimento 促进投资"],
+        derivatives: ["coragem (n. 勇气)", "encorajamento (n. 鼓励，怂恿)"],
+        roots: ["en- (使...) + coragem (勇气) + -ar (动词后缀)"],
+        synonyms: ["animar (vt. 使兴奋，鼓励)", "estimular (vt. 刺激，激励)"]
+    },
+    { 
+        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", 
+        example: { pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil de encontrar.", zh: "即使在城市里，工作也很难找。" },
+        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"],
+        derivatives: ["mesmíssimo (adj. 完全一样的)"],
+        roots: ["源自拉丁语 'metipsimus' (正是那个)"],
+        synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"]
+    },
+    { 
+        pt: "salvar", pos: "vt.", zh: "储藏，贮存；(计算机) 存储", phonetic: "/sawˈvaɾ/", 
+        example: { pt: "Não se esqueça de <strong>salvar</strong> o documento.", zh: "别忘了保存文件。" },
+        phrases: ["salvar o arquivo 保存文件", "salvar a vida 救命"],
+        derivatives: ["salvador (n. 救世主)", "salvação (n. 拯救)"],
+        roots: ["源自晚期拉丁语 'salvare' (使安全)"],
+        synonyms: ["guardar (vt. 保存，看守)", "preservar (vt. 保护，维护)"]
     }
 ];
 
@@ -42,7 +51,8 @@ const els = {
     options: document.querySelectorAll('.option .opt-content'),
     exPt: document.getElementById('word-example-pt'),
     exZh: document.getElementById('word-example-zh'),
-    phrases: document.getElementById('phrases-container'),
+    tabContent: document.getElementById('tab-content-container'),
+    tabs: document.querySelectorAll('.tab'),
     recogExPt: document.getElementById('recognize-example-pt'),
     recogSentenceCard: document.getElementById('recognize-sentence-card'),
     recogBlindText: document.getElementById('recognize-blind-text'),
@@ -85,9 +95,7 @@ function shuffleArray(array) {
     return array;
 }
 
-// UI 核心更新逻辑
 function updateDots(stage) {
-    // 满级：显示对勾，隐藏点点
     if (stage >= 3) {
         els.dotsContainer.classList.add('hidden');
         els.successBadge.classList.remove('hidden');
@@ -110,12 +118,12 @@ window.loadNextState = function() {
 
     currentWordObj = learningQueue.shift();
     els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
-    els.wordPt.innerText = currentWordObj.displayPt || currentWordObj.pt; // 使用带点分隔的词
+    // 移除了带点分隔的逻辑，直接显示纯净单词
+    els.wordPt.innerText = currentWordObj.pt; 
     els.phonetic.innerText = currentWordObj.phonetic;
     els.pos.innerText = currentWordObj.pos;
     els.zh.innerText = currentWordObj.zh;
     
-    // 初始化全隐藏
     els.defArea.classList.add('hidden');
     els.detailArea.classList.add('hidden');
     els.quizArea.classList.add('hidden');
@@ -148,17 +156,12 @@ function renderStage0() {
     shuffleArray(options);
     currentOptionsData = options;
 
+    // 移除了随机空选项的逻辑，老老实实渲染 4 个选项
     els.options.forEach((optEl, index) => {
-        // 模拟骨架屏选项
-        if (index === 3 && Math.random() > 0.6) {
-            optEl.innerHTML = `<div class="skeleton-line short"></div><div class="skeleton-line long"></div>`;
-            currentOptionsData[index] = { isCorrect: false, isEmpty: true };
-        } else {
-            const data = currentOptionsData[index].wordObj;
-            optEl.innerHTML = `<span class="opt-pos">${data.pos}</span><span class="opt-zh">${data.zh}</span>`;
-        }
+        const data = currentOptionsData[index].wordObj;
+        optEl.innerHTML = `<span class="opt-pos">${data.pos}</span><span class="opt-zh">${data.zh}</span>`;
         optEl.parentElement.style.pointerEvents = 'auto';
-        optEl.parentElement.classList.remove('active'); // 清除上次的高亮
+        optEl.parentElement.classList.remove('active');
     });
 }
 
@@ -181,8 +184,6 @@ function renderStage2() {
     els.fRecog.classList.remove('hidden');
 }
 
-// ---------------- 物理延迟与手感优化 ---------------- //
-
 window.checkAnswer = function(selectedIndex) {
     const parentOpts = document.querySelectorAll('.option');
     parentOpts.forEach(el => el.style.pointerEvents = 'none');
@@ -190,37 +191,30 @@ window.checkAnswer = function(selectedIndex) {
     const selectedData = currentOptionsData[selectedIndex];
     const clickedBtn = parentOpts[selectedIndex];
     
-    clickedBtn.classList.add('active'); // 按下态的高亮保持
+    clickedBtn.classList.add('active');
     
     if (selectedData.isCorrect) {
         currentWordObj.stage = 1; 
         learningQueue.push(currentWordObj);
         updateDots(1);
-        
-        // 【关键】答对后，停留 0.4 秒让用户看到选中态，再进入详情
         setTimeout(() => showDetails(), 400);
     } else {
         currentWordObj.stage = 0; 
         learningQueue.push(currentWordObj);
         updateDots(0);
         
-        if (!selectedData.isEmpty) {
-            els.options[selectedIndex].innerHTML = `<span style="color:#ff6b6b; font-size: 1.1rem; text-align:center; display:block; width:100%; font-weight:bold;">${selectedData.wordObj.pt}</span>`;
-        }
+        els.options[selectedIndex].innerHTML = `<span style="color:#ff6b6b; font-size: 1.1rem; text-align:center; display:block; width:100%; font-weight:bold;">${selectedData.wordObj.pt}</span>`;
         playAudio(selectedData.wordObj.pt);
-        // 【关键】答错后，停留 0.8 秒
         setTimeout(() => showDetails(), 800);
     }
 }
 
-// “认识/不认识” 按钮交互
 document.getElementById('btn-recognize').addEventListener('click', () => {
     if (currentWordObj.stage === 1) {
         currentWordObj.stage = 2; learningQueue.push(currentWordObj); updateDots(2);
     } else if (currentWordObj.stage === 2) {
-        currentWordObj.stage = 3; learnedCount++; updateDots(3); // 这里会显示满级绿勾
+        currentWordObj.stage = 3; learnedCount++; updateDots(3);
     }
-    // 增加细微延迟 150ms 体验更佳
     setTimeout(() => showDetails(), 150);
 });
 
@@ -237,9 +231,45 @@ window.showAnswerDirectly = function() {
     setTimeout(() => showDetails(), 150);
 }
 
+// ================= Tab 菜单切换逻辑 =================
+els.tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        // 移除所有 tab 的 active 状态
+        els.tabs.forEach(t => t.classList.remove('active'));
+        // 当前点击的 tab 加上 active 状态
+        e.target.classList.add('active');
+        // 根据 data-target 渲染对应的内容
+        renderTabContent(e.target.dataset.target);
+    });
+});
+
+function renderTabContent(targetType) {
+    els.tabContent.innerHTML = ''; // 清空内容
+    let contentData = currentWordObj[targetType] || [];
+    
+    if (contentData.length === 0) {
+        els.tabContent.innerHTML = `<p style="color: rgba(255,255,255,0.4); font-size: 0.9rem; text-align: center; padding: 10px 0;">暂无数据</p>`;
+        return;
+    }
+
+    contentData.forEach(item => {
+        // 处理词组搭配的格式 (前面外语，后面中文)
+        if (targetType === 'phrases') {
+            const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
+            const en = splitIndex > 0 ? item.substring(0, splitIndex).trim() : item;
+            const zh = splitIndex > 0 ? item.substring(splitIndex).trim() : '';
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
+        } 
+        // 处理派生、词根、近义词的格式
+        else {
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
+        }
+    });
+}
+
 // 详情页展示
 function showDetails() {
-    els.app.className = 'bg-blur'; // 回到暗黑背景
+    els.app.className = 'bg-blur'; 
     els.skeletonBars.classList.add('hidden');
     els.quizArea.classList.add('hidden');
     els.recognizeArea.classList.add('hidden');
@@ -253,26 +283,17 @@ function showDetails() {
     els.exPt.innerHTML = currentWordObj.example.pt;
     els.exZh.innerText = currentWordObj.example.zh;
 
-    els.phrases.innerHTML = '';
-    if (currentWordObj.phrases.length > 0) {
-        currentWordObj.phrases.forEach(p => {
-            const splitIndex = p.search(/[\u4e00-\u9fa5]/); 
-            const en = splitIndex > 0 ? p.substring(0, splitIndex).trim() : p;
-            const zh = splitIndex > 0 ? p.substring(splitIndex).trim() : '';
-            els.phrases.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
-        });
-    }
+    // 默认触发“词组搭配”的 Tab 显示
+    els.tabs[0].click(); 
 }
 
-// 【关键】下一词：增加 150ms 的物理延迟，不要瞬间一切换
 document.getElementById('btn-next').addEventListener('click', () => {
     setTimeout(() => loadNextState(), 150);
 });
 
-// “记错了” 按钮功能：从满级/任意级直接打回 0 级，塞回队列
 document.getElementById('btn-forgot').addEventListener('click', () => {
     if (currentWordObj.stage === 3) {
-        learnedCount--; // 如果已经算学会了，扣除进度
+        learnedCount--; 
     }
     currentWordObj.stage = 0;
     learningQueue.push(currentWordObj);
