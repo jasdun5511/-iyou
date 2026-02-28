@@ -72,22 +72,8 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 /* ================== 固定高度的 Tab 容器 ================== */
 #tab-content-container {
     height: 160px;
-    overflow: hidden; /* 改成 hidden，彻底禁用滚轮和滑动，隐藏多余内容 */
+    overflow: hidden; /* 彻底禁用滚轮和滑动，隐藏多余内容 */
     margin-bottom: 15px;
-}
-
-    
-    /* 彻底隐藏 IE, Edge 和 Firefox 的滚动条 */
-    -ms-overflow-style: none;  
-    scrollbar-width: none;  
-}
-
-/* 彻底隐藏 Chrome, Safari, Opera (包括大部分手机浏览器) 的滚动条 */
-#tab-content-container::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
-    background: transparent;
 }
 /* ============================================================= */
 
