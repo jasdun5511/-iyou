@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div id="app" class="bg-mountain">
+    <div id="app" class="bg-dark">
         
         <div id="home-view" class="view active">
             <header>
@@ -38,30 +38,39 @@
         </div>
 
         <div id="learning-view" class="view hidden">
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progress-bar"></div>
-            </div>
-
             <header class="learning-header">
                 <div class="left-action">
                     <i class="fa-solid fa-chevron-left" id="btn-back"></i>
-                    <span id="progress-text">0/0</span>
+                    <span id="progress-text">1/10</span>
                 </div>
                 <div class="right-action">
-                    <i class="fa-solid fa-volume-high" id="btn-play-audio" style="margin-right: 10px;"></i>
-                    <i class="fa-solid fa-rotate-left"></i>
+                    <i class="fa-solid fa-reply"></i>
+                    <i class="fa-regular fa-star"></i>
                     <i class="fa-solid fa-ellipsis"></i>
                 </div>
             </header>
 
             <main class="word-container">
                 <div class="word-header">
-                    <h1 id="word-pt" class="word-title" style="cursor: pointer;">Carregando...</h1>
+                    <div class="word-title-row">
+                        <h1 id="word-pt" class="word-title">Carregando</h1>
+                        <div class="word-dots" id="word-dots">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                    </div>
                     
-                    <div id="word-header-details" class="hidden">
-                        <p class="word-phonetic" id="phonetic-container" style="cursor: pointer;">
-                            <span class="accent-tag">BR 🔊</span> <span id="word-phonetic-text"></span>
+                    <div id="word-header-details">
+                        <p class="word-phonetic" id="phonetic-container">
+                            <span class="accent-tag">葡 <i class="fa-solid fa-volume-low"></i></span> <span id="word-phonetic-text"></span>
                         </p>
+                        
+                        <div id="skeleton-bars" class="skeleton-bars hidden">
+                            <div class="skeleton-bar long"></div>
+                            <div class="skeleton-bar short"></div>
+                        </div>
+
                         <div id="word-zh-area" class="hidden">
                             <p class="word-pos-zh"><span id="word-pos" class="pos-tag"></span> <span id="word-zh-title"></span></p>
                         </div>
@@ -79,14 +88,17 @@
                 </div>
 
                 <div id="recognize-area" class="hidden">
-                    <div id="recognize-sentence-card" class="detail-card hidden">
+                    <div id="recognize-sentence-card" class="detail-card sentence-card hidden">
                         <p id="recognize-example-pt" class="example-pt">...</p>
                     </div>
                     <div id="recognize-blind-text" class="hidden">
                         <p class="hint-text text-center">本词最后一关😉：请在无提示的情况下判断</p>
                     </div>
                     <div class="hint-btn-container">
-                        <button id="btn-hint" class="icon-btn"><i class="fa-regular fa-lightbulb"></i><br>提示一下</button>
+                        <button id="btn-hint" class="icon-btn">
+                            <div class="bulb-icon"><i class="fa-regular fa-lightbulb"></i></div>
+                            提示一下
+                        </button>
                     </div>
                 </div>
 
