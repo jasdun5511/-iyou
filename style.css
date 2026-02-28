@@ -82,3 +82,28 @@ body, html { height: 100%; width: 100%; background-color: #1a1a2e; }
 .underline-green { width: 16px; height: 3px; background-color: #2ecc71; border-radius: 2px; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); }
 
 .hidden { display: none !important; }
+
+/* --- 顶部进度条 --- */
+.progress-bar-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 10;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%; /* 默认0，JS控制 */
+    background: #2ecc71;
+    transition: width 0.4s ease-out;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+/* 优化一下顶部 header 的 padding，不要被进度条挡住 */
+.learning-header {
+    padding-top: 15px; 
+}
+
