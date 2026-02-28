@@ -49,9 +49,7 @@
                 <div class="word-section">
                     <div class="word-row">
                         <h1 id="word-pt">mesmo</h1>
-                        
                         <span id="word-success-badge" class="success-badge hidden"><i class="fa-solid fa-circle-check"></i></span>
-                        
                         <div class="progress-dots" id="progress-dots">
                             <span class="dot"></span>
                             <span class="dot"></span>
@@ -77,18 +75,10 @@
                 <div id="quiz-area">
                     <p class="hint-text">先回想词义再选择，想不起来「看答案」</p>
                     <div class="options-list">
-                        <div class="option" onclick="checkAnswer(0)">
-                            <div class="opt-content"></div>
-                        </div>
-                        <div class="option" onclick="checkAnswer(1)">
-                            <div class="opt-content"></div>
-                        </div>
-                        <div class="option" onclick="checkAnswer(2)">
-                            <div class="opt-content"></div>
-                        </div>
-                        <div class="option" onclick="checkAnswer(3)">
-                            <div class="opt-content"></div>
-                        </div>
+                        <div class="option" onclick="checkAnswer(0)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(1)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(2)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(3)"><div class="opt-content"></div></div>
                     </div>
                 </div>
 
@@ -111,13 +101,14 @@
                         <p id="word-example-zh" class="zh-text">...</p>
                     </div>
                     <div class="card phrases-card">
-                        <div id="phrases-container"></div>
+                        <div id="tab-content-container"></div>
+                        
                         <div class="card-footer-tabs">
                             <div class="tabs-left">
-                                <span class="tab active">词组搭配</span>
-                                <span class="tab">派生</span>
-                                <span class="tab">词根</span>
-                                <span class="tab">近义</span>
+                                <span class="tab active" data-target="phrases">词组搭配</span>
+                                <span class="tab" data-target="derivatives">派生</span>
+                                <span class="tab" data-target="roots">词根</span>
+                                <span class="tab" data-target="synonyms">近义</span>
                             </div>
                             <div class="tabs-right">
                                 <i class="fa-solid fa-pen"></i>
