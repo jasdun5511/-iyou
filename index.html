@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div id="app">
+    <div id="app" class="bg-mountain">
         
         <div id="home-view" class="view active">
             <header>
@@ -41,7 +41,7 @@
             <header class="learning-header">
                 <div class="left-action">
                     <i class="fa-solid fa-chevron-left" id="btn-back"></i>
-                    <span id="progress-text">1/10</span>
+                    <span id="progress-text">0/0</span>
                 </div>
                 <div class="right-action">
                     <i class="fa-solid fa-rotate-left"></i>
@@ -56,17 +56,33 @@
                     
                     <div id="word-header-details" class="hidden">
                         <p class="word-phonetic"><span class="accent-tag">葡 🔊</span> <span id="word-phonetic-text"></span></p>
-                        <p class="word-pos-zh"><span id="word-pos" class="pos-tag"></span> <span id="word-zh-title"></span></p>
+                        <div id="word-zh-area" class="hidden">
+                            <p class="word-pos-zh"><span id="word-pos" class="pos-tag"></span> <span id="word-zh-title"></span></p>
+                        </div>
                     </div>
                 </div>
 
-                <div id="quiz-area">
+                <div id="quiz-area" class="hidden">
                     <p class="hint-text">先回想词义再选择，想不起来「看答案」</p>
                     <div id="options-list" class="options-vertical">
                         <button class="option-btn" onclick="checkAnswer(0)"></button>
                         <button class="option-btn" onclick="checkAnswer(1)"></button>
                         <button class="option-btn" onclick="checkAnswer(2)"></button>
                         <button class="option-btn" onclick="checkAnswer(3)"></button>
+                    </div>
+                </div>
+
+                <div id="recognize-area" class="hidden">
+                    <div id="recognize-sentence-card" class="detail-card hidden">
+                        <p id="recognize-example-pt" class="example-pt">...</p>
+                    </div>
+                    
+                    <div id="recognize-blind-text" class="hidden">
+                        <p class="hint-text text-center">本词最后一关😉：请在无提示的情况下判断</p>
+                    </div>
+
+                    <div class="hint-btn-container">
+                        <button id="btn-hint" class="icon-btn"><i class="fa-regular fa-lightbulb"></i><br>提示一下</button>
                     </div>
                 </div>
 
@@ -81,8 +97,18 @@
             </main>
 
             <div class="footer-actions">
-                <button id="btn-show-answer" class="bottom-text-btn">看答案<div class="underline-red"></div></button>
-                <button id="btn-next" class="bottom-text-btn hidden">下一词<div class="underline-green"></div></button>
+                <div id="footer-quiz" class="action-group hidden">
+                    <button id="btn-show-answer" class="bottom-text-btn">看答案<div class="underline-red"></div></button>
+                </div>
+                
+                <div id="footer-recognize" class="action-group dual-btns hidden">
+                    <button id="btn-recognize" class="bottom-text-btn">认识<div class="underline-green"></div></button>
+                    <button id="btn-not-recognize" class="bottom-text-btn">不认识<div class="underline-red"></div></button>
+                </div>
+
+                <div id="footer-detail" class="action-group hidden">
+                    <button id="btn-next" class="bottom-text-btn">下一词<div class="underline-green"></div></button>
+                </div>
             </div>
         </div>
 
