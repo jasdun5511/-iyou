@@ -1,77 +1,97 @@
-// 全新词库：支持音标、词性、例句、词组搭配
-const portugueseVocabulary = [
+// 词库数据
+const vocabularyData = [
     { 
-        pt: "escola", pos: "n.", zh: "学校", phonetic: "/isˈkɔ.lɐ/", 
-        example: { pt: "Eu vou para a escola todos os dias.", zh: "我每天去学校。" },
-        phrases: ["escola pública 公立学校", "escola particular 私立学校"]
+        pt: "encorajar", pos: "vt.", zh: "鼓励，促进", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
+        example: { pt: "Eu encorajo você a ser completamente honesto.", zh: "我鼓励你说实话。" },
+        phrases: ["encorajar o investimento 促进投资", "encorajar a violência 助长暴力"]
+    },
+    { 
+        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/ˈmez.mu/", 
+        example: { pt: "Mesmo na cidade, o trabalho era difícil de encontrar.", zh: "即使在城市里，工作也很难找。" },
+        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"]
+    },
+    { 
+        pt: "salvar", pos: "vt.", zh: "拯救，(计算机) 保存", phonetic: "/sawˈvaɾ/", 
+        example: { pt: "Não se esqueça de salvar o documento.", zh: "别忘了保存文件。" },
+        phrases: ["salvar a vida 救命", "salvar dinheiro 存钱"]
     },
     { 
         pt: "física", pos: "n.", zh: "物理", phonetic: "/ˈfi.zi.kɐ/", 
         example: { pt: "A prova de física é muito difícil.", zh: "物理考试很难。" },
         phrases: ["física quântica 量子物理", "física aplicada 应用物理"]
-    },
-    { 
-        pt: "desenvolvimento", pos: "n.", zh: "开发，发展", phonetic: "/de.zẽ.vol.viˈmẽ.tu/", 
-        example: { pt: "Estudo desenvolvimento de software.", zh: "我学习软件开发。" },
-        phrases: ["desenvolvimento web Web开发", "desenvolvimento sustentável 可持续发展"]
-    },
-    { 
-        pt: "encorajar", pos: "v.", zh: "鼓励，促进", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
-        example: { pt: "O professor encoraja os alunos.", zh: "老师鼓励学生们。" },
-        phrases: ["encorajar alguém a fazer 鼓励某人做某事", "encorajar o investimento 促进投资"]
-    },
-    { 
-        pt: "velocidade", pos: "n.", zh: "速度", phonetic: "/ve.lo.siˈda.dʒi/", 
-        example: { pt: "A velocidade da luz é constante.", zh: "光速是恒定的。" },
-        phrases: ["alta velocidade 高速", "limite de velocidade 限速"]
     }
 ];
 
-let currentIndex = 0;
-let currentOptionsData = []; // 保存当前生成的4个选项数据
+// --- 核心学习状态管理 ---
+let learningQueue = [];   // 当前需要复习的队列
+let totalWords = 0;       // 本次计划学习的总词数
+let learnedCount = 0;     // 已掌握（通关）的词数
+let currentWordObj = null; // 当前正在处理的单词对象
+let currentOptionsData = [];
 
 // DOM 元素获取
+const appRoot = document.getElementById('app');
 const homeView = document.getElementById('home-view');
 const learningView = document.getElementById('learning-view');
 const btnLearn = document.getElementById('btn-learn');
 const btnBack = document.getElementById('btn-back');
 
-// 学习界面元素
-const elProgressText = document.getElementById('progress-text');
+// 区域控制
+const quizArea = document.getElementById('quiz-area');
+const recognizeArea = document.getElementById('recognize-area');
+const detailArea = document.getElementById('detail-area');
+const wordZhArea = document.getElementById('word-zh-area');
+
+// 细节元素
 const elWordPt = document.getElementById('word-pt');
 const elWordHeaderDetails = document.getElementById('word-header-details');
 const elWordPhoneticText = document.getElementById('word-phonetic-text');
 const elWordPos = document.getElementById('word-pos');
 const elWordZhTitle = document.getElementById('word-zh-title');
+const elProgressText = document.getElementById('progress-text');
 
-const quizArea = document.getElementById('quiz-area');
-const optionBtns = document.querySelectorAll('.option-btn');
-const detailArea = document.getElementById('detail-area');
+// 阶段特有元素
+const recognizeSentenceCard = document.getElementById('recognize-sentence-card');
+const recognizeBlindText = document.getElementById('recognize-blind-text');
+const elRecognizeExamplePt = document.getElementById('recognize-example-pt');
 
+// 详情元素
 const elExamplePt = document.getElementById('word-example-pt');
 const elExampleZh = document.getElementById('word-example-zh');
 const phrasesContainer = document.getElementById('phrases-container');
 
-const btnShowAnswer = document.getElementById('btn-show-answer');
-const btnNext = document.getElementById('btn-next');
+// 底部按钮
+const footerQuiz = document.getElementById('footer-quiz');
+const footerRecognize = document.getElementById('footer-recognize');
+const footerDetail = document.getElementById('footer-detail');
+const optionBtns = document.querySelectorAll('.option-btn');
 
 // 初始化
-document.getElementById('learn-count').innerText = portugueseVocabulary.length;
+document.getElementById('learn-count').innerText = vocabularyData.length;
 
-// 视图切换
+// 进入学习
 btnLearn.addEventListener('click', () => {
-    if (portugueseVocabulary.length === 0) return;
+    if (vocabularyData.length === 0) return;
+    
+    // 初始化队列：将所有词加入，初始阶段为 0
+    learningQueue = vocabularyData.map(word => ({ ...word, stage: 0 }));
+    totalWords = learningQueue.length;
+    learnedCount = 0;
+
     homeView.classList.replace('active', 'hidden');
     learningView.classList.replace('hidden', 'active');
-    loadWord();
+    
+    loadNextState();
 });
 
+// 返回首页
 btnBack.addEventListener('click', () => {
     learningView.classList.replace('active', 'hidden');
     homeView.classList.replace('hidden', 'active');
+    appRoot.className = 'bg-mountain'; // 恢复默认背景
 });
 
-// 打乱数组算法
+// 打乱数组
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -80,131 +100,196 @@ function shuffleArray(array) {
     return array;
 }
 
-// 加载单词与生成选项
-function loadWord() {
-    if (currentIndex >= portugueseVocabulary.length) {
-        alert("Parabéns! 今日任务完成！");
+// --- 核心调度：加载下一个状态 ---
+function loadNextState() {
+    if (learningQueue.length === 0) {
+        alert("Parabéns! 恭喜你，所有单词已通关！");
         btnBack.click();
-        currentIndex = 0;
         return;
     }
 
-    const currentWord = portugueseVocabulary[currentIndex];
-    elProgressText.innerText = `${currentIndex + 1}/${portugueseVocabulary.length}`;
+    // 从队列头部取出一个词
+    currentWordObj = learningQueue.shift();
     
-    // 顶部单词
-    elWordPt.innerText = currentWord.pt;
+    // 更新进度条 (已掌握数量 / 总数量)
+    elProgressText.innerText = `${learnedCount}/${totalWords}`;
     
-    // 隐藏详情，展示测验区
-    elWordHeaderDetails.classList.add('hidden');
+    // 渲染通用顶部 (单词和音标，但不显示中文)
+    elWordPt.innerText = currentWordObj.pt;
+    elWordPhoneticText.innerText = currentWordObj.phonetic;
+    elWordPos.innerText = currentWordObj.pos;
+    elWordZhTitle.innerText = currentWordObj.zh;
+    
+    // 隐藏所有区域，等待模式渲染
+    quizArea.classList.add('hidden');
+    recognizeArea.classList.add('hidden');
     detailArea.classList.add('hidden');
-    quizArea.classList.remove('hidden');
+    wordZhArea.classList.add('hidden');
     
-    // 底部按钮切换
-    btnShowAnswer.classList.remove('hidden');
-    btnNext.classList.add('hidden');
+    footerQuiz.classList.add('hidden');
+    footerRecognize.classList.add('hidden');
+    footerDetail.classList.add('hidden');
 
-    // 准备4个选项数据 (1对3错)
-    let options = [{ wordObj: currentWord, isCorrect: true }];
-    let wrongCandidates = portugueseVocabulary.filter(w => w.pt !== currentWord.pt);
+    // 根据当前词的阶段渲染不同界面
+    if (currentWordObj.stage === 0) {
+        renderStage0();
+    } else if (currentWordObj.stage === 1) {
+        renderStage1();
+    } else if (currentWordObj.stage === 2) {
+        renderStage2();
+    }
+}
+
+// 阶段 0: 4选1 测验
+function renderStage0() {
+    appRoot.className = 'bg-mountain'; // 默认背景
+    elWordHeaderDetails.classList.add('hidden');
+    quizArea.classList.remove('hidden');
+    footerQuiz.classList.remove('hidden');
+
+    // 准备选项
+    let options = [{ wordObj: currentWordObj, isCorrect: true }];
+    let wrongCandidates = vocabularyData.filter(w => w.pt !== currentWordObj.pt);
     shuffleArray(wrongCandidates);
-    
     for (let i = 0; i < 3 && i < wrongCandidates.length; i++) {
         options.push({ wordObj: wrongCandidates[i], isCorrect: false });
     }
     shuffleArray(options);
-    currentOptionsData = options; // 保存全局以便点击时比对
+    currentOptionsData = options;
 
-    // 渲染选项按钮
     optionBtns.forEach((btn, index) => {
         const optData = options[index].wordObj;
-        // 渲染词性和中文
         btn.innerHTML = `<span class="opt-pos">${optData.pos}</span><span class="opt-zh">${optData.zh}</span>`;
         btn.disabled = false;
-        btn.style.background = ''; // 重置背景
+        btn.style.background = ''; 
     });
 }
 
-// 选项点击判断逻辑
+// 阶段 1: 句子情境认词
+function renderStage1() {
+    appRoot.className = 'bg-green'; // 切换到沉浸式绿色
+    elWordHeaderDetails.classList.remove('hidden'); // 显示音标
+    recognizeArea.classList.remove('hidden');
+    
+    // 显示句子，隐藏盲测文字
+    recognizeSentenceCard.classList.remove('hidden');
+    recognizeBlindText.classList.add('hidden');
+    
+    // 替换句子中的原词加粗显示
+    let sentence = currentWordObj.example.pt;
+    // 简单的高亮处理（实际开发可用正则忽略大小写匹配）
+    elRecognizeExamplePt.innerHTML = sentence; 
+
+    footerRecognize.classList.remove('hidden');
+}
+
+// 阶段 2: 盲测
+function renderStage2() {
+    appRoot.className = 'bg-green'; // 保持深绿
+    elWordHeaderDetails.classList.remove('hidden'); // 显示音标
+    recognizeArea.classList.remove('hidden');
+    
+    // 隐藏句子，显示盲测文字
+    recognizeSentenceCard.classList.add('hidden');
+    recognizeBlindText.classList.remove('hidden');
+
+    footerRecognize.classList.remove('hidden');
+}
+
+
+// --- 交互事件处理 ---
+
+// 测验选项点击 (Stage 0)
 window.checkAnswer = function(selectedIndex) {
-    optionBtns.forEach(btn => btn.disabled = true); // 禁用所有按钮
+    optionBtns.forEach(btn => btn.disabled = true);
     const selectedData = currentOptionsData[selectedIndex];
     const clickedBtn = optionBtns[selectedIndex];
 
     if (selectedData.isCorrect) {
-        // 答对：直接丝滑进入详情页
-        showDetails();
+        // 答对：升级到阶段 1
+        currentWordObj.stage = 1;
+        learningQueue.push(currentWordObj); // 塞回队列后面
+        showDetails(); // 按照你要求的，答对也展示详情页
     } else {
-        // 答错：按照你的要求，按钮内容变成该错误选项对应的【葡文单词】
-        clickedBtn.innerHTML = `<span class="show-wrong-pt">${selectedData.wordObj.pt}</span>`;
-        clickedBtn.style.background = 'rgba(231, 76, 60, 0.2)'; // 微微泛红
+        // 答错：留在阶段 0，变红提示
+        currentWordObj.stage = 0;
+        learningQueue.push(currentWordObj);
         
-        // 错题惩罚：塞回数组末尾
-        const failedWord = portugueseVocabulary.splice(currentIndex, 1)[0];
-        portugueseVocabulary.push(failedWord);
-        currentIndex--; 
-
-        // 停留 1.2 秒让用户看清这个葡文，然后进入详情页
-        setTimeout(() => {
-            showDetails();
-        }, 1200);
+        clickedBtn.innerHTML = `<span class="show-wrong-pt">${selectedData.wordObj.pt}</span>`;
+        clickedBtn.style.background = 'rgba(231, 76, 60, 0.2)';
+        
+        setTimeout(() => showDetails(), 1200);
     }
 }
 
-// 主动看答案
-btnShowAnswer.addEventListener('click', () => {
-    // 算作不会，塞入队尾复习
-    const failedWord = portugueseVocabulary.splice(currentIndex, 1)[0];
-    portugueseVocabulary.push(failedWord);
-    currentIndex--;
+// 测验：直接看答案
+document.getElementById('btn-show-answer').addEventListener('click', () => {
+    currentWordObj.stage = 0; // 算作不会，进度重置
+    learningQueue.push(currentWordObj);
     showDetails();
 });
 
-// 进入详情页 (展示音标、例句、词组)
+// 认识/不认识 点击 (Stage 1 & 2)
+document.getElementById('btn-recognize').addEventListener('click', () => {
+    if (currentWordObj.stage === 1) {
+        // 阶段 1 认识 -> 升级到阶段 2
+        currentWordObj.stage = 2;
+        learningQueue.push(currentWordObj);
+    } else if (currentWordObj.stage === 2) {
+        // 阶段 2 认识 -> 彻底掌握！不加入队列了
+        learnedCount++;
+    }
+    showDetails();
+});
+
+document.getElementById('btn-not-recognize').addEventListener('click', () => {
+    // 只要不认识，无论在阶段1还是2，全部掉回阶段 0
+    currentWordObj.stage = 0;
+    learningQueue.push(currentWordObj);
+    showDetails();
+});
+
+// 提示一下按钮 (算作不认识，但立刻展示详情)
+document.getElementById('btn-hint').addEventListener('click', () => {
+    document.getElementById('btn-not-recognize').click(); 
+});
+
+// 展示详情页 (通用)
 function showDetails() {
-    const currentWord = portugueseVocabulary[currentIndex < 0 ? 0 : currentIndex]; // 防止负数越界
+    appRoot.className = 'bg-mountain'; // 详情页恢复默认背景
     
-    // 填充顶部详情
-    elWordPhoneticText.innerText = currentWord.phonetic;
-    elWordPos.innerText = currentWord.pos;
-    elWordZhTitle.innerText = currentWord.zh;
     elWordHeaderDetails.classList.remove('hidden');
+    wordZhArea.classList.remove('hidden'); // 终于显示中文了
 
-    // 填充例句
-    elExamplePt.innerText = currentWord.example.pt;
-    elExampleZh.innerText = currentWord.example.zh;
+    // 隐藏之前的测试区
+    quizArea.classList.add('hidden');
+    recognizeArea.classList.add('hidden');
+    footerQuiz.classList.add('hidden');
+    footerRecognize.classList.add('hidden');
 
-    // 填充词组搭配
-    phrasesContainer.innerHTML = ''; // 清空旧数据
-    if (currentWord.phrases && currentWord.phrases.length > 0) {
-        currentWord.phrases.forEach(phrase => {
-            const parts = phrase.split(' '); // 简单拆分葡文和中文(假设数据用空格分隔了中文)
-            // 简单处理：找到第一个中文字符的索引
+    // 填充详情
+    elExamplePt.innerText = currentWordObj.example.pt;
+    elExampleZh.innerText = currentWordObj.example.zh;
+
+    phrasesContainer.innerHTML = '';
+    if (currentWordObj.phrases && currentWordObj.phrases.length > 0) {
+        currentWordObj.phrases.forEach(phrase => {
             const zhIndex = phrase.search(/[\u4e00-\u9fa5]/); 
             const ptPart = zhIndex > 0 ? phrase.substring(0, zhIndex).trim() : phrase;
             const zhPart = zhIndex > 0 ? phrase.substring(zhIndex).trim() : '';
-
-            phrasesContainer.innerHTML += `
-                <div class="phrase-item">
-                    <p class="phrase-pt">${ptPart}</p>
-                    <p class="phrase-zh">${zhPart}</p>
-                </div>
-            `;
+            phrasesContainer.innerHTML += `<div class="phrase-item"><p class="phrase-pt">${ptPart}</p><p class="phrase-zh">${zhPart}</p></div>`;
         });
         phrasesContainer.style.display = 'block';
     } else {
         phrasesContainer.style.display = 'none';
     }
 
-    // 切换界面显示
-    quizArea.classList.add('hidden');
+    // 显示详情区和下一词按钮
     detailArea.classList.remove('hidden');
-    btnShowAnswer.classList.add('hidden');
-    btnNext.classList.remove('hidden');
+    footerDetail.classList.remove('hidden');
 }
 
 // 下一个单词
-btnNext.addEventListener('click', () => {
-    currentIndex++;
-    loadWord();
+document.getElementById('btn-next').addEventListener('click', () => {
+    loadNextState();
 });
