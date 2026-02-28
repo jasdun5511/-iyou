@@ -69,18 +69,23 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
 
-/* ================== 新增：固定高度的 Tab 容器 ================== */
+/* ================== 固定高度的 Tab 容器 ================== */
 #tab-content-container {
-    height: 160px; /* 锁死高度，无论内容多少卡片都不会变大变小 */
-    overflow-y: auto; /* 内容多了可以在内部滑动 */
+    height: 160px; /* 锁死固定高度，保持卡片大小不变 */
+    overflow-y: auto; /* 依然允许手指在里面上下滑动看多余的内容 */
     margin-bottom: 15px;
     
-    /* 隐藏丑陋的浏览器默认滚动条，保持App质感 */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    /* 彻底隐藏 IE, Edge 和 Firefox 的滚动条 */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
 }
+
+/* 彻底隐藏 Chrome, Safari, Opera (包括大部分手机浏览器) 的滚动条 */
 #tab-content-container::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
 }
 /* ============================================================= */
 
