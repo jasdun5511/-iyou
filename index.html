@@ -49,7 +49,10 @@
                 <div class="word-section">
                     <div class="word-row">
                         <h1 id="word-pt">mesmo</h1>
-                        <div class="progress-dots">
+                        
+                        <span id="word-success-badge" class="success-badge hidden"><i class="fa-solid fa-circle-check"></i></span>
+                        
+                        <div class="progress-dots" id="progress-dots">
                             <span class="dot"></span>
                             <span class="dot"></span>
                             <span class="dot"></span>
@@ -59,6 +62,11 @@
                     <div class="phonetic-row" id="phonetic-container">
                         <span class="accent-tag">葡 <i class="fa-solid fa-volume-low"></i></span>
                         <span id="word-phonetic-text">/'mez.mu/</span>
+                    </div>
+
+                    <div id="skeleton-bars" class="skeleton-bars hidden">
+                        <div class="skeleton-line short"></div>
+                        <div class="skeleton-line long"></div>
                     </div>
 
                     <div id="definition-area" class="hidden">
@@ -84,23 +92,65 @@
                     </div>
                 </div>
 
+                <div id="recognize-area" class="hidden">
+                    <div id="recognize-sentence-card" class="card sentence-card hidden">
+                        <p id="recognize-example-pt" class="en-text">...</p>
+                    </div>
+                    <div id="recognize-blind-text" class="hidden">
+                        <p class="hint-text" style="text-align: center; margin-top: 100px;">本词最后一关😉：请在无提示的情况下判断</p>
+                    </div>
+                    <div class="hint-btn-container" id="btn-hint">
+                        <div class="bulb-icon"><i class="fa-regular fa-lightbulb"></i></div>
+                        <span>提示一下</span>
+                    </div>
+                </div>
+
                 <div id="detail-area" class="hidden">
                     <div class="card sentence-card">
                         <p id="word-example-pt" class="en-text">...</p>
                         <p id="word-example-zh" class="zh-text">...</p>
                     </div>
-                    <div class="card phrases-card" id="phrases-container"></div>
+                    <div class="card phrases-card">
+                        <div id="phrases-container"></div>
+                        <div class="card-footer-tabs">
+                            <div class="tabs-left">
+                                <span class="tab active">词组搭配</span>
+                                <span class="tab">派生</span>
+                                <span class="tab">词根</span>
+                                <span class="tab">近义</span>
+                            </div>
+                            <div class="tabs-right">
+                                <i class="fa-solid fa-pen"></i>
+                                <i class="fa-solid fa-bars-staggered"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
 
             <footer class="bottom-action">
-                <div id="footer-quiz" class="action-item" onclick="showAnswerDirectly()">
-                    <span>看答案</span>
-                    <div class="line red"></div>
+                <div id="footer-quiz" class="action-group hidden">
+                    <div class="action-item" onclick="showAnswerDirectly()">
+                        <span>看答案</span><div class="line red"></div>
+                    </div>
                 </div>
-                <div id="footer-next" class="action-item hidden" onclick="loadNextState()">
-                    <span>下一词</span>
-                    <div class="line green"></div>
+                
+                <div id="footer-recognize" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-recognize">
+                        <span>认识</span><div class="line green"></div>
+                    </div>
+                    <div class="action-item" id="btn-not-recognize">
+                        <span>不认识</span><div class="line red"></div>
+                    </div>
+                </div>
+
+                <div id="footer-detail" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-next">
+                        <span>下一词</span><div class="line green"></div>
+                    </div>
+                    <div class="action-item" id="btn-forgot">
+                        <span>记错了</span><div class="line red"></div>
+                    </div>
                 </div>
             </footer>
         </div>
