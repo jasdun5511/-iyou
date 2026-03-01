@@ -1,4 +1,5 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+/* 彻底锁死整个网页的滑动 */
 body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hidden; }
 
 #app {
@@ -27,7 +28,16 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .top-bar { display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 40px; }
 .top-bar .left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .top-bar .right { display: flex; gap: 20px; }
-.content-area { flex-grow: 1; overflow-y: auto; padding-bottom: 80px; }
+
+/* ================== 核心修改处 ================== */
+.content-area { 
+    flex-grow: 1; 
+    /* 这里原来是 overflow-y: auto，导致屏幕右侧出现大滚动条 */
+    /* 现在改成 hidden，彻底锁死主屏幕的滑动！ */
+    overflow: hidden; 
+    padding-bottom: 80px; 
+}
+/* ============================================== */
 
 /* 单词行 */
 .word-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 15px; position: relative; }
@@ -68,15 +78,14 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .en-text strong { font-weight: 600; }
 .zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-
-/* ================== 固定高度的 Tab 容器 ================== */
+/* ================== 核心修改处 ================== */
 #tab-content-container {
     height: 160px;
-    overflow: hidden; /* 彻底禁用滚轮和滑动，隐藏多余内容 */
+    /* 彻底禁用卡片内部的滑动，隐藏多余内容 */
+    overflow: hidden; 
     margin-bottom: 15px;
 }
-/* ============================================================= */
-
+/* ============================================== */
 
 .phrase-item { margin-bottom: 15px; }
 .phrase-item:last-child { margin-bottom: 0; }
