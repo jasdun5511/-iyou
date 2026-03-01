@@ -115,3 +115,56 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .line.green { background-color: #2ecc71; }
 
 .hidden { display: none !important; }
+
+/* ================== 新增：画廊按钮与视图样式 ================== */
+
+/* 主详情页里的右下角重叠卡片小图标 */
+.gallery-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 15px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 5px;
+}
+.gallery-btn:active {
+    color: #fff;
+}
+
+/* 画廊视图的主体滑动区 */
+.gallery-scroll-area {
+    flex-grow: 1;
+    overflow-y: auto; /* 画廊必须能滑，否则看不完句子 */
+    padding: 0 24px 40px 24px;
+    
+    /* 彻底隐藏滚动条，保持清爽 */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+}
+.gallery-scroll-area::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+/* 画廊里的单张卡片 */
+.gallery-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 15px;
+}
+.gallery-card:last-child {
+    margin-bottom: 0;
+}
+.gallery-card-title {
+    font-size: 0.85rem;
+    color: #f39c12; /* 用一点亮色区分意思的标题 */
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+/* ============================================================= */
+
