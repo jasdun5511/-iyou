@@ -51,7 +51,9 @@
                         <h1 id="word-pt">mesmo</h1>
                         <span id="word-success-badge" class="success-badge hidden"><i class="fa-solid fa-circle-check"></i></span>
                         <div class="progress-dots" id="progress-dots">
-                            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
                         </div>
                     </div>
                     
@@ -94,15 +96,22 @@
                 </div>
 
                 <div id="detail-area" class="hidden">
-                    <div class="card sentence-card" style="position: relative;">
-                        <p id="word-example-pt" class="en-text">...</p>
-                        <p id="word-example-zh" class="zh-text">...</p>
+                    
+                    <div class="card sentence-card carousel-container">
+                        <div class="carousel-wrapper" id="meaning-carousel">
+                            </div>
+                        
+                        <div class="carousel-pagination" id="carousel-dots">
+                            </div>
+
                         <div class="gallery-btn" id="btn-open-gallery">
                             <i class="fa-regular fa-clone"></i>
                         </div>
                     </div>
+
                     <div class="card phrases-card">
                         <div id="tab-content-container"></div>
+                        
                         <div class="card-footer-tabs">
                             <div class="tabs-left">
                                 <span class="tab active" data-target="phrases">词组搭配</span>
@@ -121,15 +130,27 @@
 
             <footer class="bottom-action">
                 <div id="footer-quiz" class="action-group hidden">
-                    <div class="action-item" onclick="showAnswerDirectly()"><span>看答案</span><div class="line red"></div></div>
+                    <div class="action-item" onclick="showAnswerDirectly()">
+                        <span>看答案</span><div class="line red"></div>
+                    </div>
                 </div>
+                
                 <div id="footer-recognize" class="action-group dual-btns hidden">
-                    <div class="action-item" id="btn-recognize"><span>认识</span><div class="line green"></div></div>
-                    <div class="action-item" id="btn-not-recognize"><span>不认识</span><div class="line red"></div></div>
+                    <div class="action-item" id="btn-recognize">
+                        <span>认识</span><div class="line green"></div>
+                    </div>
+                    <div class="action-item" id="btn-not-recognize">
+                        <span>不认识</span><div class="line red"></div>
+                    </div>
                 </div>
+
                 <div id="footer-detail" class="action-group dual-btns hidden">
-                    <div class="action-item" id="btn-next"><span>下一词</span><div class="line green"></div></div>
-                    <div class="action-item" id="btn-forgot"><span>记错了</span><div class="line red"></div></div>
+                    <div class="action-item" id="btn-next">
+                        <span>下一词</span><div class="line green"></div>
+                    </div>
+                    <div class="action-item" id="btn-forgot">
+                        <span>记错了</span><div class="line red"></div>
+                    </div>
                 </div>
             </footer>
         </div>
@@ -146,7 +167,8 @@
             <main class="gallery-scroll-area" id="gallery-content">
                 </main>
         </div>
-        </div>
+
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
