@@ -1,5 +1,4 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-/* 彻底锁死整个网页的滑动 */
 body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hidden; }
 
 #app {
@@ -29,22 +28,16 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .top-bar .left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .top-bar .right { display: flex; gap: 20px; }
 
-/* ================== 核心修改处 ================== */
-.content-area { 
-    flex-grow: 1; 
-    /* 这里原来是 overflow-y: auto，导致屏幕右侧出现大滚动条 */
-    /* 现在改成 hidden，彻底锁死主屏幕的滑动！ */
-    overflow: hidden; 
-    padding-bottom: 80px; 
-}
-/* ============================================== */
+/* 绝对锁死上下滑动 */
+.content-area { flex-grow: 1; overflow: hidden; padding-bottom: 80px; }
 
 /* 单词行 */
 .word-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 15px; position: relative; }
 #word-pt { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1; }
-
 .success-badge { color: #34c759; font-size: 1.2rem; margin-bottom: 18px; } 
-.progress-dots { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; margin-left: 5px; }
+
+/* 进度点：改为从下往上 (column-reverse 魔法) */
+.progress-dots { display: flex; flex-direction: column-reverse; gap: 4px; margin-bottom: 6px; margin-left: 5px; }
 .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.3s; }
 .dot.active { background: #2ecc71; box-shadow: 0 0 4px rgba(46, 204, 113, 0.4); }
 
@@ -71,28 +64,38 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .opt-pos { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 6px; display: block; }
 .opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; }
 
-/* 详情卡片 */
+/* 卡片基础样式 */
 .card { background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
 .sentence-card { background: rgba(255, 255, 255, 0.07); }
+
+/* ================= 轮播考义卡片专属样式 ================= */
+.carousel-container { position: relative; overflow: hidden; padding: 20px 20px 30px 20px; }
+.carousel-wrapper { display: flex; transition: transform 0.3s ease; width: 100%; }
+.carousel-slide { min-width: 100%; box-sizing: border-box; }
+.meaning-tag { font-size: 0.75rem; color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 4px; margin-bottom: 12px; display: inline-block; font-weight: 500;}
 .en-text { font-size: 1.05rem; line-height: 1.5; margin-bottom: 8px; }
 .en-text strong { font-weight: 600; }
 .zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-/* ================== 核心修改处 ================== */
-#tab-content-container {
-    height: 160px;
-    /* 彻底禁用卡片内部的滑动，隐藏多余内容 */
-    overflow: hidden; 
-    margin-bottom: 15px;
-}
-/* ============================================== */
+/* 翻页圆点 */
+.carousel-pagination { display: flex; justify-content: center; gap: 6px; position: absolute; bottom: 12px; left: 0; width: 100%; }
+.page-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.3s; }
+.page-dot.active { background: #fff; }
+
+/* 画廊入口小图标 */
+.gallery-btn { position: absolute; bottom: 10px; right: 15px; color: rgba(255,255,255,0.4); font-size: 1.15rem; cursor: pointer; padding: 5px; z-index: 10; transition: color 0.2s; }
+.gallery-btn:active { color: #fff; }
+/* ======================================================= */
+
+/* Tab 容器 */
+#tab-content-container { height: 160px; overflow: hidden; margin-bottom: 15px; }
 
 .phrase-item { margin-bottom: 15px; }
 .phrase-item:last-child { margin-bottom: 0; }
 .phrase-en { font-size: 0.95rem; margin-bottom: 2px; }
 .phrase-zh { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-/* 卡片底部小菜单 */
+/* 底部小菜单 */
 .card-footer-tabs { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
 .tabs-left { display: flex; gap: 15px; }
 .tab { cursor: pointer; transition: color 0.2s; }
@@ -116,55 +119,9 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 
 .hidden { display: none !important; }
 
-/* ================== 新增：画廊按钮与视图样式 ================== */
-
-/* 主详情页里的右下角重叠卡片小图标 */
-.gallery-btn {
-    position: absolute;
-    bottom: 12px;
-    right: 15px;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: color 0.2s;
-    padding: 5px;
-}
-.gallery-btn:active {
-    color: #fff;
-}
-
-/* 画廊视图的主体滑动区 */
-.gallery-scroll-area {
-    flex-grow: 1;
-    overflow-y: auto; /* 画廊必须能滑，否则看不完句子 */
-    padding: 0 24px 40px 24px;
-    
-    /* 彻底隐藏滚动条，保持清爽 */
-    -ms-overflow-style: none;  
-    scrollbar-width: none;  
-}
-.gallery-scroll-area::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
-    background: transparent;
-}
-
-/* 画廊里的单张卡片 */
-.gallery-card {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 22px;
-    margin-bottom: 15px;
-}
-.gallery-card:last-child {
-    margin-bottom: 0;
-}
-.gallery-card-title {
-    font-size: 0.85rem;
-    color: #f39c12; /* 用一点亮色区分意思的标题 */
-    margin-bottom: 12px;
-    font-weight: 500;
-}
-/* ============================================================= */
-
+/* 画廊滚动视图 */
+.gallery-scroll-area { flex-grow: 1; overflow-y: auto; padding: 0 24px 40px 24px; -ms-overflow-style: none; scrollbar-width: none; }
+.gallery-scroll-area::-webkit-scrollbar { display: none; width: 0; height: 0; background: transparent; }
+.gallery-card { background: rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 22px; margin-bottom: 15px; }
+.gallery-card:last-child { margin-bottom: 0; }
+.gallery-card-title { font-size: 0.85rem; color: #f39c12; margin-bottom: 12px; font-weight: 500; }
