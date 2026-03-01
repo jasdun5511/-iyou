@@ -1,10 +1,20 @@
-// 升级版数据：新增 allExamples 数组，支持画廊视图显示多种意思的造句
+// 升级版数据：重点加入了 allExamples 数组，支持多考义（不同意思）的左右滑动切换
 const vocabularyData = [
     { 
+        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", 
+        // allExamples 存放该词的所有考义和例句
+        allExamples: [
+            { title: "adv. 甚至，即使", pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil de encontrar.", zh: "即使在城市里，工作也很难找。" },
+            { title: "adj. 同一个的", pt: "Nós moramos na <strong>mesma</strong> rua.", zh: "我们住在同一条街上。" },
+            { title: "pron. (强调) 自己", pt: "Eu <strong>mesmo</strong> fiz o bolo.", zh: "我自己做了蛋糕。" }
+        ],
+        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"],
+        derivatives: ["mesmíssimo (adj. 完全一样的)"],
+        roots: ["源自拉丁语 'metipsimus' (正是那个)"],
+        synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"]
+    },
+    { 
         pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿；促进，刺激", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
-        // 默认显示在详情页的例句 (取 allExamples 的第一句)
-        example: { pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
-        // 画廊里显示的所有例句，支持添加“小标题”区分意思
         allExamples: [
             { title: "vt. 鼓励，怂恿", pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
             { title: "vt. 促进，刺激", pt: "O governo deve <strong>encorajar</strong> o investimento estrangeiro.", zh: "政府应该促进外国投资。" }
@@ -12,20 +22,28 @@ const vocabularyData = [
         phrases: ["encorajar a violência 助长暴力", "encorajar o investimento 促进投资"],
         derivatives: ["coragem (n. 勇气)", "encorajamento (n. 鼓励，怂恿)"],
         roots: ["en- (使...) + coragem (勇气) + -ar (动词后缀)"],
-        synonyms: ["animar (vt. 使兴奋，鼓励)", "estimular (vt. 刺激，激励)"]
+        synonyms: ["animar (vt. 使兴奋)", "estimular (vt. 刺激)"]
     },
     { 
-        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", 
-        example: { pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil de encontrar.", zh: "即使在城市里，工作也很难找。" },
+        pt: "salvar", pos: "vt.", zh: "储藏，贮存；(计算机) 存储", phonetic: "/sawˈvaɾ/", 
         allExamples: [
-            { title: "adv. 甚至，即使", pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil de encontrar.", zh: "即使在城市里，工作也很难找。" },
-            { title: "adj. 同一个的", pt: "Nós moramos na <strong>mesma</strong> rua.", zh: "我们住在同一条街上。" },
-            { title: "pron. 自己", pt: "Eu <strong>mesmo</strong> fiz o bolo.", zh: "我自己做了蛋糕。" }
+            { title: "vt. (计算机) 存储", pt: "Não se esqueça de <strong>salvar</strong> o documento.", zh: "别忘了保存文件。" },
+            { title: "vt. 拯救，救助", pt: "O médico conseguiu <strong>salvar</strong> a vida do paciente.", zh: "医生成功挽救了病人的生命。" }
         ],
-        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"],
-        derivatives: ["mesmíssimo (adj. 完全一样的)"],
-        roots: ["源自拉丁语 'metipsimus' (正是那个)"],
-        synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"]
+        phrases: ["salvar o arquivo 保存文件", "salvar a vida 救命"],
+        derivatives: ["salvador (n. 救世主)", "salvação (n. 拯救)"],
+        roots: ["源自晚期拉丁语 'salvare' (使安全)"],
+        synonyms: ["guardar (vt. 保存)", "resgatar (vt. 营救)"]
+    },
+    { 
+        pt: "física", pos: "n.", zh: "物理学", phonetic: "/ˈfi.zi.kɐ/", 
+        allExamples: [
+            { title: "n. 物理学", pt: "A <strong>física</strong> estuda a natureza e suas propriedades.", zh: "物理学研究自然及其属性。" }
+        ],
+        phrases: ["física quântica 量子物理", "física aplicada 应用物理"],
+        derivatives: ["físico (adj. 物理的)"],
+        roots: ["源自古希腊语 'phusis' (自然)"],
+        synonyms: []
     }
 ];
 
@@ -35,10 +53,16 @@ let totalWords = 0;
 let currentWordObj = null;
 let currentOptionsData = [];
 
+// === 轮播图专属状态 ===
+let currentSlideIndex = 0;
+let touchStartX = 0;
+let touchEndX = 0;
+
+// DOM 元素获取
 const views = { 
     home: document.getElementById('home-view'), 
     learning: document.getElementById('learning-view'),
-    gallery: document.getElementById('gallery-view') // 新增画廊视图
+    gallery: document.getElementById('gallery-view') 
 };
 
 const els = {
@@ -58,8 +82,6 @@ const els = {
     detailArea: document.getElementById('detail-area'),
     options: document.querySelectorAll('.option'), 
     optContents: document.querySelectorAll('.option .opt-content'), 
-    exPt: document.getElementById('word-example-pt'),
-    exZh: document.getElementById('word-example-zh'),
     tabContent: document.getElementById('tab-content-container'),
     tabs: document.querySelectorAll('.tab'),
     recogExPt: document.getElementById('recognize-example-pt'),
@@ -68,7 +90,9 @@ const els = {
     fQuiz: document.getElementById('footer-quiz'),
     fRecog: document.getElementById('footer-recognize'),
     fDetail: document.getElementById('footer-detail'),
-    galleryContent: document.getElementById('gallery-content') // 画廊内容区
+    galleryContent: document.getElementById('gallery-content'),
+    carouselWrapper: document.getElementById('meaning-carousel'),
+    carouselDots: document.getElementById('carousel-dots')
 };
 
 document.getElementById('learn-count').innerText = vocabularyData.length;
@@ -105,6 +129,8 @@ function shuffleArray(array) {
     return array;
 }
 
+// 因为 CSS 使用了 column-reverse，所以在 DOM 里的第一个点，其实是在最下方！
+// 完美实现了“由下往上”逐个亮起的效果
 function updateDots(stage) {
     if (stage >= 3) {
         els.dotsContainer.classList.add('hidden');
@@ -187,7 +213,8 @@ function renderStage1() {
     els.recognizeArea.classList.remove('hidden');
     els.recogSentenceCard.classList.remove('hidden');
     els.recogBlindText.classList.add('hidden');
-    els.recogExPt.innerHTML = currentWordObj.example.pt; 
+    // 取该词第一个意思的葡语例句展示
+    els.recogExPt.innerHTML = currentWordObj.allExamples[0].pt; 
     els.fRecog.classList.remove('hidden');
 }
 
@@ -200,6 +227,7 @@ function renderStage2() {
     els.fRecog.classList.remove('hidden');
 }
 
+// 选项交互与颜色反馈
 window.checkAnswer = function(selectedIndex) {
     els.options.forEach(el => el.style.pointerEvents = 'none');
     
@@ -212,14 +240,16 @@ window.checkAnswer = function(selectedIndex) {
         currentWordObj.stage = 1; 
         learningQueue.push(currentWordObj);
         updateDots(1); 
-        setTimeout(() => showDetails(), 400); 
+        setTimeout(() => showDetails(), 400); // 物理延迟
     } else {
         currentWordObj.stage = 0; 
         learningQueue.push(currentWordObj);
         updateDots(0); 
         
+        // 【核心交互还原】选错的答案文字变红
         els.optContents[selectedIndex].innerHTML = `<span style="color:#ff6b6b; font-size: 1.1rem; text-align:center; display:block; width:100%; font-weight:bold;">${selectedData.wordObj.pt}</span>`;
         
+        // 自动在正确的答案上亮起绿色小灯提示
         currentOptionsData.forEach((opt, index) => {
             if (opt.isCorrect) {
                 els.options[index].classList.add('active'); 
@@ -253,7 +283,7 @@ window.showAnswerDirectly = function() {
     setTimeout(() => showDetails(), 150);
 }
 
-// Tab 菜单
+// ================= Tab 菜单交互 =================
 els.tabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
         els.tabs.forEach(t => t.classList.remove('active'));
@@ -281,12 +311,81 @@ function renderTabContent(targetType) {
             const en = splitIndex > 0 ? item.substring(0, splitIndex).trim() : item;
             const zh = splitIndex > 0 ? item.substring(splitIndex).trim() : '';
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
-        } 
-        else {
+        } else {
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
         }
     });
 }
+
+
+// ================= 核心：考义轮播与滑动算法 =================
+function renderCarousel() {
+    els.carouselWrapper.innerHTML = '';
+    els.carouselDots.innerHTML = '';
+    currentSlideIndex = 0; // 重置到第一张
+
+    const examples = currentWordObj.allExamples;
+    
+    // 生成卡片和底部翻页圆点
+    examples.forEach((ex, index) => {
+        const titleHtml = ex.title ? `<span class="meaning-tag">${ex.title}</span>` : '';
+        els.carouselWrapper.innerHTML += `
+            <div class="carousel-slide">
+                ${titleHtml}
+                <p class="en-text">${ex.pt}</p>
+                <p class="zh-text">${ex.zh}</p>
+            </div>
+        `;
+        
+        // 如果多于一个意思，才生成底部指示小圆点
+        if (examples.length > 1) {
+            els.carouselDots.innerHTML += `<span class="page-dot ${index === 0 ? 'active' : ''}"></span>`;
+        }
+    });
+
+    updateCarouselTransform();
+}
+
+function updateCarouselTransform() {
+    els.carouselWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+    // 更新点点高亮
+    const dots = els.carouselDots.querySelectorAll('.page-dot');
+    if (dots.length > 0) {
+        dots.forEach((dot, idx) => {
+            idx === currentSlideIndex ? dot.classList.add('active') : dot.classList.remove('active');
+        });
+    }
+}
+
+// 触摸滑动事件监听
+els.carouselWrapper.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+els.carouselWrapper.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleCarouselSwipe();
+});
+
+function handleCarouselSwipe() {
+    const minSwipeDistance = 40; // 滑动触发距离
+    const examplesLen = currentWordObj.allExamples.length;
+    
+    // 只有在考义多于1个的时候才允许滑动
+    if (examplesLen > 1) {
+        // 向左划 (看下一张)
+        if (touchEndX < touchStartX - minSwipeDistance) {
+            if (currentSlideIndex < examplesLen - 1) currentSlideIndex++;
+        }
+        // 向右划 (看上一张)
+        if (touchEndX > touchStartX + minSwipeDistance) {
+            if (currentSlideIndex > 0) currentSlideIndex--;
+        }
+        updateCarouselTransform();
+    }
+}
+// =========================================================
+
 
 function showDetails() {
     els.app.className = 'bg-blur'; 
@@ -300,8 +399,8 @@ function showDetails() {
     els.detailArea.classList.remove('hidden');
     els.fDetail.classList.remove('hidden');
 
-    els.exPt.innerHTML = currentWordObj.example.pt;
-    els.exZh.innerText = currentWordObj.example.zh;
+    // 渲染带有滑动功能的例句区
+    renderCarousel();
 
     els.tabs[0].click(); 
 }
@@ -312,48 +411,30 @@ document.getElementById('btn-next').addEventListener('click', () => {
 });
 
 document.getElementById('btn-forgot').addEventListener('click', () => {
-    if (currentWordObj.stage === 3) {
-        learnedCount--; 
-    }
+    if (currentWordObj.stage === 3) learnedCount--; 
     currentWordObj.stage = 0;
     learningQueue.push(currentWordObj);
     setTimeout(() => loadNextState(), 150);
 });
 
-// ================= 新增：画廊系统逻辑 =================
-
-// 1. 点击例句右下角的图标，打开全屏画廊
+// ================= 画廊系统 =================
 document.getElementById('btn-open-gallery').addEventListener('click', () => {
     views.learning.classList.replace('active', 'hidden');
     views.gallery.classList.replace('hidden', 'active');
     
-    // 渲染画廊内容
     els.galleryContent.innerHTML = '';
     
-    // 渲染所有的例句卡片
-    if (currentWordObj.allExamples && currentWordObj.allExamples.length > 0) {
-        currentWordObj.allExamples.forEach(ex => {
-            // 如果有 title (比如 "vt. 鼓励，怂恿") 就加上一个小标题
-            const titleHtml = ex.title ? `<div class="gallery-card-title">${ex.title}</div>` : '';
-            els.galleryContent.innerHTML += `
-                <div class="gallery-card">
-                    ${titleHtml}
-                    <p class="en-text">${ex.pt}</p>
-                    <p class="zh-text">${ex.zh}</p>
-                </div>
-            `;
-        });
-    } else {
-        // 如果没配置 allExamples，就兜底用主 example
+    currentWordObj.allExamples.forEach(ex => {
+        const titleHtml = ex.title ? `<div class="gallery-card-title">${ex.title}</div>` : '';
         els.galleryContent.innerHTML += `
             <div class="gallery-card">
-                <p class="en-text">${currentWordObj.example.pt}</p>
-                <p class="zh-text">${currentWordObj.example.zh}</p>
+                ${titleHtml}
+                <p class="en-text">${ex.pt}</p>
+                <p class="zh-text">${ex.zh}</p>
             </div>
         `;
-    }
+    });
 
-    // 在画廊的最下方，追加该单词的词组搭配卡片
     if (currentWordObj.phrases && currentWordObj.phrases.length > 0) {
         let phrasesHtml = `<div class="gallery-card"><div class="gallery-card-title">词组搭配</div>`;
         currentWordObj.phrases.forEach(item => {
@@ -367,7 +448,6 @@ document.getElementById('btn-open-gallery').addEventListener('click', () => {
     }
 });
 
-// 2. 点击画廊左上角的返回按钮，退回学习页
 document.getElementById('btn-back-gallery').addEventListener('click', () => {
     views.gallery.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
