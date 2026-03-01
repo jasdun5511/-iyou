@@ -1,4 +1,4 @@
-// 升级版数据：扩展了词汇量，包含真实的派生、词根和近义词数据
+// 升级版数据：扩展了词汇量（包含物理、编程、截图原词 re·union），包含真实的派生、词根数据
 const vocabularyData = [
     { 
         pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿；促进，刺激", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
@@ -25,12 +25,20 @@ const vocabularyData = [
         synonyms: ["guardar (vt. 保存，看守)", "preservar (vt. 保护，维护)"]
     },
     { 
+        pt: "reunion", pos: "n.", zh: "聚会，重聚，重逢；再联合", phonetic: "/ˌriːˈjuːniən/", 
+        example: { pt: "Patrick was going to have that <strong>reunion</strong> with his mother.", zh: "帕特里克想和他母亲团聚。" },
+        phrases: ["a family reunion 家庭聚会", "a mother-daughter reunion 母女重逢"],
+        derivatives: ["reunir (vt. 使重新聚集)", "reunificação (n. 重新统一)"],
+        roots: ["re- (再) + union (联合)"],
+        synonyms: ["ajuntamento (n. 聚集)", "aglomeração (n. 聚集，团聚)"]
+    },
+    { 
         pt: "física", pos: "n.", zh: "物理学", phonetic: "/ˈfi.zi.kɐ/", 
         example: { pt: "A <strong>física</strong> estuda a natureza e suas propriedades.", zh: "物理学研究自然及其属性。" },
         phrases: ["física quântica 量子物理", "física aplicada 应用物理"],
         derivatives: ["físico (adj. 物理的 / n. 物理学家)"],
         roots: ["源自古希腊语 'phusis' (自然)"],
-        synonyms: []
+        synonyms: ["fisiologia (n. 生理学)"]
     },
     { 
         pt: "variável", pos: "n.", zh: "变量；可变物", phonetic: "/va.ɾiˈa.vew/", 
@@ -155,6 +163,7 @@ window.loadNextState = function() {
     currentWordObj = learningQueue.shift();
     
     els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
+    // 此处已修复，不再显示带点分隔的 re·union，而是干净的 reunion
     els.wordPt.innerText = currentWordObj.pt; 
     els.phonetic.innerText = currentWordObj.phonetic;
     els.pos.innerText = currentWordObj.pos;
@@ -189,23 +198,24 @@ function renderStage0() {
     let wrongCandidates = vocabularyData.filter(w => w.pt !== currentWordObj.pt);
     shuffleArray(wrongCandidates);
     
-    // 动态取错误选项，防止词库数量少于4个时报错
+    // 此处修复：即使总词数小于4，也会取到所有的错误选项。
     for (let i = 0; i < 3 && i < wrongCandidates.length; i++) {
         options.push({ wordObj: wrongCandidates[i], isCorrect: false });
     }
     shuffleArray(options);
     currentOptionsData = options;
 
+    // 此处修复：即使总词数小于4（如只有3词），第4个按钮也会正确显示隐藏，防报错。
     els.options.forEach((optContainer, index) => {
         const contentEl = els.optContents[index];
         if (currentOptionsData[index]) {
             const data = currentOptionsData[index].wordObj;
             contentEl.innerHTML = `<span class="opt-pos">${data.pos}</span><span class="opt-zh">${data.zh}</span>`;
-            optContainer.style.display = 'flex'; // 确保显示
+            optContainer.style.display = 'flex'; // 确保显示按钮
             optContainer.style.pointerEvents = 'auto'; // 恢复可点击
-            optContainer.classList.remove('active'); // 移除高亮
+            optContainer.classList.remove('active'); // 移除按下态的高亮
         } else {
-            optContainer.style.display = 'none'; // 隐藏多余按钮
+            optContainer.style.display = 'none'; // 隐藏这个空按钮，防止报错卡死
         }
     });
 }
@@ -231,42 +241,59 @@ function renderStage2() {
     els.fRecog.classList.remove('hidden');
 }
 
-// 选项点击事件
+// ---------------- 物理延迟与手感优化 ---------------- //
+
 window.checkAnswer = function(selectedIndex) {
+    // 禁用所有选项点击，防止连续疯狂点击报错
     els.options.forEach(el => el.style.pointerEvents = 'none');
     
     const selectedData = currentOptionsData[selectedIndex];
     const clickedBtn = els.options[selectedIndex];
     
-    clickedBtn.classList.add('active'); // 按下态高亮
+    clickedBtn.classList.add('active'); // 给按下的按钮单独加上高亮样式
     
     if (selectedData.isCorrect) {
-        currentWordObj.stage = 1; 
+        // --- 核心：答对逻辑 ---
+        currentWordObj.stage = 1; // 升级
         learningQueue.push(currentWordObj);
-        updateDots(1);
-        setTimeout(() => showDetails(), 400); // 物理延迟手感
-    } else {
-        currentWordObj.stage = 0; 
-        learningQueue.push(currentWordObj);
-        updateDots(0);
+        updateDots(1); // 瞬间亮起第一个绿点给予奖励反馈
         
+        // 【关键】答对后，停留 0.4 秒，让用户看到选中态反馈，体验极佳，跟原生一样。
+        setTimeout(() => showDetails(), 400);
+    } else {
+        // --- 核心：答错逻辑 ---
+        currentWordObj.stage = 0; // 进度清零
+        learningQueue.push(currentWordObj);
+        updateDots(0); // 三个点瞬间全灭，心痛的感觉
+        
+        // 【核心还原】截图里的错误答案变红，同时绿色的正确答案自动出现：
+        // 1. 将错选项变为红色，文字改为葡语大词
         els.optContents[selectedIndex].innerHTML = `<span style="color:#ff6b6b; font-size: 1.1rem; text-align:center; display:block; width:100%; font-weight:bold;">${selectedData.wordObj.pt}</span>`;
+        
+        // 2. 将真正的正确答案变为绿色并高亮，自动提示（截图效果还原）
+        currentOptionsData.forEach((opt, index) => {
+            if (opt.isCorrect) {
+                const correctEl = els.options[index];
+                correctEl.classList.add('active'); // 模拟正确答案的光晕和绿灯提示，教育反馈
+            }
+        });
+        
         playAudio(selectedData.wordObj.pt);
+        // 【关键】答错后，停留 0.8 秒让用户充分看清错误和正确提示，然后跳转详情
         setTimeout(() => showDetails(), 800);
     }
 }
 
-// “认识”按钮
+// 其他“认识/不认识”按钮功能均维持原状
 document.getElementById('btn-recognize').addEventListener('click', () => {
     if (currentWordObj.stage === 1) {
         currentWordObj.stage = 2; learningQueue.push(currentWordObj); updateDots(2);
     } else if (currentWordObj.stage === 2) {
-        currentWordObj.stage = 3; learnedCount++; updateDots(3);
+        currentWordObj.stage = 3; learnedCount++; updateDots(3); // 这里会显示绿勾
     }
-    setTimeout(() => showDetails(), 150);
+    setTimeout(() => showDetails(), 150); // 细微物理手感
 });
 
-// “不认识”和“提示一下”按钮
 document.getElementById('btn-not-recognize').addEventListener('click', punishAndShow);
 document.getElementById('btn-hint').addEventListener('click', punishAndShow);
 
@@ -275,17 +302,19 @@ function punishAndShow() {
     setTimeout(() => showDetails(), 150);
 }
 
-// “直接看答案”按钮
 window.showAnswerDirectly = function() {
     currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
     setTimeout(() => showDetails(), 150);
 }
 
-// ================= Tab 菜单切换逻辑 =================
+// ================= Tab 菜单切换逻辑 (已修复且还原) =================
 els.tabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
+        // 移除所有 tab 的 active 状态
         els.tabs.forEach(t => t.classList.remove('active'));
+        // 当前点击的 tab 加上 active 状态
         e.target.classList.add('active');
+        // 根据 data-target 渲染对应的内容
         renderTabContent(e.target.dataset.target);
     });
 });
@@ -294,7 +323,7 @@ function renderTabContent(targetType) {
     els.tabContent.innerHTML = ''; 
     let contentData = currentWordObj[targetType] || [];
     
-    // 无数据时的完美居中显示
+    // 此处已修复：如果没有数据，让文字在固定高度容器中完美居中显示，体验高级
     if (contentData.length === 0) {
         els.tabContent.innerHTML = `
             <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
@@ -305,12 +334,14 @@ function renderTabContent(targetType) {
     }
 
     contentData.forEach(item => {
+        // 处理词组搭配的中文分隔 (reunion 截图还原)
         if (targetType === 'phrases') {
             const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
             const en = splitIndex > 0 ? item.substring(0, splitIndex).trim() : item;
             const zh = splitIndex > 0 ? item.substring(splitIndex).trim() : '';
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
         } 
+        // 渲染词根、近义词等 (encorajar 截图还原)
         else {
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
         }
@@ -319,7 +350,7 @@ function renderTabContent(targetType) {
 
 // 详情页展示
 function showDetails() {
-    els.app.className = 'bg-blur'; 
+    els.app.className = 'bg-blur'; // 回到暗黑背景，沉浸式解析
     els.skeletonBars.classList.add('hidden');
     els.quizArea.classList.add('hidden');
     els.recognizeArea.classList.add('hidden');
@@ -333,20 +364,23 @@ function showDetails() {
     els.exPt.innerHTML = currentWordObj.example.pt;
     els.exZh.innerText = currentWordObj.example.zh;
 
-    // 默认点击激活第一个Tab（词组搭配）
+    // 此处已还原：默认激活第一个Tab，还原截图
     els.tabs[0].click(); 
 }
 
 // 下一词
 document.getElementById('btn-next').addEventListener('click', () => {
+    // 增加细微手感
     setTimeout(() => loadNextState(), 150);
 });
 
 // 记错了
 document.getElementById('btn-forgot').addEventListener('click', () => {
+    // 如果已经学会（stage为3），扣除进度
     if (currentWordObj.stage === 3) {
-        learnedCount--; // 如果已经满级，需要扣除已学数量
+        learnedCount--; 
     }
+    // 进度打回0级，重新开始（不背单词硬核惩罚机制还原）
     currentWordObj.stage = 0;
     learningQueue.push(currentWordObj);
     setTimeout(() => loadNextState(), 150);
