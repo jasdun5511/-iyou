@@ -54,17 +54,14 @@
                             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
                         </div>
                     </div>
-                    
                     <div class="phonetic-row" id="phonetic-container">
                         <span class="accent-tag">葡 <i class="fa-solid fa-volume-low"></i></span>
                         <span id="word-phonetic-text">/'mez.mu/</span>
                     </div>
-
                     <div id="skeleton-bars" class="skeleton-bars hidden">
                         <div class="skeleton-line short"></div>
                         <div class="skeleton-line long"></div>
                     </div>
-
                     <div id="definition-area" class="hidden">
                         <div class="def-line"><span id="word-pos" class="pos-grey"></span> <span id="word-zh-title" class="zh-white"></span></div>
                     </div>
@@ -97,7 +94,7 @@
                     <div class="card sentence-card" style="position: relative;">
                         <p id="word-example-pt" class="en-text">...</p>
                         <p id="word-example-zh" class="zh-text">...</p>
-                        <div class="gallery-btn" id="btn-open-gallery">
+                        <div class="gallery-btn" id="btn-open-immersive">
                             <i class="fa-regular fa-clone"></i>
                         </div>
                     </div>
@@ -134,26 +131,56 @@
             </footer>
         </div>
 
-        <div id="gallery-view" class="view hidden bg-blur" style="z-index: 10;">
-            <header class="top-bar" style="margin-bottom: 20px;">
-                <div class="left" id="btn-back-gallery">
-                    <i class="fa-solid fa-chevron-left" style="font-size: 1.2rem;"></i>
-                </div>
-                <div style="flex-grow: 1; text-align: center; font-size: 1.1rem; font-weight: 500; margin-right: 22px; color: rgba(255,255,255,0.8);">
-                    考义
-                </div>
-            </header>
-            
-            <main class="gallery-carousel-container" id="gallery-carousel-container">
-                <div class="gallery-wrapper" id="gallery-wrapper">
-                    </div>
-                
-                <div class="carousel-pagination" id="gallery-dots">
-                    </div>
-            </main>
-        </div>
 
-    </div>
+        <div id="immersive-modal" class="view hidden" style="z-index: 50;">
+            <div class="immersive-bg" id="immersive-bg"></div>
+            
+            <div class="immersive-content-wrapper">
+                
+                <div class="immersive-upper" id="upper-layer-container">
+                    <div class="upper-header">
+                        <span class="source-tag" id="upper-source-tag">词典例句</span>
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </div>
+                    
+                    <div class="upper-sentence-box">
+                        <p class="im-en-sentence" id="im-en-sentence">
+                            Loading...
+                        </p>
+                        <p class="im-zh-sentence" id="im-zh-sentence">加载中...</p>
+                    </div>
+
+                    <div class="upper-pagination" id="upper-dots">
+                        </div>
+                </div>
+
+                <div class="immersive-lower" id="lower-layer-container">
+                    <div class="def-panel">
+                        <div class="def-content">
+                            <p class="im-pos" id="im-pos">adv.</p>
+                            <p class="im-en-def" id="im-en-def">English meaning goes here</p>
+                            <p class="im-zh-def" id="im-zh-def">中文解释释义</p>
+                        </div>
+                        <div class="meaning-counter" id="meaning-counter">1/1</div>
+                    </div>
+                </div>
+
+                <div class="immersive-footer">
+                    <div class="im-footer-btn left" id="im-btn-next-word">
+                        <i class="fa-solid fa-forward-step"></i> 下一词
+                    </div>
+                    
+                    <div class="global-pagination" id="global-dots">
+                        </div>
+
+                    <div class="im-footer-btn right" id="im-btn-close">
+                        <i class="fa-solid fa-angle-down"></i> 收起卡片
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        </div>
     <script src="script.js"></script>
 </body>
 </html>
