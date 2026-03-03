@@ -510,48 +510,106 @@ function updateGlobalDots() {
 }
 
 
-// ================= 序列 7：手势滑动侦听 (Touch Events) =================
+// ================= 序列 7：手势滑动侦听 (加入原生物理拖动引擎) =================
 
-let startX = 0;
-const SWIPE_THRESHOLD = 40; // 滑动阈值，超过 40px 判定为翻页
+const SWIPE_THRESHOLD = 50; // 调大一点翻页阈值，防止误触
 
-// 侦听上层视口 (滑动例句)
-els.upperWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
-els.upperWindow.addEventListener('touchend', e => {
-    let diff = e.changedTouches[0].screenX - startX;
-    const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
-    
-    if (totalEx > 1) {
-        if (diff < -SWIPE_THRESHOLD && currentExampleIndex < totalEx - 1) {
-            currentExampleIndex++; // 往左划
-            updateUpperTransform();
-        } else if (diff > SWIPE_THRESHOLD && currentExampleIndex > 0) {
-            currentExampleIndex--; // 往右划
-            updateUpperTransform();
-        }
-    }
+// ----------------------------------------------------
+// --- 上层例句视口 (物理拖动) ---
+// ----------------------------------------------------
+let upperStartX = 0;
+let upperIsDragging = false;
+
+els.upperWindow.addEventListener('touchstart', e => { 
+    upperStartX = e.touches[0].screenX; 
+    upperIsDragging = true;
+    // 核心 1：手指按下时，瞬间移除动画时间，让卡片零延迟“黏”住手指
+    els.upperTrack.style.transition = 'none'; 
 });
 
-// 侦听下层视口 (滑动考义)
-els.lowerWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
-els.lowerWindow.addEventListener('touchend', e => {
-    let diff = e.changedTouches[0].screenX - startX;
+els.upperWindow.addEventListener('touchmove', e => {
+    if (!upperIsDragging) return;
+    let diff = e.touches[0].screenX - upperStartX;
+    const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
+    
+    // 核心 2：边缘阻力效果 (橡皮筋回弹)。如果在第一张往右拉，或最后一张往左拉，增加巨大阻力
+    if ((currentExampleIndex === 0 && diff > 0) || (currentExampleIndex === totalEx - 1 && diff < 0)) {
+        diff = diff * 0.25; 
+    }
+    
+    // 核心 3：实时改变 translateX，让你拖动时就能看到下一张卡片
+    els.upperTrack.style.transform = `translateX(calc(-${currentExampleIndex * 100}% + ${diff}px))`;
+});
+
+els.upperWindow.addEventListener('touchend', e => {
+    if (!upperIsDragging) return;
+    upperIsDragging = false;
+    let diff = e.changedTouches[0].screenX - upperStartX;
+    const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
+    
+    // 核心 4：松手时，恢复顺滑的贝塞尔曲线过渡动画
+    els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff < 0 && currentExampleIndex < totalEx - 1) currentExampleIndex++; 
+        else if (diff > 0 && currentExampleIndex > 0) currentExampleIndex--; 
+    }
+    // 无论是否翻页成功，都执行一次标准对齐，实现“吸附”效果
+    updateUpperTransform(); 
+});
+
+
+// ----------------------------------------------------
+// --- 下层考义视口 (物理拖动) ---
+// ----------------------------------------------------
+let lowerStartX = 0;
+let lowerIsDragging = false;
+
+els.lowerWindow.addEventListener('touchstart', e => { 
+    lowerStartX = e.touches[0].screenX; 
+    lowerIsDragging = true;
+    els.lowerTrack.style.transition = 'none'; // 移除动画，黏住手指
+});
+
+els.lowerWindow.addEventListener('touchmove', e => {
+    if (!lowerIsDragging) return;
+    let diff = e.touches[0].screenX - lowerStartX;
     const totalMeanings = currentWordObj.meanings.length;
     
-    if (totalMeanings > 1) {
-        if (diff < -SWIPE_THRESHOLD && currentMeaningIndex < totalMeanings - 1) {
-            // 滑向下一个意思
+    // 橡皮筋边缘阻力
+    if ((currentMeaningIndex === 0 && diff > 0) || (currentMeaningIndex === totalMeanings - 1 && diff < 0)) {
+        diff = diff * 0.25; 
+    }
+    
+    // 实时拖动下层卡片
+    els.lowerTrack.style.transform = `translateX(calc(-${currentMeaningIndex * 100}% + ${diff}px))`;
+});
+
+els.lowerWindow.addEventListener('touchend', e => {
+    if (!lowerIsDragging) return;
+    lowerIsDragging = false;
+    let diff = e.changedTouches[0].screenX - lowerStartX;
+    const totalMeanings = currentWordObj.meanings.length;
+    
+    // 松手，恢复物理动画
+    els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff < 0 && currentMeaningIndex < totalMeanings - 1) {
+            // 往左滑，进入下一张
             currentMeaningIndex++;
             updateLowerTransform();
-            // 核心联动：下层考义变了，上层例句必须重构
             setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150); 
-            
-        } else if (diff > SWIPE_THRESHOLD && currentMeaningIndex > 0) {
-            // 滑向上一个意思
+        } else if (diff > 0 && currentMeaningIndex > 0) {
+            // 往右滑，回到上一张
             currentMeaningIndex--;
             updateLowerTransform();
             setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150);
+        } else {
+            updateLowerTransform(); // 未越界但触发了滑动，原位回弹
         }
+    } else {
+        updateLowerTransform(); // 滑动距离不够阈值，吸附回原位
     }
 });
 
