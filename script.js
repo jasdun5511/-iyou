@@ -1,204 +1,515 @@
-// 严格按要求的数据结构
-const wordData = {
-    word: "capital",
-    meanings: [
-        {
-            partOfSpeech: "n.",
-            enDefinition: "the most important town or city in a country...",
-            cnDefinition: "首都；国都",
-            sentences: [
-                { source: "广州版小学英语", en: "The <span>capital</span> of China is Beijing.", cn: "中国的首都是北京。", imageUrl: "https://images.unsplash.com/photo-1599571234909-29ed5d13204b?q=80&w=800&auto=format&fit=crop" },
-                { source: "新闻例句", en: "He travelled to Washington, the <span>capital</span> of...", cn: "他前往美国首都...", imageUrl: "https://images.unsplash.com/photo-1617581629397-a72507c3de9e?q=80&w=800&auto=format&fit=crop" }
-            ]
-        },
-        {
-            partOfSpeech: "n.",
-            enDefinition: "a large amount of money...",
-            cnDefinition: "资本；资金",
-            sentences: [
-                { source: "海军罪案调查处", en: "Starting a business like this takes <span>capital</span>, right?", cn: "这种创业是需要资金的，对吧？", imageUrl: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=800&auto=format&fit=crop" }
-            ]
-        },
-        {
-            partOfSpeech: "n.",
-            enDefinition: "a letter of the form and size used to begin a sentence...",
-            cnDefinition: "大写字母",
-            sentences: [
-                { source: "龙虾", en: "Please write your name clearly in <span>capital letters</span>...", cn: "请清楚地填上自己的姓名，全部大写...", imageUrl: "https://images.unsplash.com/photo-1503694978374-8a2fa686963a?q=80&w=800&auto=format&fit=crop" }
-            ]
-        }
-    ]
+// ================= 序列 1：升维版数据结构 (支持二维考义滑动) =================
+const vocabularyData = [
+    { 
+        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", 
+        example: { pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", zh: "即使在城市里，工作也很难找。" },
+        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"],
+        derivatives: ["mesmíssimo (adj. 完全一样的)"],
+        roots: ["源自拉丁语 'metipsimus'"],
+        synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"],
+        
+        // 【核心大更新】：沉浸式大卡片的二维数据源
+        meanings: [
+            {
+                pos: "adv.",
+                enDef: "even, exactly",
+                zhDef: "甚至，即使",
+                examples: [
+                    { source: "柯林斯词典", pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", zh: "即使在城市里，工作也很难找。" },
+                    { source: "日常口语", pt: "Foi ele <strong>mesmo</strong> quem fez isso.", zh: "确实是他本人做的。" }
+                ]
+            },
+            {
+                pos: "adj.",
+                enDef: "same, identical",
+                zhDef: "同一个的",
+                examples: [
+                    { source: "广州版小学英语", pt: "Nós moramos na <strong>mesma</strong> rua.", zh: "我们住在同一条街上。" }
+                ]
+            },
+            {
+                pos: "pron.",
+                enDef: "oneself",
+                zhDef: "(强调) 自己",
+                examples: [
+                    { source: "基础语法", pt: "Eu <strong>mesmo</strong> fiz o bolo.", zh: "我自己做了蛋糕。" }
+                ]
+            }
+        ]
+    },
+    { 
+        pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", 
+        example: { pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
+        phrases: ["encorajar a violência 助长暴力", "encorajar o investimento 促进投资"],
+        derivatives: ["coragem (n. 勇气)", "encorajamento (n. 鼓励，怂恿)"],
+        roots: ["en- (使...) + coragem (勇气) + -ar (动词后缀)"],
+        synonyms: ["animar (vt. 使兴奋)"],
+        
+        meanings: [
+            {
+                pos: "vt.",
+                enDef: "encourage, advise",
+                zhDef: "鼓励，怂恿",
+                examples: [
+                    { source: "TED 演讲", pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
+                    { source: "牛津词典", pt: "Meus pais sempre me <strong>encorajaram</strong> a estudar.", zh: "我父母总是鼓励我学习。" }
+                ]
+            },
+            {
+                pos: "vt.",
+                enDef: "promote, stimulate",
+                zhDef: "促进，刺激",
+                examples: [
+                    { source: "经济学人", pt: "O governo deve <strong>encorajar</strong> o investimento estrangeiro.", zh: "政府应该促进外国投资。" }
+                ]
+            }
+        ]
+    }
+];
+
+// ================= 序列 2：全局状态与 DOM 元素 =================
+let learningQueue = [];
+let learnedCount = 0;
+let totalWords = 0;
+let currentWordObj = null;
+let currentOptionsData = [];
+
+// 【沉浸式 Modal 的双维滑动状态】
+let currentMeaningIndex = 0;
+let currentExampleIndex = 0;
+
+const views = { 
+    home: document.getElementById('home-view'), 
+    learning: document.getElementById('learning-view'),
+    immersive: document.getElementById('immersive-modal') 
 };
 
-// 状态管理
-let currentMeaningIndex = 0;
-let currentSentenceIndex = 0;
+const els = {
+    app: document.getElementById('app'),
+    wordPt: document.getElementById('word-pt'),
+    phonetic: document.getElementById('word-phonetic-text'),
+    pos: document.getElementById('word-pos'),
+    zh: document.getElementById('word-zh-title'),
+    progressText: document.getElementById('progress-text'),
+    dots: document.querySelectorAll('.dot'),
+    dotsContainer: document.getElementById('progress-dots'),
+    successBadge: document.getElementById('word-success-badge'),
+    skeletonBars: document.getElementById('skeleton-bars'),
+    quizArea: document.getElementById('quiz-area'),
+    recognizeArea: document.getElementById('recognize-area'),
+    defArea: document.getElementById('definition-area'),
+    detailArea: document.getElementById('detail-area'),
+    options: document.querySelectorAll('.option'), 
+    optContents: document.querySelectorAll('.option .opt-content'), 
+    tabContent: document.getElementById('tab-content-container'),
+    tabs: document.querySelectorAll('.tab'),
+    recogExPt: document.getElementById('recognize-example-pt'),
+    recogSentenceCard: document.getElementById('recognize-sentence-card'),
+    recogBlindText: document.getElementById('recognize-blind-text'),
+    fQuiz: document.getElementById('footer-quiz'),
+    fRecog: document.getElementById('footer-recognize'),
+    fDetail: document.getElementById('footer-detail'),
+    
+    // 【大卡片专属元素】
+    btnOpenImmersive: document.getElementById('btn-open-immersive'),
+    upperWindow: document.getElementById('upper-window'),
+    upperTrack: document.getElementById('upper-track'),
+    lowerWindow: document.getElementById('lower-window'),
+    lowerTrack: document.getElementById('lower-track'),
+    upperSource: document.getElementById('upper-source-tag'),
+    upperDots: document.getElementById('upper-dots'),
+    globalDots: document.getElementById('global-dots'),
+    btnImClose: document.getElementById('im-btn-close'),
+    btnImNext: document.getElementById('im-btn-next-word')
+};
 
-// DOM 获取
-const modal = document.getElementById('immersive-modal');
-const bgImage = document.getElementById('im-bg-image');
-const sourceTag = document.getElementById('im-source-tag');
-const upperTrack = document.getElementById('upper-track');
-const upperDotsContainer = document.getElementById('upper-dots');
-const lowerTrack = document.getElementById('lower-track');
-const globalDotsContainer = document.getElementById('global-dots');
+document.getElementById('learn-count').innerText = vocabularyData.length;
 
-const upperWindow = document.getElementById('upper-window');
-const lowerWindow = document.getElementById('lower-window');
-
-// 辅助：高亮替换
-function parseHighlight(text) {
-    return text.replace(/<span>/g, '<span class="highlight">').replace(/<\/span>/g, '</span>');
+// ================= 序列 3：基础背词逻辑 =================
+function playAudio(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'pt-BR'; window.speechSynthesis.speak(utterance);
+    }
 }
+document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
-// ================== 初始化与渲染 ==================
-
-document.getElementById('btn-open-immersive').addEventListener('click', () => {
-    currentMeaningIndex = 0;
-    currentSentenceIndex = 0;
-    
-    renderLowerTrack();
-    updateLowerSlider(); // 触发上层的第一次渲染
-    
-    modal.classList.remove('hidden');
+document.getElementById('btn-learn').addEventListener('click', () => {
+    if (vocabularyData.length === 0) return;
+    learningQueue = vocabularyData.map(word => ({ ...word, stage: 0 }));
+    totalWords = learningQueue.length;
+    learnedCount = 0;
+    views.home.classList.replace('active', 'hidden');
+    views.learning.classList.replace('hidden', 'active');
+    loadNextState();
 });
 
-document.getElementById('im-btn-close').addEventListener('click', () => {
-    modal.classList.add('hidden');
+document.getElementById('btn-back').addEventListener('click', () => {
+    views.learning.classList.replace('active', 'hidden');
+    views.home.classList.replace('hidden', 'active');
 });
 
-// 渲染下层 (考义轨道，仅在初始化时生成一次)
-function renderLowerTrack() {
-    lowerTrack.innerHTML = '';
-    const totalMeanings = wordData.meanings.length;
-    
-    wordData.meanings.forEach((meaning, idx) => {
-        lowerTrack.innerHTML += `
-            <div class="slider-slide">
-                <div class="def-panel">
-                    <p class="im-pos">${meaning.partOfSpeech}</p>
-                    <p class="im-en-def">${meaning.enDefinition}</p>
-                    <p class="im-zh-def">${meaning.cnDefinition}</p>
-                    <div class="page-indicator">${idx + 1}/${totalMeanings}</div>
-                </div>
-            </div>
-        `;
-    });
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
 
-// 渲染上层 (例句轨道，每次考义切换时重新生成)
-function renderUpperTrack() {
-    const meaning = wordData.meanings[currentMeaningIndex];
-    upperTrack.innerHTML = '';
-    
-    meaning.sentences.forEach(sen => {
-        upperTrack.innerHTML += `
-            <div class="slider-slide">
-                <p class="im-en-sentence">${parseHighlight(sen.en)}</p>
-                <p class="im-zh-sentence">${sen.cn}</p>
-            </div>
-        `;
-    });
-
-    // 瞬间重置上层轨道位置，无动画
-    upperTrack.style.transition = 'none';
-    upperTrack.style.transform = `translateX(0%)`;
-    void upperTrack.offsetWidth; // 强制重绘
-    upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
-    
-    updateUpperUI();
-}
-
-// ================== 更新视图状态 ==================
-
-// 更新上层 UI (例句位置、指示点、来源、背景图)
-function updateUpperUI() {
-    const meaning = wordData.meanings[currentMeaningIndex];
-    const sen = meaning.sentences[currentSentenceIndex];
-    
-    // 1. 滑动轨道
-    upperTrack.style.transform = `translateX(-${currentSentenceIndex * 100}%)`;
-    
-    // 2. 更新来源标签
-    sourceTag.innerText = sen.source;
-    
-    // 3. 更新背景图片
-    bgImage.style.opacity = '0';
-    setTimeout(() => {
-        if(sen.imageUrl) {
-            bgImage.src = sen.imageUrl;
-            bgImage.style.opacity = '0.4';
-        }
-    }, 150);
-
-    // 4. 更新局部小圆点
-    upperDotsContainer.innerHTML = '';
-    if (meaning.sentences.length > 1) {
-        meaning.sentences.forEach((_, idx) => {
-            upperDotsContainer.innerHTML += `<div class="dot ${idx === currentSentenceIndex ? 'active' : ''}"></div>`;
+function updateDots(stage) {
+    if (stage >= 3) {
+        els.dotsContainer.classList.add('hidden');
+        els.successBadge.classList.remove('hidden'); 
+    } else {
+        els.dotsContainer.classList.remove('hidden');
+        els.successBadge.classList.add('hidden');
+        els.dots.forEach((dot, index) => {
+            if(index < stage) dot.classList.add('active');
+            else dot.classList.remove('active');
         });
     }
 }
 
-// 更新下层 UI (考义位置、全局胶囊点)
-function updateLowerSlider() {
-    // 滑动轨道
-    lowerTrack.style.transform = `translateX(-${currentMeaningIndex * 100}%)`;
+window.loadNextState = function() {
+    if (learningQueue.length === 0) {
+        alert("今日完毕！");
+        document.getElementById('btn-back').click();
+        return;
+    }
+    currentWordObj = learningQueue.shift();
     
-    // 渲染全局考义胶囊
-    globalDotsContainer.innerHTML = '';
-    const total = wordData.meanings.length;
+    els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
+    els.wordPt.innerText = currentWordObj.pt; 
+    els.phonetic.innerText = currentWordObj.phonetic;
+    els.pos.innerText = currentWordObj.pos;
+    els.zh.innerText = currentWordObj.zh;
+    
+    els.defArea.classList.add('hidden');
+    els.detailArea.classList.add('hidden');
+    els.quizArea.classList.add('hidden');
+    els.recognizeArea.classList.add('hidden');
+    els.skeletonBars.classList.add('hidden');
+    els.fQuiz.classList.add('hidden');
+    els.fRecog.classList.add('hidden');
+    els.fDetail.classList.add('hidden');
+    
+    updateDots(currentWordObj.stage);
+    if (currentWordObj.stage === 0) renderStage0();
+    else if (currentWordObj.stage === 1) renderStage1();
+    else if (currentWordObj.stage === 2) renderStage2();
+    playAudio(currentWordObj.pt);
+}
+
+function renderStage0() {
+    els.app.className = 'bg-blur';
+    els.quizArea.classList.remove('hidden');
+    els.fQuiz.classList.remove('hidden');
+    let options = [{ wordObj: currentWordObj, isCorrect: true }];
+    let wrongCandidates = vocabularyData.filter(w => w.pt !== currentWordObj.pt);
+    shuffleArray(wrongCandidates);
+    for (let i = 0; i < 3 && i < wrongCandidates.length; i++) {
+        options.push({ wordObj: wrongCandidates[i], isCorrect: false });
+    }
+    shuffleArray(options);
+    currentOptionsData = options;
+
+    els.options.forEach((optContainer, index) => {
+        const contentEl = els.optContents[index];
+        if (currentOptionsData[index]) {
+            const data = currentOptionsData[index].wordObj;
+            contentEl.innerHTML = `<span class="opt-pos">${data.pos}</span><span class="opt-zh">${data.zh}</span>`;
+            optContainer.style.display = 'flex'; 
+            optContainer.style.pointerEvents = 'auto'; 
+            optContainer.classList.remove('active'); 
+        } else {
+            optContainer.style.display = 'none'; 
+        }
+    });
+}
+
+function renderStage1() {
+    els.app.className = 'bg-green';
+    els.skeletonBars.classList.remove('hidden');
+    els.recognizeArea.classList.remove('hidden');
+    els.recogSentenceCard.classList.remove('hidden');
+    els.recogBlindText.classList.add('hidden');
+    els.recogExPt.innerHTML = highlightYellow(currentWordObj.example.pt); 
+    els.fRecog.classList.remove('hidden');
+}
+
+function renderStage2() {
+    els.app.className = 'bg-green';
+    els.skeletonBars.classList.remove('hidden');
+    els.recognizeArea.classList.remove('hidden');
+    els.recogSentenceCard.classList.add('hidden');
+    els.recogBlindText.classList.remove('hidden');
+    els.fRecog.classList.remove('hidden');
+}
+
+window.checkAnswer = function(selectedIndex) {
+    els.options.forEach(el => el.style.pointerEvents = 'none');
+    const selectedData = currentOptionsData[selectedIndex];
+    const clickedBtn = els.options[selectedIndex];
+    clickedBtn.classList.add('active'); 
+    
+    if (selectedData.isCorrect) {
+        currentWordObj.stage = 1; learningQueue.push(currentWordObj); updateDots(1); 
+        setTimeout(() => showDetails(), 400); 
+    } else {
+        currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0); 
+        els.optContents[selectedIndex].innerHTML = `<span style="color:#ff6b6b; font-size: 1.1rem; text-align:center; display:block; width:100%; font-weight:bold;">${selectedData.wordObj.pt}</span>`;
+        currentOptionsData.forEach((opt, index) => {
+            if (opt.isCorrect) els.options[index].classList.add('active'); 
+        });
+        playAudio(selectedData.wordObj.pt);
+        setTimeout(() => showDetails(), 800);
+    }
+}
+
+document.getElementById('btn-recognize').addEventListener('click', () => {
+    if (currentWordObj.stage === 1) {
+        currentWordObj.stage = 2; learningQueue.push(currentWordObj); updateDots(2);
+    } else if (currentWordObj.stage === 2) {
+        currentWordObj.stage = 3; learnedCount++; updateDots(3); 
+    }
+    setTimeout(() => showDetails(), 150); 
+});
+
+document.getElementById('btn-not-recognize').addEventListener('click', punishAndShow);
+document.getElementById('btn-hint').addEventListener('click', punishAndShow);
+
+function punishAndShow() {
+    currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
+    setTimeout(() => showDetails(), 150);
+}
+
+window.showAnswerDirectly = function() {
+    currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
+    setTimeout(() => showDetails(), 150);
+}
+
+// 底部 Tab
+els.tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        els.tabs.forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        renderTabContent(e.target.dataset.target);
+    });
+});
+
+function renderTabContent(targetType) {
+    els.tabContent.innerHTML = ''; 
+    let contentData = currentWordObj[targetType] || [];
+    if (contentData.length === 0) {
+        els.tabContent.innerHTML = `<div style="height: 100%; display: flex; align-items: center; justify-content: center;"><p style="color: rgba(255,255,255,0.4); font-size: 0.9rem;">暂无数据</p></div>`;
+        return;
+    }
+    contentData.forEach(item => {
+        if (targetType === 'phrases') {
+            const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
+            const en = splitIndex > 0 ? item.substring(0, splitIndex).trim() : item;
+            const zh = splitIndex > 0 ? item.substring(splitIndex).trim() : '';
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
+        } else {
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
+        }
+    });
+}
+
+function showDetails() {
+    els.app.className = 'bg-blur'; 
+    els.skeletonBars.classList.add('hidden');
+    els.quizArea.classList.add('hidden');
+    els.recognizeArea.classList.add('hidden');
+    els.fQuiz.classList.add('hidden');
+    els.fRecog.classList.add('hidden');
+    els.defArea.classList.remove('hidden');
+    els.detailArea.classList.remove('hidden');
+    els.fDetail.classList.remove('hidden');
+
+    document.getElementById('word-example-pt').innerHTML = highlightYellow(currentWordObj.example.pt);
+    document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
+    els.tabs[0].click(); 
+}
+
+document.getElementById('btn-next').addEventListener('click', () => { setTimeout(() => loadNextState(), 150); });
+document.getElementById('btn-forgot').addEventListener('click', () => {
+    if (currentWordObj.stage === 3) learnedCount--; 
+    currentWordObj.stage = 0; learningQueue.push(currentWordObj);
+    setTimeout(() => loadNextState(), 150);
+});
+
+// 自动高亮替换工具
+function highlightYellow(text) {
+    return text.replace(/<strong>/g, '<span class="highlight-yellow">').replace(/<\/strong>/g, '</span>');
+}
+
+
+/* ================================================================================= */
+/* ================= 序列 5：原生滑动物理引擎 (2D Carousel Core) ================= */
+/* ================================================================================= */
+
+// 1. 打开卡片并初始化二维轨道
+els.btnOpenImmersive.addEventListener('click', () => {
+    if (!currentWordObj.meanings || currentWordObj.meanings.length === 0) return;
+    
+    currentMeaningIndex = 0;
+    currentExampleIndex = 0;
+    
+    // 初始化下层轨道 (释义卡片列队)
+    els.lowerTrack.innerHTML = '';
+    currentWordObj.meanings.forEach((meaning, idx) => {
+        els.lowerTrack.innerHTML += `
+            <div class="slider-slide">
+                <div class="def-panel">
+                    <p class="im-pos">${meaning.pos}</p>
+                    <p class="im-en-def">${meaning.enDef}</p>
+                    <p class="im-zh-def">${meaning.zhDef}</p>
+                    <div class="meaning-counter">${idx + 1}/${currentWordObj.meanings.length}</div>
+                </div>
+            </div>
+        `;
+    });
+
+    // 初始化上层例句、底部胶囊，并执行位置重置
+    updateGlobalDots();
+    populateUpperTrack(0); // 载入第 1 个考义的例句
+    
+    // 强制清除旧的 transform (瞬间归零)
+    els.lowerTrack.style.transition = 'none';
+    els.lowerTrack.style.transform = `translateX(0%)`;
+    // 强制重绘，恢复动画
+    void els.lowerTrack.offsetWidth;
+    els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+
+    views.learning.classList.replace('active', 'hidden');
+    views.immersive.classList.replace('hidden', 'active');
+});
+
+
+// 2. 注入上层轨道数据 (当释义切换时触发)
+function populateUpperTrack(meaningIdx) {
+    const meaning = currentWordObj.meanings[meaningIdx];
+    currentExampleIndex = 0; // 切换考义后，例句重置为该考义的第一句
+    
+    // 填入所有的例句作为 Slide
+    els.upperTrack.innerHTML = '';
+    meaning.examples.forEach(ex => {
+        els.upperTrack.innerHTML += `
+            <div class="slider-slide">
+                <p class="im-en-sentence">${highlightYellow(ex.pt)}</p>
+                <p class="im-zh-sentence">${ex.zh}</p>
+            </div>
+        `;
+    });
+
+    // 生成上层翻页点
+    els.upperDots.innerHTML = '';
+    if (meaning.examples.length > 1) {
+        meaning.examples.forEach((_, idx) => {
+            els.upperDots.innerHTML += `<span class="dot ${idx === 0 ? 'active' : ''}"></span>`;
+        });
+    }
+
+    // 强制归零上层轨道
+    els.upperTrack.style.transition = 'none';
+    els.upperTrack.style.transform = `translateX(0%)`;
+    void els.upperTrack.offsetWidth;
+    els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    // 更新固定不动的标题 (如“日常口语”)
+    els.upperSource.innerText = meaning.examples[0].source || "词典例句";
+}
+
+// 3. 执行滑动位置更新 (Update Transforms)
+function updateUpperTransform() {
+    els.upperTrack.style.transform = `translateX(-${currentExampleIndex * 100}%)`;
+    
+    // 更新例句点点
+    const dots = els.upperDots.querySelectorAll('.dot');
+    if (dots.length > 0) {
+        dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentExampleIndex));
+    }
+    // 更新左上角来源标题
+    const currentEx = currentWordObj.meanings[currentMeaningIndex].examples[currentExampleIndex];
+    els.upperSource.innerText = currentEx.source || "词典例句";
+}
+
+function updateLowerTransform() {
+    els.lowerTrack.style.transform = `translateX(-${currentMeaningIndex * 100}%)`;
+    updateGlobalDots();
+}
+
+// 更新底部全局考义点 (胶囊逻辑)
+function updateGlobalDots() {
+    els.globalDots.innerHTML = '';
+    const total = currentWordObj.meanings.length;
     if (total > 1) {
-        for(let i = 0; i < total; i++) {
+        for(let i=0; i<total; i++) {
             if (i === currentMeaningIndex) {
-                globalDotsContainer.innerHTML += `<div class="global-dot capsule">考义</div>`;
+                els.globalDots.innerHTML += `<span class="global-dot capsule">考义</span>`;
             } else {
-                globalDotsContainer.innerHTML += `<div class="global-dot"></div>`;
+                els.globalDots.innerHTML += `<span class="global-dot"></span>`;
             }
         }
     }
-    
-    // 联动：下层切换，上层数据必须重构并归零
-    currentSentenceIndex = 0;
-    renderUpperTrack();
 }
 
-// ================== 二维滑动侦听器 ==================
+// ================= 序列 6：手势滑动侦听 (Touch Events) =================
 
-const SWIPE_THRESHOLD = 40;
+let startX = 0;
+const SWIPE_THRESHOLD = 40; // 滑动阈值，超过 40px 判定为翻页
 
-// 维度一：上层局部滑动
-let upperStartX = 0;
-upperWindow.addEventListener('touchstart', e => { upperStartX = e.touches[0].clientX; });
-upperWindow.addEventListener('touchend', e => {
-    let diff = e.changedTouches[0].clientX - upperStartX;
-    const totalEx = wordData.meanings[currentMeaningIndex].sentences.length;
+// 侦听上层视口 (滑动例句)
+els.upperWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
+els.upperWindow.addEventListener('touchend', e => {
+    let diff = e.changedTouches[0].screenX - startX;
+    const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
     
     if (totalEx > 1) {
-        if (diff < -SWIPE_THRESHOLD && currentSentenceIndex < totalEx - 1) {
-            currentSentenceIndex++;
-            updateUpperUI();
-        } else if (diff > SWIPE_THRESHOLD && currentSentenceIndex > 0) {
-            currentSentenceIndex--;
-            updateUpperUI();
+        if (diff < -SWIPE_THRESHOLD && currentExampleIndex < totalEx - 1) {
+            currentExampleIndex++; // 往左划
+            updateUpperTransform();
+        } else if (diff > SWIPE_THRESHOLD && currentExampleIndex > 0) {
+            currentExampleIndex--; // 往右划
+            updateUpperTransform();
         }
     }
 });
 
-// 维度二：下层全局滑动
-let lowerStartX = 0;
-lowerWindow.addEventListener('touchstart', e => { lowerStartX = e.touches[0].clientX; });
-lowerWindow.addEventListener('touchend', e => {
-    let diff = e.changedTouches[0].clientX - lowerStartX;
-    const totalMeanings = wordData.meanings.length;
+// 侦听下层视口 (滑动考义)
+els.lowerWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
+els.lowerWindow.addEventListener('touchend', e => {
+    let diff = e.changedTouches[0].screenX - startX;
+    const totalMeanings = currentWordObj.meanings.length;
     
     if (totalMeanings > 1) {
         if (diff < -SWIPE_THRESHOLD && currentMeaningIndex < totalMeanings - 1) {
+            // 滑向下一个意思
             currentMeaningIndex++;
-            updateLowerSlider();
+            updateLowerTransform();
+            // 核心联动：下层考义变了，上层例句必须重构
+            setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150); 
+            
         } else if (diff > SWIPE_THRESHOLD && currentMeaningIndex > 0) {
+            // 滑向上一个意思
             currentMeaningIndex--;
-            updateLowerSlider();
+            updateLowerTransform();
+            setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150);
         }
     }
+});
+
+// ================= 序列 7：大卡片底部操作 =================
+els.btnImClose.addEventListener('click', () => {
+    views.immersive.classList.replace('active', 'hidden');
+    views.learning.classList.replace('hidden', 'active');
+});
+
+els.btnImNext.addEventListener('click', () => {
+    views.immersive.classList.replace('active', 'hidden');
+    views.learning.classList.replace('hidden', 'active');
+    setTimeout(() => loadNextState(), 150); // 切回后立刻翻下一词
 });
