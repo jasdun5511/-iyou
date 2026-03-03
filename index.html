@@ -49,9 +49,9 @@
                     </div>
                 </div>
 
-                <div id="quiz-area">
+                <div id="quiz-area" class="quiz-card-wrapper hidden">
                     <p class="hint-text">先回想词义再选择，想不起来「看答案」</p>
-                    <div class="options-list">
+                    <div class="options-grid">
                         <div class="option" onclick="checkAnswer(0)"><div class="opt-content"></div></div>
                         <div class="option" onclick="checkAnswer(1)"><div class="opt-content"></div></div>
                         <div class="option" onclick="checkAnswer(2)"><div class="opt-content"></div></div>
@@ -117,19 +117,15 @@
                         <span class="source-tag" id="upper-source-tag">词典例句</span>
                         <i class="fa-solid fa-ellipsis" style="color: rgba(255,255,255,0.6);"></i>
                     </div>
-                    
                     <div class="slider-window" id="upper-window">
-                        <div class="slider-track" id="upper-track">
-                            </div>
+                        <div class="slider-track" id="upper-track"></div>
                     </div>
-
                     <div class="upper-pagination" id="upper-dots"></div>
                 </div>
 
                 <div class="immersive-lower">
                     <div class="slider-window" id="lower-window">
-                        <div class="slider-track" id="lower-track">
-                            </div>
+                        <div class="slider-track" id="lower-track"></div>
                     </div>
                 </div>
 
@@ -137,9 +133,7 @@
                     <div class="im-footer-btn im-btn-next-word" id="im-btn-next-word">
                         <i class="fa-solid fa-forward-step" style="font-size: 0.9rem;"></i> 下一词
                     </div>
-                    
                     <div class="global-pagination" id="global-dots"></div>
-
                     <div class="im-footer-btn im-btn-close" id="im-btn-close">
                         收起卡片 <i class="fa-solid fa-angle-down" style="font-size: 0.9rem;"></i>
                     </div>
