@@ -61,20 +61,20 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .option { 
     background: rgba(255, 255, 255, 0.08); 
     border-radius: 14px; 
-    padding: 16px 20px; 
+    padding: 16px 24px; /* 稍微增加了左右的内边距，让靠左对齐看着更舒服 */
     cursor: pointer; 
     min-height: 64px; 
     display: flex; 
     flex-direction: column; 
     justify-content: center; 
-    align-items: center; 
+    align-items: flex-start; /* 核心修改：从 center 改为 flex-start，整体靠左排列 */
     transition: all 0.2s ease; 
     border: 1px solid transparent; 
 }
 .option:active, .option.active { background: rgba(255, 255, 255, 0.18); } 
 
 .opt-pos { font-size: 0.8rem; color: #2ecc71; margin-bottom: 4px; display: block; font-weight: 500;}
-.opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; text-align: center;}
+.opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; text-align: left;} /* 核心修改：靠左对齐 */
 
 /* === 答错/答对的框体反馈 === */
 .option.wrong {
@@ -91,12 +91,11 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     display: flex; 
     flex-direction: column; 
     gap: 4px; 
-    align-items: center;
+    align-items: flex-start; /* 核心修改：双语状态下也强制靠左对齐 */
 }
 .opt-pt-text { font-size: 1.15rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
-.opt-zh-text { font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); text-align: center;}
-
-/* ============================================================== */
+.opt-zh-text { font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); text-align: left;} /* 核心修改：靠左对齐 */
+ ============================================================== */
 
 .card { background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
 .sentence-card { background: rgba(255, 255, 255, 0.07); }
