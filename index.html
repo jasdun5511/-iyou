@@ -5,40 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Meu Vocabulário</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div id="app" class="bg-blur">
         
-        <div id="learning-view" class="view active" style="padding: 20px;">
-            <h1 style="margin-top: 40px; margin-bottom: 20px;">capital</h1>
-            
-            <div id="detail-area">
-                <div class="card sentence-card" style="position: relative;">
-                    <p class="en-text">The <span>capital</span> of China is Beijing.</p>
-                    <p class="zh-text">中国的首都是北京。</p>
-                    
-                    <div class="expand-card-btn" id="btn-open-immersive">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect>
-                            <line x1="4" y1="16" x2="20" y2="16"></line>
-                        </svg>
-                    </div>
+        <div id="home-view" class="view active">
+            <h1 class="home-title">Splendid</h1>
+            <div class="home-bottom">
+                <div class="cards-container" id="btn-learn">
+                    <div class="nav-card"><h3>Learn</h3><span class="nav-count" id="learn-count">0</span></div>
+                    <div class="nav-card"><h3>Review</h3><span class="nav-count">0</span></div>
                 </div>
+                <nav class="bottom-nav">
+                    <i class="fa-solid fa-layer-group active"></i>
+                    <i class="fa-solid fa-box-archive"></i>
+                    <i class="fa-solid fa-chart-line"></i>
+                </nav>
             </div>
         </div>
 
-        <div id="immersive-modal" class="modal hidden">
-            <div class="modal-bg">
-                <img id="im-bg-image" src="" alt="">
-                <div class="bg-gradient-mask"></div>
-            </div>
+        <div id="learning-view" class="view hidden">
+            <header class="top-bar">
+                <div class="left" id="btn-back"><i class="fa-solid fa-chevron-left"></i> <span id="progress-text">1/3</span></div>
+                <div class="right"><i class="fa-solid fa-rotate-left"></i><i class="fa-regular fa-star"></i><i class="fa-solid fa-fire-flame-curved"></i><i class="fa-solid fa-ellipsis"></i></div>
+            </header>
+
+            <main class="content-area">
+                <div class="word-section">
+                    <div class="word-row">
+                        <h1 id="word-pt">mesmo</h1>
+                        <span id="word-success-badge" class="success-badge hidden"><i class="fa-solid fa-circle-check"></i></span>
+                        <div class="progress-dots" id="progress-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+                    </div>
+                    <div class="phonetic-row" id="phonetic-container">
+                        <span class="accent-tag">葡 <i class="fa-solid fa-volume-low"></i></span><span id="word-phonetic-text">/'mez.mu/</span>
+                    </div>
+                    <div id="skeleton-bars" class="skeleton-bars hidden">
+                        <div class="skeleton-line short"></div><div class="skeleton-line long"></div>
+                    </div>
+                    <div id="definition-area" class="hidden">
+                        <div class="def-line"><span id="word-pos" class="pos-grey"></span> <span id="word-zh-title" class="zh-white"></span></div>
+                    </div>
+                </div>
+
+                <div id="quiz-area">
+                    <p class="hint-text">先回想词义再选择，想不起来「看答案」</p>
+                    <div class="options-list">
+                        <div class="option" onclick="checkAnswer(0)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(1)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(2)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(3)"><div class="opt-content"></div></div>
+                    </div>
+                </div>
+
+                <div id="recognize-area" class="hidden">
+                    <div id="recognize-sentence-card" class="card sentence-card hidden"><p id="recognize-example-pt" class="en-text">...</p></div>
+                    <div id="recognize-blind-text" class="hidden"><p class="hint-text" style="text-align: center; margin-top: 100px;">本词最后一关😉：请在无提示的情况下判断</p></div>
+                    <div class="hint-btn-container" id="btn-hint"><div class="bulb-icon"><i class="fa-regular fa-lightbulb"></i></div><span>提示一下</span></div>
+                </div>
+
+                <div id="detail-area" class="hidden">
+                    <div class="card sentence-card" style="position: relative;">
+                        <p id="word-example-pt" class="en-text">...</p>
+                        <p id="word-example-zh" class="zh-text">...</p>
+                        
+                        <div class="expand-card-btn" id="btn-open-immersive">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect>
+                                <line x1="4" y1="16" x2="20" y2="16"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="card phrases-card">
+                        <div id="tab-content-container"></div>
+                        <div class="card-footer-tabs">
+                            <div class="tabs-left">
+                                <span class="tab active" data-target="phrases">词组搭配</span><span class="tab" data-target="derivatives">派生</span>
+                                <span class="tab" data-target="roots">词根</span><span class="tab" data-target="synonyms">近义</span>
+                            </div>
+                            <div class="tabs-right"><i class="fa-solid fa-pen"></i><i class="fa-solid fa-bars-staggered"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="bottom-action">
+                <div id="footer-quiz" class="action-group hidden">
+                    <div class="action-item" onclick="showAnswerDirectly()"><span>看答案</span><div class="line red"></div></div>
+                </div>
+                <div id="footer-recognize" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-recognize"><span>认识</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-not-recognize"><span>不认识</span><div class="line red"></div></div>
+                </div>
+                <div id="footer-detail" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-next"><span>下一词</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-forgot"><span>记错了</span><div class="line red"></div></div>
+                </div>
+            </footer>
+        </div>
+
+
+        <div id="immersive-modal" class="view hidden" style="z-index: 50;">
+            <div class="immersive-bg" id="immersive-bg"></div>
             
-            <div class="modal-content-wrapper">
+            <div class="immersive-content-wrapper">
                 
-                <div class="im-upper-layer">
+                <div class="immersive-upper">
                     <div class="upper-header">
-                        <span class="source-tag" id="im-source-tag">来源</span>
-                        <div class="menu-dots">•••</div>
+                        <span class="source-tag" id="upper-source-tag">词典例句</span>
+                        <i class="fa-solid fa-ellipsis" style="color: rgba(255,255,255,0.6);"></i>
                     </div>
                     
                     <div class="slider-window" id="upper-window">
@@ -46,34 +123,31 @@
                             </div>
                     </div>
 
-                    <div class="upper-pagination" id="upper-dots">
-                        </div>
+                    <div class="upper-pagination" id="upper-dots"></div>
                 </div>
 
-                <div class="im-lower-layer">
-                    <div class="slider-window" id="lower-window" style="overflow: visible;">
+                <div class="immersive-lower">
+                    <div class="slider-window" id="lower-window" style="height: 100%; overflow: visible;">
                         <div class="slider-track" id="lower-track">
                             </div>
                     </div>
                 </div>
 
-                <div class="im-footer">
-                    <div class="footer-btn left" id="im-btn-next">下一词</div>
+                <div class="immersive-footer">
+                    <div class="im-footer-btn left" id="im-btn-next-word">
+                        <i class="fa-solid fa-forward-step"></i> 下一词
+                    </div>
                     
-                    <div class="global-pagination" id="global-dots">
-                        </div>
+                    <div class="global-pagination" id="global-dots"></div>
 
-                    <div class="footer-btn right" id="im-btn-close">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
+                    <div class="im-footer-btn right" id="im-btn-close">
+                        收起卡片 <i class="fa-solid fa-angle-down"></i>
                     </div>
                 </div>
 
             </div>
         </div>
-        
-    </div>
+        </div>
     <script src="script.js"></script>
 </body>
 </html>
