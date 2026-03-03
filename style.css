@@ -51,10 +51,42 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .zh-white { font-size: 1.1rem; color: #fff; }
 
 .options-list { display: flex; flex-direction: column; gap: 10px; }
-.option { background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px 20px; cursor: pointer; min-height: 76px; display: flex; flex-direction: column; justify-content: center; transition: background 0.15s ease; }
+/* ================= 选项基础样式 (保持原样即可) ================= */
+.option { background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px 20px; cursor: pointer; min-height: 76px; display: flex; flex-direction: column; justify-content: center; transition: all 0.2s ease; border: 1px solid transparent; }
 .option:active, .option.active { background: rgba(255, 255, 255, 0.18); } 
 .opt-pos { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 6px; display: block; }
 .opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; }
+
+/* ================= 新增：答错/答对的框体与双语样式 ================= */
+/* 淡淡的红底 + 红色描边 */
+.option.wrong {
+    background-color: rgba(231, 76, 60, 0.15) !important;
+    border: 1px solid rgba(231, 76, 60, 0.5);
+}
+
+/* 淡淡的绿底 + 绿色描边 */
+.option.correct {
+    background-color: rgba(46, 204, 113, 0.15) !important;
+    border: 1px solid rgba(46, 204, 113, 0.5);
+}
+
+/* 选项变成双语对照时的排版 */
+.opt-bilingual {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.opt-pt-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+.opt-zh-text {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+/* ============================================================== */
 
 .card { background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
 .sentence-card { background: rgba(255, 255, 255, 0.07); }
