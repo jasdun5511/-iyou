@@ -62,18 +62,30 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .en-text strong { font-weight: 600; }
 .zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-/* 主界面的画廊触发按钮容器 */
-.gallery-btn { 
-    position: absolute; 
-    bottom: 8px; 
-    right: 12px; 
-    padding: 8px; /* 给手指点击留出足够的热区，不影响 SVG 视觉大小 */
-    z-index: 10; 
+/* ================== 新增：右下角带背景的圆形按钮样式 ================== */
+.expand-card-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15); /* 提供对比度的半透明白圈 */
     display: flex;
-    align-items: center;
     justify-content: center;
-    -webkit-tap-highlight-color: transparent;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    z-index: 10;
+    -webkit-tap-highlight-color: transparent; /* 消除移动端点击黑块闪烁 */
 }
+
+/* 鼠标悬浮 / 手指按下时的交互反馈 */
+.expand-card-btn:hover,
+.expand-card-btn:active {
+    background-color: rgba(255, 255, 255, 0.25); /* 悬浮时背景提亮 */
+}
+/* ====================================================================== */
 
 #tab-content-container { height: 160px; overflow: hidden; margin-bottom: 15px; }
 .phrase-item { margin-bottom: 15px; }
@@ -187,12 +199,3 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     font-size: 0.75rem; font-weight: 600; 
     padding: 4px 12px; border-radius: 12px; 
 }
-
-/* ==================================================================== */
-/* ================= 新增：为写在 SVG 里的 Tailwind 类名提供底层兼容 ================= */
-/* ==================================================================== */
-.text-white\/40 { color: rgba(255, 255, 255, 0.4); }
-.hover\:text-white:hover { color: #ffffff; }
-.gallery-btn:active svg { color: #ffffff; } /* 补充移动端按下时的颜色反馈 */
-.transition-colors { transition: color 0.2s ease-in-out; }
-.cursor-pointer { cursor: pointer; }
