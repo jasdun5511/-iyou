@@ -8,7 +8,6 @@ const vocabularyData = [
         roots: ["源自拉丁语 'metipsimus'"],
         synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"],
         
-        // 【核心】：沉浸式大卡片的二维数据源
         meanings: [
             {
                 pos: "adv.",
@@ -203,14 +202,14 @@ window.loadNextState = function() {
 }
 
 
-// ================= 序列 4：测验出题与交互反馈逻辑 (核心重构) =================
+// ================= 序列 4：测验出题与交互反馈逻辑 (经典上下排版版) =================
 
 function renderStage0() {
     els.app.className = 'bg-blur';
     els.quizArea.classList.remove('hidden');
     els.fQuiz.classList.remove('hidden');
 
-    // 每次进入新词时，重置底部按钮为默认的“看答案”
+    // 每次进入新词时，重置底部按钮为“看答案”
     els.fQuiz.innerHTML = `
         <div class="action-item" onclick="showAnswerDirectly()">
             <span>看答案</span><div class="line red"></div>
@@ -230,7 +229,7 @@ function renderStage0() {
     els.options.forEach((optContainer, index) => {
         const contentEl = els.optContents[index];
         
-        // 核心：清空上一题可能残留的 wrong/correct 背景色、描边以及双语内容
+        // 核心：清空残留的状态，避免上一题的红绿底色污染新题
         optContainer.classList.remove('wrong', 'correct', 'active');
         contentEl.innerHTML = '';
         
@@ -246,7 +245,7 @@ function renderStage0() {
 }
 
 window.checkAnswer = function(selectedIndex) {
-    els.options.forEach(el => el.style.pointerEvents = 'none'); // 选完锁死其他选项
+    els.options.forEach(el => el.style.pointerEvents = 'none'); 
     
     const selectedData = currentOptionsData[selectedIndex];
     const clickedBtn = els.options[selectedIndex];
@@ -254,7 +253,7 @@ window.checkAnswer = function(selectedIndex) {
     if (selectedData.isCorrect) {
         currentWordObj.stage = 1; learningQueue.push(currentWordObj); updateDots(1); 
         
-        // 选对时：框体变淡淡的绿色，显示双语
+        // 选对时变浅绿双语
         clickedBtn.classList.add('correct');
         els.optContents[selectedIndex].innerHTML = `
             <div class="opt-bilingual">
@@ -262,13 +261,12 @@ window.checkAnswer = function(selectedIndex) {
                 <span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span>
             </div>
         `;
-        
-        // 选对则保留自动跳转体验
+        // 选对自动跳转
         setTimeout(() => showDetails(), 400); 
     } else {
         currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0); 
         
-        // 1. 选错时：你点错的框体变淡淡的红色，显示那个错误单词的双语
+        // 1. 选错的框：变淡淡的红色，展示双语
         clickedBtn.classList.add('wrong');
         els.optContents[selectedIndex].innerHTML = `
             <div class="opt-bilingual">
@@ -277,7 +275,7 @@ window.checkAnswer = function(selectedIndex) {
             </div>
         `;
         
-        // 2. 自动显示正确答案：正确的框体变淡淡的绿色，显示正确单词的双语
+        // 2. 正确的框：变淡淡的绿色，展示双语
         currentOptionsData.forEach((opt, index) => {
             if (opt.isCorrect) {
                 const correctBtn = els.options[index];
@@ -293,8 +291,7 @@ window.checkAnswer = function(selectedIndex) {
         
         playAudio(selectedData.wordObj.pt);
         
-        // 3. 核心交互修改：不再自动跳转！
-        // 将底部按钮替换为“查看详情”，让用户自己对比看明白后，手动点击进入下一页
+        // 3. 底部变为“查看详情”，不自动跳转！给用户留出复盘时间
         els.fQuiz.innerHTML = `
             <div class="action-item" onclick="showDetails()" style="animation: fadeIn 0.3s;">
                 <span style="color: #fff; font-weight: 500;">查看详情</span>
