@@ -8,6 +8,7 @@ const vocabularyData = [
         roots: ["源自拉丁语 'metipsimus'"],
         synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"],
         
+        // 【核心】：沉浸式大卡片的二维数据源
         meanings: [
             {
                 pos: "adv.",
@@ -202,7 +203,7 @@ window.loadNextState = function() {
 }
 
 
-// ================= 序列 4：【本次核心更新】测验出题与判题逻辑 =================
+// ================= 序列 4：测验出题与交互反馈逻辑 (核心重构) =================
 
 function renderStage0() {
     els.app.className = 'bg-blur';
@@ -229,8 +230,9 @@ function renderStage0() {
     els.options.forEach((optContainer, index) => {
         const contentEl = els.optContents[index];
         
-        // 核心：清空上一题可能残留的 wrong/correct 背景色和双语排版
+        // 核心：清空上一题可能残留的 wrong/correct 背景色、描边以及双语内容
         optContainer.classList.remove('wrong', 'correct', 'active');
+        contentEl.innerHTML = '';
         
         if (currentOptionsData[index]) {
             const data = currentOptionsData[index].wordObj;
@@ -303,7 +305,7 @@ window.checkAnswer = function(selectedIndex) {
 }
 
 
-// ================= 序列 5：复习认词与 Tab 菜单 =================
+// ================= 序列 5：复习认词与详情逻辑 =================
 function renderStage1() {
     els.app.className = 'bg-green';
     els.skeletonBars.classList.remove('hidden');
@@ -404,7 +406,6 @@ function highlightYellow(text) {
 
 // ================= 序列 6：沉浸大卡片核心系统 (二维滑动) =================
 
-// 1. 打开卡片并初始化二维轨道
 els.btnOpenImmersive.addEventListener('click', () => {
     if (!currentWordObj.meanings || currentWordObj.meanings.length === 0) return;
     
@@ -426,14 +427,12 @@ els.btnOpenImmersive.addEventListener('click', () => {
         `;
     });
 
-    // 初始化上层例句、底部胶囊，并执行位置重置
     updateGlobalDots();
-    populateUpperTrack(0); // 载入第 1 个考义的例句
+    populateUpperTrack(0); 
     
     // 强制清除旧的 transform (瞬间归零)
     els.lowerTrack.style.transition = 'none';
     els.lowerTrack.style.transform = `translateX(0%)`;
-    // 强制重绘，恢复动画
     void els.lowerTrack.offsetWidth;
     els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
 
@@ -441,12 +440,10 @@ els.btnOpenImmersive.addEventListener('click', () => {
     views.immersive.classList.replace('hidden', 'active');
 });
 
-// 2. 注入上层轨道数据 (当释义切换时触发)
 function populateUpperTrack(meaningIdx) {
     const meaning = currentWordObj.meanings[meaningIdx];
-    currentExampleIndex = 0; // 切换考义后，例句重置为该考义的第一句
+    currentExampleIndex = 0; 
     
-    // 填入所有的例句作为 Slide
     els.upperTrack.innerHTML = '';
     meaning.examples.forEach(ex => {
         els.upperTrack.innerHTML += `
@@ -457,7 +454,6 @@ function populateUpperTrack(meaningIdx) {
         `;
     });
 
-    // 生成上层翻页点
     els.upperDots.innerHTML = '';
     if (meaning.examples.length > 1) {
         meaning.examples.forEach((_, idx) => {
@@ -465,26 +461,20 @@ function populateUpperTrack(meaningIdx) {
         });
     }
 
-    // 强制归零上层轨道
     els.upperTrack.style.transition = 'none';
     els.upperTrack.style.transform = `translateX(0%)`;
     void els.upperTrack.offsetWidth;
     els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
     
-    // 更新固定不动的标题 (如“日常口语”)
     els.upperSource.innerText = meaning.examples[0].source || "词典例句";
 }
 
-// 3. 执行滑动位置更新 (Update Transforms)
 function updateUpperTransform() {
     els.upperTrack.style.transform = `translateX(-${currentExampleIndex * 100}%)`;
-    
-    // 更新例句点点
     const dots = els.upperDots.querySelectorAll('.dot');
     if (dots.length > 0) {
         dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentExampleIndex));
     }
-    // 更新左上角来源标题
     const currentEx = currentWordObj.meanings[currentMeaningIndex].examples[currentExampleIndex];
     els.upperSource.innerText = currentEx.source || "词典例句";
 }
@@ -494,7 +484,6 @@ function updateLowerTransform() {
     updateGlobalDots();
 }
 
-// 更新底部全局考义点 (胶囊逻辑)
 function updateGlobalDots() {
     els.globalDots.innerHTML = '';
     const total = currentWordObj.meanings.length;
@@ -513,9 +502,8 @@ function updateGlobalDots() {
 // ================= 序列 7：手势滑动侦听 (Touch Events) =================
 
 let startX = 0;
-const SWIPE_THRESHOLD = 40; // 滑动阈值，超过 40px 判定为翻页
+const SWIPE_THRESHOLD = 40; 
 
-// 侦听上层视口 (滑动例句)
 els.upperWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
 els.upperWindow.addEventListener('touchend', e => {
     let diff = e.changedTouches[0].screenX - startX;
@@ -523,16 +511,15 @@ els.upperWindow.addEventListener('touchend', e => {
     
     if (totalEx > 1) {
         if (diff < -SWIPE_THRESHOLD && currentExampleIndex < totalEx - 1) {
-            currentExampleIndex++; // 往左划
+            currentExampleIndex++; 
             updateUpperTransform();
         } else if (diff > SWIPE_THRESHOLD && currentExampleIndex > 0) {
-            currentExampleIndex--; // 往右划
+            currentExampleIndex--; 
             updateUpperTransform();
         }
     }
 });
 
-// 侦听下层视口 (滑动考义)
 els.lowerWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
 els.lowerWindow.addEventListener('touchend', e => {
     let diff = e.changedTouches[0].screenX - startX;
@@ -540,14 +527,11 @@ els.lowerWindow.addEventListener('touchend', e => {
     
     if (totalMeanings > 1) {
         if (diff < -SWIPE_THRESHOLD && currentMeaningIndex < totalMeanings - 1) {
-            // 滑向下一个意思
             currentMeaningIndex++;
             updateLowerTransform();
-            // 核心联动：下层考义变了，上层例句必须重构
             setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150); 
             
         } else if (diff > SWIPE_THRESHOLD && currentMeaningIndex > 0) {
-            // 滑向上一个意思
             currentMeaningIndex--;
             updateLowerTransform();
             setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150);
@@ -565,5 +549,5 @@ els.btnImClose.addEventListener('click', () => {
 els.btnImNext.addEventListener('click', () => {
     views.immersive.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
-    setTimeout(() => loadNextState(), 150); // 切回后立刻翻下一词
+    setTimeout(() => loadNextState(), 150); 
 });
