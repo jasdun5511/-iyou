@@ -44,49 +44,75 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .skeleton-line.short { width: 45%; }
 .skeleton-line.long { width: 30%; }
 
-.hint-text { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-bottom: 24px; }
 #definition-area { margin-bottom: 30px; }
 .def-line { line-height: 1.6; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 15px; }
 .pos-grey { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-right: 8px; }
 .zh-white { font-size: 1.1rem; color: #fff; }
 
-.options-list { display: flex; flex-direction: column; gap: 10px; }
-/* ================= 选项基础样式 (保持原样即可) ================= */
-.option { background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px 20px; cursor: pointer; min-height: 76px; display: flex; flex-direction: column; justify-content: center; transition: all 0.2s ease; border: 1px solid transparent; }
-.option:active, .option.active { background: rgba(255, 255, 255, 0.18); } 
-.opt-pos { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 6px; display: block; }
-.opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; }
+/* ================= 全新的 2x2 物理卡片测验区 ================= */
 
-/* ================= 新增：答错/答对的框体与双语样式 ================= */
-/* 淡淡的红底 + 红色描边 */
+/* 出题容器：深色物理大卡片 */
+.quiz-card-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(30, 35, 45, 0.95); 
+    border-radius: 20px;
+    padding: 30px 20px 25px 20px;
+    margin: 10px 0; 
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.03); 
+}
+
+.hint-text { 
+    font-size: 0.8rem; 
+    color: rgba(255,255,255,0.4); 
+    margin-bottom: 30px; 
+    text-align: center; 
+}
+
+/* 2x2 网格布局 */
+.options-grid { 
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    grid-template-rows: repeat(2, 1fr);    
+    gap: 12px; 
+    flex-grow: 1; 
+}
+
+/* 选项按钮精致化 */
+.option { 
+    background: rgba(255, 255, 255, 0.06); 
+    border-radius: 14px; 
+    padding: 15px; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    transition: all 0.2s ease; 
+    border: 1px solid transparent; 
+}
+.option:active { background: rgba(255, 255, 255, 0.15); } 
+
+.opt-pos { font-size: 0.75rem; color: #2ecc71; margin-bottom: 6px; display: block; font-weight: 500;}
+.opt-zh { font-size: 1.0rem; color: #fff; line-height: 1.4; text-align: center;} 
+
+/* === 答错/答对的框体反馈与双语排版 === */
 .option.wrong {
     background-color: rgba(231, 76, 60, 0.15) !important;
     border: 1px solid rgba(231, 76, 60, 0.5);
 }
-
-/* 淡淡的绿底 + 绿色描边 */
 .option.correct {
     background-color: rgba(46, 204, 113, 0.15) !important;
     border: 1px solid rgba(46, 204, 113, 0.5);
 }
 
-/* 选项变成双语对照时的排版 */
-.opt-bilingual {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.opt-pt-text {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #fff;
-    letter-spacing: 0.5px;
-}
-.opt-zh-text {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.7);
-}
-/* ============================================================== */
+.opt-bilingual { display: flex; flex-direction: column; gap: 5px; align-items: center;}
+.opt-pt-text { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+.opt-zh-text { font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); text-align: center; line-height: 1.4;}
+
+/* ========================================================= */
 
 .card { background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
 .sentence-card { background: rgba(255, 255, 255, 0.07); }
@@ -102,20 +128,18 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.15); /* 提供对比度的半透明白圈 */
+    background-color: rgba(255, 255, 255, 0.15); 
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     transition: background-color 0.2s ease;
     z-index: 10;
-    -webkit-tap-highlight-color: transparent; /* 消除移动端点击黑块闪烁 */
+    -webkit-tap-highlight-color: transparent; 
 }
-
-/* 鼠标悬浮 / 手指按下时的交互反馈 */
 .expand-card-btn:hover,
 .expand-card-btn:active {
-    background-color: rgba(255, 255, 255, 0.25); /* 悬浮时背景提亮 */
+    background-color: rgba(255, 255, 255, 0.25); 
 }
 
 #tab-content-container { height: 160px; overflow: hidden; margin-bottom: 15px; }
@@ -144,9 +168,7 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .line.green { background-color: #2ecc71; }
 .hidden { display: none !important; }
 
-/* ==================================================================== */
 /* ================= 序列 3：沉浸式原生滑动 大卡片专属 ================= */
-/* ==================================================================== */
 
 .immersive-content-wrapper { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; z-index: 2; }
 .immersive-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 25, 30, 0.95); z-index: 1; }
@@ -155,53 +177,45 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .slider-track { display: flex; width: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .slider-slide { flex: 0 0 100%; width: 100%; box-sizing: border-box; }
 
-/* -- 深度调整后的上层：例句区 -- */
 .immersive-upper { flex: 5; display: flex; flex-direction: column; padding: 50px 0 20px 0; position: relative; }
 .upper-header { display: flex; justify-content: space-between; align-items: center; padding: 0 24px; margin-bottom: 20px; }
 .source-tag { background: rgba(255, 255, 255, 0.12); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.8); }
 
 #upper-window { flex-grow: 1; display: flex; align-items: center; padding: 0 10px; }
-/* 核心细节：字号放大至 1.8rem，加粗，line-height 调大 */
 .im-en-sentence { font-size: 1.8rem; line-height: 1.45; font-weight: 700; margin-bottom: 18px; padding: 0 24px; letter-spacing: 0.2px; }
 .highlight-yellow { color: #f1c40f; }
-/* 核心细节：翻译颜色调为 60% 透明度 */
 .im-zh-sentence { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.55; padding: 0 24px; }
 
 .upper-pagination { display: flex; gap: 8px; justify-content: flex-start; padding: 0 24px; margin-bottom: 10px; }
 .upper-pagination .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: background 0.3s; }
 .upper-pagination .dot.active { background: #fff; }
 
-/* -- 深度调整后的下层：释义面板区 -- */
 .immersive-lower { flex: 4; padding: 0 16px; margin-bottom: 10px;}
 
 .def-panel {
-    background: rgba(35, 40, 50, 0.95); /* 更暗，对比更强 */
+    background: rgba(35, 40, 50, 0.95); 
     border-radius: 20px; 
     padding: 28px 24px; 
     height: 100%; 
     position: relative; 
-    /* 核心细节：加上非常高级的、淡淡的大半径投影 */
     box-shadow: 0 -8px 30px rgba(0,0,0,0.3);
     margin: 0 6px; 
-    border: 1px solid rgba(255,255,255,0.03); /* 增加极细的边缘描边，显得精致 */
+    border: 1px solid rgba(255,255,255,0.03); 
 }
 
-/* 核心细节：vt. 采用鲜艳的主题绿 */
 .im-pos { font-size: 0.85rem; color: #2ecc71; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; }
 .im-en-def { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.45; font-weight: 500;}
-/* 核心细节：中文翻译调为 50% 透明度灰色 */
 .im-zh-def { font-size: 0.98rem; color: rgba(255,255,255,0.5); line-height: 1.5;}
 
 .meaning-counter { position: absolute; bottom: 22px; right: 24px; font-size: 0.85rem; color: rgba(255,255,255,0.3); font-weight: 600; }
 
-/* -- 深度调整后的底部：考义与按钮 -- */
 .immersive-footer { 
-    height: 85px; /* 增加一点高度 */
+    height: 85px; 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     padding: 0 24px; 
-    background: rgba(20, 25, 30, 0.98); /* 确保绝对不透明 */
+    background: rgba(20, 25, 30, 0.98); 
     position: relative; 
 }
 
@@ -217,8 +231,7 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 }
 .im-footer-btn:active { opacity: 0.6; }
 
-/* 核心还原排版：文字不堆叠，精准对齐 */
-.im-btn-next-word { color: #f39c12; } /* 下一词采用橙色高亮 */
+.im-btn-next-word { color: #f39c12; } 
 .im-btn-close { color: rgba(255,255,255,0.6); }
 
 .global-pagination { 
@@ -237,7 +250,6 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
 }
 
-/* 核心细节：考义胶囊的内边距和字号微调 */
 .global-dot.capsule { 
     width: auto; height: auto; 
     background: #fff; color: #000; 
