@@ -202,14 +202,14 @@ window.loadNextState = function() {
 }
 
 
-// ================= 序列 4：测验出题与交互反馈逻辑 (经典上下排版版) =================
+// ================= 序列 4：【本次核心更新】测验出题与判题逻辑 =================
 
 function renderStage0() {
     els.app.className = 'bg-blur';
     els.quizArea.classList.remove('hidden');
     els.fQuiz.classList.remove('hidden');
 
-    // 每次进入新词时，重置底部按钮为“看答案”
+    // 每次进入新词时，重置底部按钮为默认的“看答案”
     els.fQuiz.innerHTML = `
         <div class="action-item" onclick="showAnswerDirectly()">
             <span>看答案</span><div class="line red"></div>
@@ -229,9 +229,8 @@ function renderStage0() {
     els.options.forEach((optContainer, index) => {
         const contentEl = els.optContents[index];
         
-        // 核心：清空残留的状态，避免上一题的红绿底色污染新题
+        // 核心：清空上一题可能残留的 wrong/correct 背景色和双语排版
         optContainer.classList.remove('wrong', 'correct', 'active');
-        contentEl.innerHTML = '';
         
         if (currentOptionsData[index]) {
             const data = currentOptionsData[index].wordObj;
@@ -245,7 +244,7 @@ function renderStage0() {
 }
 
 window.checkAnswer = function(selectedIndex) {
-    els.options.forEach(el => el.style.pointerEvents = 'none'); 
+    els.options.forEach(el => el.style.pointerEvents = 'none'); // 选完锁死其他选项
     
     const selectedData = currentOptionsData[selectedIndex];
     const clickedBtn = els.options[selectedIndex];
@@ -253,7 +252,7 @@ window.checkAnswer = function(selectedIndex) {
     if (selectedData.isCorrect) {
         currentWordObj.stage = 1; learningQueue.push(currentWordObj); updateDots(1); 
         
-        // 选对时变浅绿双语
+        // 选对时：框体变淡淡的绿色，显示双语
         clickedBtn.classList.add('correct');
         els.optContents[selectedIndex].innerHTML = `
             <div class="opt-bilingual">
@@ -261,12 +260,13 @@ window.checkAnswer = function(selectedIndex) {
                 <span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span>
             </div>
         `;
-        // 选对自动跳转
+        
+        // 选对则保留自动跳转体验
         setTimeout(() => showDetails(), 400); 
     } else {
         currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0); 
         
-        // 1. 选错的框：变淡淡的红色，展示双语
+        // 1. 选错时：你点错的框体变淡淡的红色，显示那个错误单词的双语
         clickedBtn.classList.add('wrong');
         els.optContents[selectedIndex].innerHTML = `
             <div class="opt-bilingual">
@@ -275,7 +275,7 @@ window.checkAnswer = function(selectedIndex) {
             </div>
         `;
         
-        // 2. 正确的框：变淡淡的绿色，展示双语
+        // 2. 自动显示正确答案：正确的框体变淡淡的绿色，显示正确单词的双语
         currentOptionsData.forEach((opt, index) => {
             if (opt.isCorrect) {
                 const correctBtn = els.options[index];
@@ -291,7 +291,8 @@ window.checkAnswer = function(selectedIndex) {
         
         playAudio(selectedData.wordObj.pt);
         
-        // 3. 底部变为“查看详情”，不自动跳转！给用户留出复盘时间
+        // 3. 核心交互修改：不再自动跳转！
+        // 将底部按钮替换为“查看详情”，让用户自己对比看明白后，手动点击进入下一页
         els.fQuiz.innerHTML = `
             <div class="action-item" onclick="showDetails()" style="animation: fadeIn 0.3s;">
                 <span style="color: #fff; font-weight: 500;">查看详情</span>
@@ -302,7 +303,7 @@ window.checkAnswer = function(selectedIndex) {
 }
 
 
-// ================= 序列 5：复习认词与详情逻辑 =================
+// ================= 序列 5：复习认词与 Tab 菜单 =================
 function renderStage1() {
     els.app.className = 'bg-green';
     els.skeletonBars.classList.remove('hidden');
@@ -403,6 +404,7 @@ function highlightYellow(text) {
 
 // ================= 序列 6：沉浸大卡片核心系统 (二维滑动) =================
 
+// 1. 打开卡片并初始化二维轨道
 els.btnOpenImmersive.addEventListener('click', () => {
     if (!currentWordObj.meanings || currentWordObj.meanings.length === 0) return;
     
@@ -424,12 +426,14 @@ els.btnOpenImmersive.addEventListener('click', () => {
         `;
     });
 
+    // 初始化上层例句、底部胶囊，并执行位置重置
     updateGlobalDots();
-    populateUpperTrack(0); 
+    populateUpperTrack(0); // 载入第 1 个考义的例句
     
     // 强制清除旧的 transform (瞬间归零)
     els.lowerTrack.style.transition = 'none';
     els.lowerTrack.style.transform = `translateX(0%)`;
+    // 强制重绘，恢复动画
     void els.lowerTrack.offsetWidth;
     els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
 
@@ -437,10 +441,12 @@ els.btnOpenImmersive.addEventListener('click', () => {
     views.immersive.classList.replace('hidden', 'active');
 });
 
+// 2. 注入上层轨道数据 (当释义切换时触发)
 function populateUpperTrack(meaningIdx) {
     const meaning = currentWordObj.meanings[meaningIdx];
-    currentExampleIndex = 0; 
+    currentExampleIndex = 0; // 切换考义后，例句重置为该考义的第一句
     
+    // 填入所有的例句作为 Slide
     els.upperTrack.innerHTML = '';
     meaning.examples.forEach(ex => {
         els.upperTrack.innerHTML += `
@@ -451,6 +457,7 @@ function populateUpperTrack(meaningIdx) {
         `;
     });
 
+    // 生成上层翻页点
     els.upperDots.innerHTML = '';
     if (meaning.examples.length > 1) {
         meaning.examples.forEach((_, idx) => {
@@ -458,20 +465,26 @@ function populateUpperTrack(meaningIdx) {
         });
     }
 
+    // 强制归零上层轨道
     els.upperTrack.style.transition = 'none';
     els.upperTrack.style.transform = `translateX(0%)`;
     void els.upperTrack.offsetWidth;
     els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
     
+    // 更新固定不动的标题 (如“日常口语”)
     els.upperSource.innerText = meaning.examples[0].source || "词典例句";
 }
 
+// 3. 执行滑动位置更新 (Update Transforms)
 function updateUpperTransform() {
     els.upperTrack.style.transform = `translateX(-${currentExampleIndex * 100}%)`;
+    
+    // 更新例句点点
     const dots = els.upperDots.querySelectorAll('.dot');
     if (dots.length > 0) {
         dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentExampleIndex));
     }
+    // 更新左上角来源标题
     const currentEx = currentWordObj.meanings[currentMeaningIndex].examples[currentExampleIndex];
     els.upperSource.innerText = currentEx.source || "词典例句";
 }
@@ -481,6 +494,7 @@ function updateLowerTransform() {
     updateGlobalDots();
 }
 
+// 更新底部全局考义点 (胶囊逻辑)
 function updateGlobalDots() {
     els.globalDots.innerHTML = '';
     const total = currentWordObj.meanings.length;
@@ -499,8 +513,9 @@ function updateGlobalDots() {
 // ================= 序列 7：手势滑动侦听 (Touch Events) =================
 
 let startX = 0;
-const SWIPE_THRESHOLD = 40; 
+const SWIPE_THRESHOLD = 40; // 滑动阈值，超过 40px 判定为翻页
 
+// 侦听上层视口 (滑动例句)
 els.upperWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
 els.upperWindow.addEventListener('touchend', e => {
     let diff = e.changedTouches[0].screenX - startX;
@@ -508,15 +523,16 @@ els.upperWindow.addEventListener('touchend', e => {
     
     if (totalEx > 1) {
         if (diff < -SWIPE_THRESHOLD && currentExampleIndex < totalEx - 1) {
-            currentExampleIndex++; 
+            currentExampleIndex++; // 往左划
             updateUpperTransform();
         } else if (diff > SWIPE_THRESHOLD && currentExampleIndex > 0) {
-            currentExampleIndex--; 
+            currentExampleIndex--; // 往右划
             updateUpperTransform();
         }
     }
 });
 
+// 侦听下层视口 (滑动考义)
 els.lowerWindow.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
 els.lowerWindow.addEventListener('touchend', e => {
     let diff = e.changedTouches[0].screenX - startX;
@@ -524,11 +540,14 @@ els.lowerWindow.addEventListener('touchend', e => {
     
     if (totalMeanings > 1) {
         if (diff < -SWIPE_THRESHOLD && currentMeaningIndex < totalMeanings - 1) {
+            // 滑向下一个意思
             currentMeaningIndex++;
             updateLowerTransform();
+            // 核心联动：下层考义变了，上层例句必须重构
             setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150); 
             
         } else if (diff > SWIPE_THRESHOLD && currentMeaningIndex > 0) {
+            // 滑向上一个意思
             currentMeaningIndex--;
             updateLowerTransform();
             setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150);
@@ -546,5 +565,5 @@ els.btnImClose.addEventListener('click', () => {
 els.btnImNext.addEventListener('click', () => {
     views.immersive.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
-    setTimeout(() => loadNextState(), 150); 
+    setTimeout(() => loadNextState(), 150); // 切回后立刻翻下一词
 });
