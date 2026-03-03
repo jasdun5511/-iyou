@@ -62,7 +62,7 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .en-text strong { font-weight: 600; }
 .zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-/* ================== 新增：右下角带背景的圆形按钮样式 ================== */
+/* 右下角带背景的圆形按钮样式 */
 .expand-card-btn {
     position: absolute;
     bottom: 12px;
@@ -85,7 +85,6 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .expand-card-btn:active {
     background-color: rgba(255, 255, 255, 0.25); /* 悬浮时背景提亮 */
 }
-/* ====================================================================== */
 
 #tab-content-container { height: 160px; overflow: hidden; margin-bottom: 15px; }
 .phrase-item { margin-bottom: 15px; }
@@ -124,58 +123,71 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .slider-track { display: flex; width: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .slider-slide { flex: 0 0 100%; width: 100%; box-sizing: border-box; }
 
+/* -- 深度调整后的上层：例句区 -- */
 .immersive-upper { flex: 5; display: flex; flex-direction: column; padding: 50px 0 20px 0; position: relative; }
 .upper-header { display: flex; justify-content: space-between; align-items: center; padding: 0 24px; margin-bottom: 20px; }
-.source-tag { background: rgba(255, 255, 255, 0.15); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.9); }
+.source-tag { background: rgba(255, 255, 255, 0.12); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.8); }
 
-#upper-window { flex-grow: 1; display: flex; align-items: center; }
-.im-en-sentence { font-size: 1.6rem; line-height: 1.4; font-weight: 600; margin-bottom: 15px; padding: 0 24px; }
+#upper-window { flex-grow: 1; display: flex; align-items: center; padding: 0 10px; }
+/* 核心细节：字号放大至 1.8rem，加粗，line-height 调大 */
+.im-en-sentence { font-size: 1.8rem; line-height: 1.45; font-weight: 700; margin-bottom: 18px; padding: 0 24px; letter-spacing: 0.2px; }
 .highlight-yellow { color: #f1c40f; }
-.im-zh-sentence { font-size: 1.05rem; color: rgba(255,255,255,0.7); line-height: 1.5; padding: 0 24px; }
+/* 核心细节：翻译颜色调为 60% 透明度 */
+.im-zh-sentence { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.55; padding: 0 24px; }
 
 .upper-pagination { display: flex; gap: 8px; justify-content: flex-start; padding: 0 24px; margin-bottom: 10px; }
-.upper-pagination .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s; }
+.upper-pagination .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: background 0.3s; }
 .upper-pagination .dot.active { background: #fff; }
 
-.immersive-lower { flex: 4; padding: 0 15px; }
+/* -- 深度调整后的下层：释义面板区 -- */
+.immersive-lower { flex: 4; padding: 0 16px; margin-bottom: 10px;}
 
 .def-panel {
-    background: rgba(40, 45, 55, 0.9); 
+    background: rgba(35, 40, 50, 0.95); /* 更暗，对比更强 */
     border-radius: 20px; 
-    padding: 25px 20px; 
+    padding: 28px 24px; 
     height: 100%; 
     position: relative; 
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
-    margin: 0 5px; 
+    /* 核心细节：加上非常高级的、淡淡的大半径投影 */
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.3);
+    margin: 0 6px; 
+    border: 1px solid rgba(255,255,255,0.03); /* 增加极细的边缘描边，显得精致 */
 }
 
-.im-pos { font-size: 0.85rem; color: #2ecc71; margin-bottom: 10px; font-weight: 500; }
-.im-en-def { font-size: 1.1rem; margin-bottom: 8px; line-height: 1.4; }
-.im-zh-def { font-size: 0.95rem; color: rgba(255,255,255,0.6); }
+/* 核心细节：vt. 采用鲜艳的主题绿 */
+.im-pos { font-size: 0.85rem; color: #2ecc71; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; }
+.im-en-def { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.45; font-weight: 500;}
+/* 核心细节：中文翻译调为 50% 透明度灰色 */
+.im-zh-def { font-size: 0.98rem; color: rgba(255,255,255,0.5); line-height: 1.5;}
 
-.meaning-counter { position: absolute; bottom: 20px; right: 20px; font-size: 0.85rem; color: rgba(255,255,255,0.4); font-weight: 600; }
+.meaning-counter { position: absolute; bottom: 22px; right: 24px; font-size: 0.85rem; color: rgba(255,255,255,0.3); font-weight: 600; }
 
+/* -- 深度调整后的底部：考义与按钮 -- */
 .immersive-footer { 
-    height: 80px; 
+    height: 85px; /* 增加一点高度 */
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     padding: 0 24px; 
-    background: rgba(20, 25, 30, 0.95);
+    background: rgba(20, 25, 30, 0.98); /* 确保绝对不透明 */
     position: relative; 
 }
 
 .im-footer-btn { 
-    font-size: 0.9rem; 
+    font-size: 0.92rem; 
     color: rgba(255,255,255,0.85); 
     cursor: pointer; 
     display: flex; 
     align-items: center; 
-    gap: 6px; 
+    gap: 7px; 
     font-weight: 500;
     transition: opacity 0.2s;
 }
 .im-footer-btn:active { opacity: 0.6; }
+
+/* 核心还原排版：文字不堆叠，精准对齐 */
+.im-btn-next-word { color: #f39c12; } /* 下一词采用橙色高亮 */
+.im-btn-close { color: rgba(255,255,255,0.6); }
 
 .global-pagination { 
     position: absolute;
@@ -189,13 +201,14 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .global-dot { 
     width: 6px; height: 6px; 
     border-radius: 50%; 
-    background: rgba(255,255,255,0.3); 
+    background: rgba(255,255,255,0.2); 
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
 }
 
+/* 核心细节：考义胶囊的内边距和字号微调 */
 .global-dot.capsule { 
     width: auto; height: auto; 
     background: #fff; color: #000; 
     font-size: 0.75rem; font-weight: 600; 
-    padding: 4px 12px; border-radius: 12px; 
+    padding: 4px 13px; border-radius: 12px; 
 }
