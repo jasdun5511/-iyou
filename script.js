@@ -1,272 +1,676 @@
-/* ================= 序列 1：全局基础样式 ================= */
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hidden; }
+// ================= 序列 1：升维版数据结构 =================
+// 核心修改：增加了 errorCount 字段用于全局错误追踪
+const vocabularyData = [
+    { 
+        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", errorCount: 0,
+        example: { pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", zh: "即使在城市里，工作也很难找。" },
+        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"],
+        derivatives: ["mesmíssimo (adj. 完全一样的)"],
+        roots: ["源自拉丁语 'metipsimus'"],
+        synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"],
+        
+        meanings: [
+            { pos: "adv.", enDef: "even, exactly", zhDef: "甚至，即使", examples: [{ source: "柯林斯词典", pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", zh: "即使在城市里，工作也很难找。" }] },
+            { pos: "adj.", enDef: "same, identical", zhDef: "同一个的", examples: [{ source: "小学教材", pt: "Nós moramos na <strong>mesma</strong> rua.", zh: "我们住在同一条街上。" }] },
+            { pos: "pron.", enDef: "oneself", zhDef: "(强调) 自己", examples: [{ source: "基础语法", pt: "Eu <strong>mesmo</strong> fiz o bolo.", zh: "我自己做了蛋糕。" }] }
+        ]
+    },
+    { 
+        pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", errorCount: 0,
+        example: { pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
+        phrases: ["encorajar a violência 助长暴力", "encorajar o investimento 促进投资"],
+        derivatives: ["coragem (n. 勇气)", "encorajamento (n. 鼓励，怂恿)"],
+        roots: ["en- (使...) + coragem (勇气) + -ar (动词后缀)"],
+        synonyms: ["animar (vt. 使兴奋)"],
+        
+        meanings: [
+            { pos: "vt.", enDef: "encourage, advise", zhDef: "鼓励，怂恿", examples: [{ source: "TED 演讲", pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" }] },
+            { pos: "vt.", enDef: "promote, stimulate", zhDef: "促进，刺激", examples: [{ source: "经济学人", pt: "O governo deve <strong>encorajar</strong> o investimento estrangeiro.", zh: "政府应该促进外国投资。" }] }
+        ]
+    }
+];
 
-#app {
-    height: 100vh; color: #fff; position: relative;
-    background-image: linear-gradient(rgba(35, 45, 55, 0.8), rgba(15, 25, 35, 0.98)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1080&auto=format&fit=crop');
-    background-size: cover; background-position: center; transition: background 0.6s ease;
+// ================= 序列 2：全局状态与 DOM 元素 =================
+let learningQueue = [];
+let learnedCount = 0;
+let totalWords = 0;
+let currentWordObj = null;
+let currentOptionsData = [];
+
+// 沉浸式 Modal 的双维滑动状态
+let currentMeaningIndex = 0;
+let currentExampleIndex = 0;
+
+// 全新：拼写测试的状态
+let spellingQueue = [];
+let wrongWordsQueue = [];
+let currentSpellWord = null;
+let spellCurrentIndex = 0;
+let spellTotalInRound = 0;
+let spellHasErroredThisTurn = false;
+let isSpellChecking = false;
+
+// DOM 视图路由
+const views = { 
+    home: document.getElementById('home-view'), 
+    learning: document.getElementById('learning-view'),
+    immersive: document.getElementById('immersive-modal'),
+    spelling: document.getElementById('spelling-view'),
+    summary: document.getElementById('summary-view')
+};
+
+// DOM 元素集合
+const els = {
+    app: document.getElementById('app'),
+    wordPt: document.getElementById('word-pt'),
+    phonetic: document.getElementById('word-phonetic-text'),
+    pos: document.getElementById('word-pos'),
+    zh: document.getElementById('word-zh-title'),
+    progressText: document.getElementById('progress-text'),
+    dots: document.querySelectorAll('.dot'),
+    dotsContainer: document.getElementById('progress-dots'),
+    successBadge: document.getElementById('word-success-badge'),
+    skeletonBars: document.getElementById('skeleton-bars'),
+    quizArea: document.getElementById('quiz-area'),
+    recognizeArea: document.getElementById('recognize-area'),
+    defArea: document.getElementById('definition-area'),
+    detailArea: document.getElementById('detail-area'),
+    options: document.querySelectorAll('.option'), 
+    optContents: document.querySelectorAll('.option .opt-content'), 
+    tabContent: document.getElementById('tab-content-container'),
+    tabs: document.querySelectorAll('.tab'),
+    recogExPt: document.getElementById('recognize-example-pt'),
+    recogSentenceCard: document.getElementById('recognize-sentence-card'),
+    recogBlindText: document.getElementById('recognize-blind-text'),
+    fQuiz: document.getElementById('footer-quiz'),
+    fRecog: document.getElementById('footer-recognize'),
+    fDetail: document.getElementById('footer-detail'),
+    
+    // 大卡片专属元素
+    btnOpenImmersive: document.getElementById('btn-open-immersive'),
+    upperWindow: document.getElementById('upper-window'),
+    upperTrack: document.getElementById('upper-track'),
+    lowerWindow: document.getElementById('lower-window'),
+    lowerTrack: document.getElementById('lower-track'),
+    upperSource: document.getElementById('upper-source-tag'),
+    upperDots: document.getElementById('upper-dots'),
+    globalDots: document.getElementById('global-dots'),
+    btnImClose: document.getElementById('im-btn-close'),
+    btnImNext: document.getElementById('im-btn-next-word'),
+
+    // 全新：拼写与小结元素
+    spellProgress: document.getElementById('spell-progress-text'),
+    spellMeaning: document.getElementById('spell-word-meaning'),
+    letterBoxes: document.getElementById('letter-boxes'),
+    hiddenInput: document.getElementById('hidden-input'),
+    hintContainer: document.getElementById('hint-container'),
+    bulbIcon: document.getElementById('bulb-icon'),
+    phoneticText: document.getElementById('phonetic-text'),
+    summaryList: document.getElementById('summary-list'),
+    totalCount: document.getElementById('total-words-count'),
+    btnFinish: document.getElementById('btn-finish')
+};
+
+document.getElementById('learn-count').innerText = vocabularyData.length;
+
+// ================= 序列 3：基础背词与流程控制 =================
+function playAudio(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'pt-BR'; window.speechSynthesis.speak(utterance);
+    }
 }
-.bg-green { background-image: linear-gradient(to bottom, #394a3d, #1f2b23); }
+document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
-.view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; transition: opacity 0.3s ease; }
-.view.hidden { opacity: 0; pointer-events: none; z-index: -1; }
-.view.active { opacity: 1; pointer-events: all; z-index: 1; }
+document.getElementById('btn-learn').addEventListener('click', () => {
+    if (vocabularyData.length === 0) return;
+    // 每次开始学习，重置所有错误计数
+    vocabularyData.forEach(w => w.errorCount = 0);
+    learningQueue = vocabularyData.map(word => ({ ...word, stage: 0 }));
+    totalWords = learningQueue.length;
+    learnedCount = 0;
+    views.home.classList.replace('active', 'hidden');
+    views.learning.classList.replace('hidden', 'active');
+    loadNextState();
+});
 
-#home-view { justify-content: space-between; padding: 60px 20px 20px 20px; }
-.home-title { text-align: center; font-size: 2.5rem; font-weight: 600; margin-top: 20vh; letter-spacing: 0.5px; }
-.cards-container { display: flex; gap: 12px; margin-bottom: 30px; }
-.nav-card { flex: 1; background: rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 16px 20px; cursor: pointer; backdrop-filter: blur(10px); }
-.nav-card h3 { font-size: 1.1rem; font-weight: 500; margin-bottom: 4px; }
-.nav-count { color: #f39c12; font-size: 1.1rem; font-weight: 600; }
-.bottom-nav { display: flex; justify-content: space-around; padding: 10px 0; color: rgba(255,255,255,0.4); font-size: 1.2rem; }
-.bottom-nav i.active { color: #fff; }
+document.getElementById('btn-back').addEventListener('click', () => {
+    views.learning.classList.replace('active', 'hidden');
+    views.home.classList.replace('hidden', 'active');
+});
 
-#learning-view { padding: 45px 24px 30px 24px; }
-.top-bar { display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 40px; }
-.top-bar .left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.top-bar .right { display: flex; gap: 20px; }
-
-.content-area { flex-grow: 1; overflow: hidden; padding-bottom: 80px; }
-.word-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 15px; position: relative; }
-#word-pt { font-size: 2.8rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1; }
-.success-badge { color: #34c759; font-size: 1.2rem; margin-bottom: 18px; } 
-
-.progress-dots { display: flex; flex-direction: column-reverse; gap: 4px; margin-bottom: 6px; margin-left: 5px; }
-.dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.3s; }
-.dot.active { background: #2ecc71; box-shadow: 0 0 4px rgba(46, 204, 113, 0.4); }
-
-.phonetic-row { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 35px; cursor: pointer; }
-.accent-tag { background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; color: rgba(255,255,255,0.8); }
-
-.skeleton-bars { margin-bottom: 30px; }
-.skeleton-line { height: 16px; background: rgba(255,255,255,0.08); border-radius: 6px; margin-bottom: 8px; }
-.skeleton-line.short { width: 45%; }
-.skeleton-line.long { width: 30%; }
-
-.hint-text { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-bottom: 24px; text-align: center; }
-#definition-area { margin-bottom: 30px; }
-.def-line { line-height: 1.6; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 15px; }
-.pos-grey { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-right: 8px; }
-.zh-white { font-size: 1.1rem; color: #fff; }
-
-/* ================= 经典的测验区样式 (恢复上下气泡排列，靠左对齐) ================= */
-.options-list { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 12px; 
-    width: 100%;
-}
-
-.option { 
-    background: rgba(255, 255, 255, 0.08); 
-    border-radius: 14px; 
-    padding: 16px 24px; 
-    cursor: pointer; 
-    min-height: 64px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: flex-start; 
-    transition: all 0.2s ease; 
-    border: 1px solid transparent; 
-}
-.option:active, .option.active { background: rgba(255, 255, 255, 0.18); } 
-
-.opt-pos { font-size: 0.8rem; color: #2ecc71; margin-bottom: 4px; display: block; font-weight: 500;}
-.opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; text-align: left;} 
-
-/* === 答错/答对的框体反馈 === */
-.option.wrong {
-    background-color: rgba(231, 76, 60, 0.12) !important; 
-    border: 1px solid rgba(231, 76, 60, 0.4);
-}
-.option.correct {
-    background-color: rgba(46, 204, 113, 0.12) !important; 
-    border: 1px solid rgba(46, 204, 113, 0.4);
-}
-
-/* === 选错后展示的双语排版 === */
-.opt-bilingual { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 4px; 
-    align-items: flex-start; 
-}
-.opt-pt-text { font-size: 1.15rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
-.opt-zh-text { font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); text-align: left;}
-
-/* ============================================================== */
-
-.card { background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
-.sentence-card { background: rgba(255, 255, 255, 0.07); }
-.en-text { font-size: 1.05rem; line-height: 1.5; margin-bottom: 8px; }
-.en-text strong { font-weight: 600; }
-.zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
-
-/* 右下角带背景的圆形按钮样式 */
-.expand-card-btn {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.15); 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    z-index: 10;
-    -webkit-tap-highlight-color: transparent; 
-}
-.expand-card-btn:hover,
-.expand-card-btn:active { background-color: rgba(255, 255, 255, 0.25); }
-
-#tab-content-container { height: 160px; overflow: hidden; margin-bottom: 15px; }
-.phrase-item { margin-bottom: 15px; }
-.phrase-item:last-child { margin-bottom: 0; }
-.phrase-en { font-size: 0.95rem; margin-bottom: 2px; }
-.phrase-zh { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
-
-.card-footer-tabs { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
-.tabs-left { display: flex; gap: 15px; }
-.tab { cursor: pointer; transition: color 0.2s; }
-.tab.active { color: #fff; font-weight: 500; }
-.tabs-right { display: flex; gap: 15px; font-size: 0.85rem; }
-
-.hint-btn-container { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 120px; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 0.8rem; }
-.bulb-icon { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-.hint-btn-container:active { color: #fff; }
-
-.bottom-action { display: flex; justify-content: center; position: absolute; bottom: 35px; width: calc(100% - 48px); }
-.action-group { width: 100%; display: flex; justify-content: center; }
-.dual-btns { justify-content: space-between; padding: 0 40px; }
-.action-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; color: rgba(255,255,255,0.8); font-size: 0.95rem; font-weight: 500; padding: 10px; transition: transform 0.1s; }
-.action-item:active { transform: scale(0.95); }
-.action-item .line { width: 14px; height: 3px; border-radius: 2px; }
-.line.red { background-color: #e74c3c; }
-.line.green { background-color: #2ecc71; }
-.hidden { display: none !important; }
-
-/* ================= 序列 3：沉浸式原生滑动 大卡片专属 ================= */
-
-.immersive-content-wrapper { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; z-index: 2; }
-.immersive-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 25, 30, 0.95); z-index: 1; }
-
-.slider-window { width: 100%; overflow: hidden; position: relative; }
-.slider-track { display: flex; width: 100%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
-.slider-slide { flex: 0 0 100%; width: 100%; box-sizing: border-box; }
-
-.immersive-upper { flex: 5; display: flex; flex-direction: column; padding: 50px 0 20px 0; position: relative; }
-.upper-header { display: flex; justify-content: space-between; align-items: center; padding: 0 24px; margin-bottom: 20px; }
-.source-tag { background: rgba(255, 255, 255, 0.12); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.8); }
-
-#upper-window { flex-grow: 1; display: flex; align-items: center; padding: 0 10px; }
-.im-en-sentence { font-size: 1.8rem; line-height: 1.45; font-weight: 700; margin-bottom: 18px; padding: 0 24px; letter-spacing: 0.2px; }
-.highlight-yellow { color: #f1c40f; }
-.im-zh-sentence { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.55; padding: 0 24px; }
-
-/* 核心修改 1：上层例句点点居中 */
-.upper-pagination { 
-    display: flex; gap: 8px; justify-content: center; padding: 0; margin-bottom: 10px; 
-}
-.upper-pagination .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: background 0.3s; }
-.upper-pagination .dot.active { background: #fff; }
-
-/* 核心修改 2：下层释义卡片向下延伸 */
-.immersive-lower { 
-    flex: 5.5; 
-    padding: 0 16px 35px 16px; 
-    position: relative;        
-    margin-bottom: 0; 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
 
-.def-panel {
-    background: rgba(35, 40, 50, 0.95); 
-    border-radius: 20px; 
-    padding: 28px 24px; 
-    height: 100%; 
-    position: relative; 
-    box-shadow: 0 -8px 30px rgba(0,0,0,0.3);
-    margin: 0 6px; 
-    border: 1px solid rgba(255,255,255,0.03); 
+function updateDots(stage) {
+    if (stage >= 3) {
+        els.dotsContainer.classList.add('hidden');
+        els.successBadge.classList.remove('hidden'); 
+    } else {
+        els.dotsContainer.classList.remove('hidden');
+        els.successBadge.classList.add('hidden');
+        els.dots.forEach((dot, index) => {
+            if(index < stage) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+    }
 }
 
-.im-pos { font-size: 0.85rem; color: #2ecc71; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; }
-.im-en-def { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.45; font-weight: 500;}
-.im-zh-def { font-size: 0.98rem; color: rgba(255,255,255,0.5); line-height: 1.5;}
-
-.meaning-counter { position: absolute; bottom: 22px; right: 24px; font-size: 0.85rem; color: rgba(255,255,255,0.3); font-weight: 600; }
-
-/* 压缩底部操作栏，把空间让给释义卡片 */
-.immersive-footer { 
-    height: 60px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 0 24px; background: rgba(20, 25, 30, 0.98); position: relative; 
+window.loadNextState = function() {
+    if (learningQueue.length === 0) {
+        // 核心修改：学习队列清空后，不直接结束，进入拼写环节！
+        startSpellingPhase();
+        return;
+    }
+    currentWordObj = learningQueue.shift();
+    
+    els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
+    els.wordPt.innerText = currentWordObj.pt; 
+    els.phonetic.innerText = currentWordObj.phonetic;
+    els.pos.innerText = currentWordObj.pos;
+    els.zh.innerText = currentWordObj.zh;
+    
+    els.defArea.classList.add('hidden');
+    els.detailArea.classList.add('hidden');
+    els.quizArea.classList.add('hidden');
+    els.recognizeArea.classList.add('hidden');
+    els.skeletonBars.classList.add('hidden');
+    els.fQuiz.classList.add('hidden');
+    els.fRecog.classList.add('hidden');
+    els.fDetail.classList.add('hidden');
+    
+    updateDots(currentWordObj.stage);
+    if (currentWordObj.stage === 0) renderStage0();
+    else if (currentWordObj.stage === 1) renderStage1();
+    else if (currentWordObj.stage === 2) renderStage2();
+    playAudio(currentWordObj.pt);
 }
 
-.im-footer-btn { 
-    font-size: 0.92rem; color: rgba(255,255,255,0.85); cursor: pointer; 
-    display: flex; align-items: center; gap: 7px; font-weight: 500; transition: opacity 0.2s;
+
+// ================= 序列 4：测验出题与交互反馈逻辑 =================
+
+function renderStage0() {
+    els.app.className = 'bg-blur';
+    els.quizArea.classList.remove('hidden');
+    els.fQuiz.classList.remove('hidden');
+
+    els.fQuiz.innerHTML = `
+        <div class="action-item" onclick="showAnswerDirectly()">
+            <span>看答案</span><div class="line red"></div>
+        </div>
+    `;
+
+    let options = [{ wordObj: currentWordObj, isCorrect: true }];
+    let wrongCandidates = vocabularyData.filter(w => w.pt !== currentWordObj.pt);
+    shuffleArray(wrongCandidates);
+    
+    for (let i = 0; i < 3 && i < wrongCandidates.length; i++) {
+        options.push({ wordObj: wrongCandidates[i], isCorrect: false });
+    }
+    shuffleArray(options);
+    currentOptionsData = options;
+
+    els.options.forEach((optContainer, index) => {
+        const contentEl = els.optContents[index];
+        optContainer.classList.remove('wrong', 'correct', 'active');
+        contentEl.innerHTML = '';
+        
+        if (currentOptionsData[index]) {
+            const data = currentOptionsData[index].wordObj;
+            contentEl.innerHTML = `<span class="opt-pos">${data.pos}</span><span class="opt-zh">${data.zh}</span>`;
+            optContainer.style.display = 'flex'; 
+            optContainer.style.pointerEvents = 'auto'; 
+        } else {
+            optContainer.style.display = 'none'; 
+        }
+    });
 }
-.im-footer-btn:active { opacity: 0.6; }
 
-.im-btn-next-word { color: #f39c12; } 
-.im-btn-close { color: rgba(255,255,255,0.6); }
+window.checkAnswer = function(selectedIndex) {
+    els.options.forEach(el => el.style.pointerEvents = 'none'); 
+    
+    const selectedData = currentOptionsData[selectedIndex];
+    const clickedBtn = els.options[selectedIndex];
+    
+    if (selectedData.isCorrect) {
+        currentWordObj.stage = 1; learningQueue.push(currentWordObj); updateDots(1); 
+        clickedBtn.classList.add('correct');
+        els.optContents[selectedIndex].innerHTML = `
+            <div class="opt-bilingual"><span class="opt-pt-text">${selectedData.wordObj.pt}</span><span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span></div>
+        `;
+        setTimeout(() => showDetails(), 400); 
+    } else {
+        // 核心修改：记录学习阶段的错误
+        let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
+        if (masterWord) masterWord.errorCount++;
 
-.global-pagination { 
-    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; 
+        currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0); 
+        clickedBtn.classList.add('wrong');
+        els.optContents[selectedIndex].innerHTML = `
+            <div class="opt-bilingual"><span class="opt-pt-text">${selectedData.wordObj.pt}</span><span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span></div>
+        `;
+        
+        currentOptionsData.forEach((opt, index) => {
+            if (opt.isCorrect) {
+                const correctBtn = els.options[index];
+                correctBtn.classList.add('correct');
+                els.optContents[index].innerHTML = `
+                    <div class="opt-bilingual"><span class="opt-pt-text">${opt.wordObj.pt}</span><span class="opt-zh-text">${opt.wordObj.pos} ${opt.wordObj.zh}</span></div>
+                `;
+            }
+        });
+        
+        playAudio(selectedData.wordObj.pt);
+        els.fQuiz.innerHTML = `
+            <div class="action-item" onclick="showDetails()" style="animation: fadeIn 0.3s;">
+                <span style="color: #fff; font-weight: 500;">查看详情</span><div class="line" style="background-color: #f39c12;"></div>
+            </div>
+        `;
+    }
 }
-.global-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
-.global-dot.capsule { width: auto; height: auto; background: #fff; color: #000; font-size: 0.7rem; font-weight: 600; padding: 2px 10px; border-radius: 10px; }
 
 
-/* ================= 全新：拼写测试与小结视图样式 ================= */
+// ================= 序列 5：复习认词与详情逻辑 =================
+function renderStage1() {
+    els.app.className = 'bg-green';
+    els.skeletonBars.classList.remove('hidden');
+    els.recognizeArea.classList.remove('hidden');
+    els.recogSentenceCard.classList.remove('hidden');
+    els.recogBlindText.classList.add('hidden');
+    els.recogExPt.innerHTML = highlightYellow(currentWordObj.example.pt); 
+    els.fRecog.classList.remove('hidden');
+}
 
-.spell-top-bar { padding: 20px 24px; text-align: right; color: rgba(255,255,255,0.5); font-size: 0.95rem; font-weight: 500; }
+function renderStage2() {
+    els.app.className = 'bg-green';
+    els.skeletonBars.classList.remove('hidden');
+    els.recognizeArea.classList.remove('hidden');
+    els.recogSentenceCard.classList.add('hidden');
+    els.recogBlindText.classList.remove('hidden');
+    els.fRecog.classList.remove('hidden');
+}
 
-.spell-main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 20px; }
-.meaning-area { margin-bottom: 60px; text-align: center; }
-#spell-word-meaning { font-size: 1.4rem; color: #e0e0e0; line-height: 1.5; }
+document.getElementById('btn-recognize').addEventListener('click', () => {
+    if (currentWordObj.stage === 1) {
+        currentWordObj.stage = 2; learningQueue.push(currentWordObj); updateDots(2);
+    } else if (currentWordObj.stage === 2) {
+        currentWordObj.stage = 3; learnedCount++; updateDots(3); 
+    }
+    setTimeout(() => showDetails(), 150); 
+});
 
-/* 输入区核心布局 */
-.input-container { position: relative; width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
-.letter-boxes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; z-index: 2; pointer-events: none; }
-.letter-box { width: 32px; height: 40px; border-bottom: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5px; font-size: 1.5rem; font-weight: 600; text-transform: lowercase; transition: all 0.2s; }
+document.getElementById('btn-not-recognize').addEventListener('click', punishAndShow);
+document.getElementById('btn-hint').addEventListener('click', punishAndShow);
 
-/* 隐藏真实 Input，但盖在盒子上层以接收焦点和触摸 */
-#hidden-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 3; font-size: 16px; }
+function punishAndShow() {
+    // 记录错误
+    let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
+    if (masterWord) masterWord.errorCount++;
 
-.submit-hint { font-size: 0.8rem; color: rgba(255,255,255,0.3); text-align: center; margin-top: 20px; }
+    currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
+    setTimeout(() => showDetails(), 150);
+}
 
-/* 状态反馈样式 */
-.letter-box.filled { border-bottom-color: #fff; }
-.letter-box.correct { border-bottom-color: #2ecc71; color: #2ecc71; }
-.letter-box.wrong { border-bottom-color: #e74c3c; color: #e74c3c; }
-.letter-box.correction { border-bottom-color: #2ecc71; color: #2ecc71; font-style: italic; opacity: 0.8; } 
+window.showAnswerDirectly = function() {
+    // 记录错误
+    let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
+    if (masterWord) masterWord.errorCount++;
 
-/* 底部提示灯泡 */
-.hint-footer { padding: 30px; display: flex; justify-content: center; align-items: center; height: 100px; }
-.hint-container { display: flex; justify-content: center; align-items: center; cursor: pointer; height: 40px; }
-.bulb-icon { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: rgba(255,255,255,0.6); transition: all 0.2s; }
-.bulb-icon:active { background: rgba(255,255,255,0.1); }
-.phonetic-text { font-size: 1.2rem; color: #f39c12; font-family: monospace; letter-spacing: 1px; animation: fadeIn 0.3s; }
+    currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
+    setTimeout(() => showDetails(), 150);
+}
 
-/* 学习小结视图 */
-.summary-header { padding: 50px 20px 20px; text-align: center; }
-.summary-header h2 { font-size: 1.8rem; margin-bottom: 10px; }
-.summary-header p { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+// 底部 Tab
+els.tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        els.tabs.forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        renderTabContent(e.target.dataset.target);
+    });
+});
 
-.summary-list { flex: 1; overflow-y: auto; padding: 0 20px 100px; }
-.summary-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px 20px; border-radius: 12px; margin-bottom: 10px; }
-.summary-word { font-size: 1.2rem; font-weight: 600; }
-.summary-error { font-size: 0.9rem; padding: 4px 10px; border-radius: 12px; background: rgba(231, 76, 60, 0.2); color: #ff6b6b; }
-.summary-error.zero { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+function renderTabContent(targetType) {
+    els.tabContent.innerHTML = ''; 
+    let contentData = currentWordObj[targetType] || [];
+    if (contentData.length === 0) {
+        els.tabContent.innerHTML = `<div style="height: 100%; display: flex; align-items: center; justify-content: center;"><p style="color: rgba(255,255,255,0.4); font-size: 0.9rem;">暂无数据</p></div>`;
+        return;
+    }
+    contentData.forEach(item => {
+        if (targetType === 'phrases') {
+            const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
+            const en = splitIndex > 0 ? item.substring(0, splitIndex).trim() : item;
+            const zh = splitIndex > 0 ? item.substring(splitIndex).trim() : '';
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
+        } else {
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
+        }
+    });
+}
 
-.summary-footer { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #121212 30%); }
-.primary-btn { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #2ecc71; color: #121212; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
-.primary-btn:active { opacity: 0.8; }
+window.showDetails = function() {
+    els.app.className = 'bg-blur'; 
+    els.skeletonBars.classList.add('hidden');
+    els.quizArea.classList.add('hidden');
+    els.recognizeArea.classList.add('hidden');
+    els.fQuiz.classList.add('hidden');
+    els.fRecog.classList.add('hidden');
+    els.defArea.classList.remove('hidden');
+    els.detailArea.classList.remove('hidden');
+    els.fDetail.classList.remove('hidden');
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    document.getElementById('word-example-pt').innerHTML = highlightYellow(currentWordObj.example.pt);
+    document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
+    els.tabs[0].click(); 
+}
+
+document.getElementById('btn-next').addEventListener('click', () => { setTimeout(() => loadNextState(), 150); });
+document.getElementById('btn-forgot').addEventListener('click', () => {
+    // 记录错误
+    let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
+    if (masterWord) masterWord.errorCount++;
+
+    if (currentWordObj.stage === 3) learnedCount--; 
+    currentWordObj.stage = 0; learningQueue.push(currentWordObj);
+    setTimeout(() => loadNextState(), 150);
+});
+
+function highlightYellow(text) { return text.replace(/<strong>/g, '<span class="highlight-yellow">').replace(/<\/strong>/g, '</span>'); }
+
+// ================= 序列 6：沉浸大卡片核心系统 (二维滑动) =================
+els.btnOpenImmersive.addEventListener('click', () => {
+    if (!currentWordObj.meanings || currentWordObj.meanings.length === 0) return;
+    currentMeaningIndex = 0;
+    currentExampleIndex = 0;
+    
+    els.lowerTrack.innerHTML = '';
+    currentWordObj.meanings.forEach((meaning, idx) => {
+        els.lowerTrack.innerHTML += `
+            <div class="slider-slide"><div class="def-panel"><p class="im-pos">${meaning.pos}</p><p class="im-en-def">${meaning.enDef}</p><p class="im-zh-def">${meaning.zhDef}</p><div class="meaning-counter">${idx + 1}/${currentWordObj.meanings.length}</div></div></div>
+        `;
+    });
+
+    updateGlobalDots();
+    populateUpperTrack(0); 
+    
+    els.lowerTrack.style.transition = 'none';
+    els.lowerTrack.style.transform = `translateX(0%)`;
+    void els.lowerTrack.offsetWidth;
+    els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+
+    views.learning.classList.replace('active', 'hidden');
+    views.immersive.classList.replace('hidden', 'active');
+});
+
+function populateUpperTrack(meaningIdx) {
+    const meaning = currentWordObj.meanings[meaningIdx];
+    currentExampleIndex = 0; 
+    els.upperTrack.innerHTML = '';
+    meaning.examples.forEach(ex => { els.upperTrack.innerHTML += `<div class="slider-slide"><p class="im-en-sentence">${highlightYellow(ex.pt)}</p><p class="im-zh-sentence">${ex.zh}</p></div>`; });
+
+    els.upperDots.innerHTML = '';
+    if (meaning.examples.length > 1) { meaning.examples.forEach((_, idx) => { els.upperDots.innerHTML += `<span class="dot ${idx === 0 ? 'active' : ''}"></span>`; }); }
+
+    els.upperTrack.style.transition = 'none';
+    els.upperTrack.style.transform = `translateX(0%)`;
+    void els.upperTrack.offsetWidth;
+    els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+    els.upperSource.innerText = meaning.examples[0].source || "词典例句";
+}
+
+function updateUpperTransform() {
+    els.upperTrack.style.transform = `translateX(-${currentExampleIndex * 100}%)`;
+    const dots = els.upperDots.querySelectorAll('.dot');
+    if (dots.length > 0) { dots.forEach((dot, idx) => dot.classList.toggle('active', idx === currentExampleIndex)); }
+    els.upperSource.innerText = currentWordObj.meanings[currentMeaningIndex].examples[currentExampleIndex].source || "词典例句";
+}
+
+function updateLowerTransform() {
+    els.lowerTrack.style.transform = `translateX(-${currentMeaningIndex * 100}%)`;
+    updateGlobalDots();
+}
+
+function updateGlobalDots() {
+    els.globalDots.innerHTML = '';
+    const total = currentWordObj.meanings.length;
+    if (total > 1) {
+        for(let i=0; i<total; i++) {
+            if (i === currentMeaningIndex) els.globalDots.innerHTML += `<span class="global-dot capsule">考义</span>`;
+            else els.globalDots.innerHTML += `<span class="global-dot"></span>`;
+        }
+    }
+}
+
+// ================= 序列 7：手势滑动侦听 (加入原生物理拖动引擎) =================
+const SWIPE_THRESHOLD = 50; 
+
+let upperStartX = 0;
+let upperIsDragging = false;
+els.upperWindow.addEventListener('touchstart', e => { upperStartX = e.touches[0].screenX; upperIsDragging = true; els.upperTrack.style.transition = 'none'; });
+els.upperWindow.addEventListener('touchmove', e => {
+    if (!upperIsDragging) return;
+    let diff = e.touches[0].screenX - upperStartX;
+    const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
+    if ((currentExampleIndex === 0 && diff > 0) || (currentExampleIndex === totalEx - 1 && diff < 0)) diff = diff * 0.25; 
+    els.upperTrack.style.transform = `translateX(calc(-${currentExampleIndex * 100}% + ${diff}px))`;
+});
+els.upperWindow.addEventListener('touchend', e => {
+    if (!upperIsDragging) return;
+    upperIsDragging = false;
+    let diff = e.changedTouches[0].screenX - upperStartX;
+    const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
+    els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff < 0 && currentExampleIndex < totalEx - 1) currentExampleIndex++; 
+        else if (diff > 0 && currentExampleIndex > 0) currentExampleIndex--; 
+    }
+    updateUpperTransform(); 
+});
+
+let lowerStartX = 0;
+let lowerIsDragging = false;
+els.lowerWindow.addEventListener('touchstart', e => { lowerStartX = e.touches[0].screenX; lowerIsDragging = true; els.lowerTrack.style.transition = 'none'; });
+els.lowerWindow.addEventListener('touchmove', e => {
+    if (!lowerIsDragging) return;
+    let diff = e.touches[0].screenX - lowerStartX;
+    const totalMeanings = currentWordObj.meanings.length;
+    if ((currentMeaningIndex === 0 && diff > 0) || (currentMeaningIndex === totalMeanings - 1 && diff < 0)) diff = diff * 0.25; 
+    els.lowerTrack.style.transform = `translateX(calc(-${currentMeaningIndex * 100}% + ${diff}px))`;
+});
+els.lowerWindow.addEventListener('touchend', e => {
+    if (!lowerIsDragging) return;
+    lowerIsDragging = false;
+    let diff = e.changedTouches[0].screenX - lowerStartX;
+    const totalMeanings = currentWordObj.meanings.length;
+    els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+        if (diff < 0 && currentMeaningIndex < totalMeanings - 1) {
+            currentMeaningIndex++; updateLowerTransform(); setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150); 
+        } else if (diff > 0 && currentMeaningIndex > 0) {
+            currentMeaningIndex--; updateLowerTransform(); setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150);
+        } else { updateLowerTransform(); }
+    } else { updateLowerTransform(); }
+});
+
+// ================= 序列 8：大卡片底部操作 =================
+els.btnImClose.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); });
+els.btnImNext.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); setTimeout(() => loadNextState(), 150); });
+
+// ================= 全新序列 9：拼写测试逻辑 =================
+function startSpellingPhase() {
+    views.learning.classList.replace('active', 'hidden');
+    views.spelling.classList.replace('hidden', 'active');
+    
+    // 初始化拼写队列为本次学习的所有单词
+    spellingQueue = [...vocabularyData];
+    wrongWordsQueue = [];
+    spellCurrentIndex = 0;
+    spellTotalInRound = spellingQueue.length;
+    els.totalCount.innerText = spellTotalInRound;
+    
+    loadNextSpellWord();
+}
+
+function loadNextSpellWord() {
+    if (spellingQueue.length === 0) {
+        if (wrongWordsQueue.length > 0) {
+            // 原生弹窗提示，然后开启错词重练
+            alert("接下来复习错词"); 
+            spellingQueue = [...wrongWordsQueue];
+            wrongWordsQueue = [];
+            spellCurrentIndex = 0;
+            spellTotalInRound = spellingQueue.length;
+        } else {
+            // 彻底清空，进入小结
+            showSummaryPhase();
+            return;
+        }
+    }
+
+    currentSpellWord = spellingQueue.shift();
+    spellCurrentIndex++;
+    spellHasErroredThisTurn = false;
+    isSpellChecking = false;
+    
+    updateSpellUI();
+}
+
+function updateSpellUI() {
+    els.spellProgress.innerText = `${spellCurrentIndex}/${spellTotalInRound}`;
+    els.spellMeaning.innerText = `${currentSpellWord.pos} ${currentSpellWord.zh}`;
+    els.hiddenInput.value = '';
+    els.hiddenInput.maxLength = currentSpellWord.pt.length;
+    
+    // 生成字母格子
+    els.letterBoxes.innerHTML = '';
+    for (let i = 0; i < currentSpellWord.pt.length; i++) {
+        els.letterBoxes.innerHTML += `<div class="letter-box"></div>`;
+    }
+    
+    resetSpellHint();
+    
+    // 自动聚焦唤起键盘
+    setTimeout(() => { els.hiddenInput.focus(); }, 100);
+}
+
+// 隐藏输入框事件监听
+els.hiddenInput.addEventListener('input', (e) => {
+    if (isSpellChecking) { e.preventDefault(); return; }
+    
+    const val = els.hiddenInput.value;
+    const boxes = els.letterBoxes.children;
+    
+    for (let i = 0; i < boxes.length; i++) {
+        boxes[i].innerText = val[i] || '';
+        if (val[i]) boxes[i].classList.add('filled');
+        else boxes[i].classList.remove('filled');
+    }
+});
+
+els.hiddenInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter' && !isSpellChecking) {
+        checkSpelling();
+    }
+});
+
+function checkSpelling() {
+    isSpellChecking = true;
+    els.hiddenInput.blur(); // 收起键盘
+    
+    const userInput = els.hiddenInput.value.trim().toLowerCase();
+    const targetWord = currentSpellWord.pt.toLowerCase();
+    const boxes = els.letterBoxes.children;
+    
+    let isCorrect = (userInput === targetWord);
+
+    if (isCorrect && !spellHasErroredThisTurn) {
+        // 拼写正确
+        for (let i = 0; i < boxes.length; i++) { boxes[i].classList.add('correct'); }
+        playAudio(currentSpellWord.pt);
+        setTimeout(loadNextSpellWord, 600); // 绿灯亮起，0.6秒后跳过
+        
+    } else {
+        // 拼错记录
+        if (!spellHasErroredThisTurn) recordSpellError();
+        
+        // 红绿覆盖逻辑
+        for (let i = 0; i < targetWord.length; i++) {
+            boxes[i].classList.remove('filled', 'correct', 'wrong', 'correction');
+            if (userInput[i] === targetWord[i]) {
+                boxes[i].innerText = targetWord[i];
+                boxes[i].classList.add('correct');
+            } else {
+                boxes[i].innerText = targetWord[i];
+                if (userInput[i]) boxes[i].classList.add('wrong'); // 写错了
+                else boxes[i].classList.add('correction'); // 漏写了
+            }
+        }
+        
+        playAudio(currentSpellWord.pt);
+        setTimeout(loadNextSpellWord, 2000); // 停顿2秒，让用户看清正确拼写
+    }
+}
+
+function recordSpellError() {
+    spellHasErroredThisTurn = true;
+    wrongWordsQueue.push(currentSpellWord);
+    
+    // 累加到全局数据
+    let masterWord = vocabularyData.find(w => w.pt === currentSpellWord.pt);
+    if (masterWord) masterWord.errorCount++;
+}
+
+// 灯泡提示
+els.hintContainer.addEventListener('click', () => {
+    if (isSpellChecking || els.phoneticText.classList.contains('active')) return;
+    
+    if (!spellHasErroredThisTurn) recordSpellError();
+    
+    els.bulbIcon.classList.add('hidden');
+    els.phoneticText.innerText = currentSpellWord.phonetic;
+    els.phoneticText.classList.remove('hidden');
+    els.phoneticText.classList.add('active');
+    
+    setTimeout(resetSpellHint, 1500);
+});
+
+function resetSpellHint() {
+    els.bulbIcon.classList.remove('hidden');
+    els.phoneticText.classList.add('hidden');
+    els.phoneticText.classList.remove('active');
+}
+
+// ================= 全新序列 10：学习小结视图逻辑 =================
+function showSummaryPhase() {
+    views.spelling.classList.replace('active', 'hidden');
+    views.summary.classList.replace('hidden', 'active');
+    
+    els.summaryList.innerHTML = '';
+    
+    // 渲染总结列表，结合了认词和拼写的所有错误总数
+    vocabularyData.forEach(item => {
+        const errCount = item.errorCount || 0;
+        const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
+        const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
+        
+        els.summaryList.innerHTML += `
+            <div class="summary-item">
+                <span class="summary-word">${item.pt}</span>
+                <span class="${errorClass}">${errorText}</span>
+            </div>
+        `;
+    });
+}
+
+els.btnFinish.addEventListener('click', () => {
+    views.summary.classList.replace('active', 'hidden');
+    views.home.classList.replace('hidden', 'active');
+});
