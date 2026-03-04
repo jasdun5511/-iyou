@@ -142,18 +142,30 @@
             </div>
         </div>
         <div id="transition-view" class="view hidden" style="z-index: 55;">
-            <div class="completion-container">
-                <h1 class="completion-title">首组单词辨识完成</h1>
-                <p class="completion-reward">+20 酷币</p>
-                <div class="completion-emoji">😀</div>
-                <p class="completion-hint">辨识后拼写，更能加强记忆哦</p>
-                <div class="completion-actions">
-                    <button id="btn-start-spell" class="btn-primary">开始拼写</button>
-                    <button id="btn-skip-spell" class="btn-outline">小结</button>
+            <div class="completion-screen">
+                
+                <div class="completion-header">
+                    <h1 class="completion-title">首组单词辨识完成</h1>
+                    <p class="completion-reward">+20 酷币</p>
                 </div>
+
+                <div class="completion-character">
+                    <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Felix&backgroundColor=transparent" alt="3D Character Placeholder">
+                </div>
+
+                <div class="completion-panel">
+                    <p class="panel-hint">辨识后拼写，更能加强记忆哦</p>
+                    <button id="btn-start-spell" class="btn-primary-gradient">开始拼写</button>
+                    <button id="btn-skip-spell" class="btn-ghost">小结</button>
+                </div>
+
                 <div class="bottom-setting">
-                    <span class="circle-icon"></span> 学习时不再拼写
+                    <div class="checkbox-wrapper">
+                        <i class="fa-regular fa-circle"></i>
+                    </div>
+                    <span>学习时不再拼写</span>
                 </div>
+
             </div>
         </div>
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
