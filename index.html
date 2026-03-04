@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Meu Vocabulário - Classic UI</title>
+    <title>Meu Vocabulário</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div id="app">
+    <div id="app" class="bg-blur">
         
         <div id="home-view" class="view active">
             <h1 class="home-title">Splendid</h1>
@@ -17,140 +17,185 @@
                     <div class="nav-card"><h3>Learn</h3><span class="nav-count" id="learn-count">0</span></div>
                     <div class="nav-card"><h3>Review</h3><span class="nav-count">0</span></div>
                 </div>
+                <nav class="bottom-nav">
+                    <i class="fa-solid fa-layer-group active"></i>
+                    <i class="fa-solid fa-box-archive"></i>
+                    <i class="fa-solid fa-chart-line"></i>
+                </nav>
             </div>
         </div>
 
         <div id="learning-view" class="view hidden">
-            <header class="header">
-                <div class="header-left">
-                    <i class="fa-solid fa-xmark close-icon" id="btn-back"></i>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="top-progress-bar"></div>
-                    </div>
-                    <span class="header-title" id="progress-text">学习</span>
-                </div>
-                <div class="header-right">
-                    <i class="fa-regular fa-lightbulb bulb-icon"></i>
-                </div>
+            <header class="top-bar">
+                <div class="left" id="btn-back"><i class="fa-solid fa-chevron-left"></i> <span id="progress-text">1/3</span></div>
+                <div class="right"><i class="fa-solid fa-rotate-left"></i><i class="fa-regular fa-star"></i><i class="fa-solid fa-fire-flame-curved"></i><i class="fa-solid fa-ellipsis"></i></div>
             </header>
 
-            <main class="main-content">
-                <div id="top-phrase-area" class="bubble phrase-bubble hidden">
-                    <p id="recognize-example-pt">...</p>
-                </div>
-
-                <div class="word-display">
-                    <h1 class="word" id="word-pt">você</h1>
-                    <div class="pronunciation-row" id="phonetic-container">
-                        <span class="phonetic" id="word-phonetic-text">[ voˈse ]</span>
-                        <i class="fa-solid fa-volume-high audio-icon"></i>
+            <main class="content-area">
+                <div class="word-section">
+                    <div class="word-row">
+                        <h1 id="word-pt">mesmo</h1>
+                        <span id="word-success-badge" class="success-badge hidden"><i class="fa-solid fa-circle-check"></i></span>
+                        <div class="progress-dots" id="progress-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+                    </div>
+                    <div class="phonetic-row" id="phonetic-container">
+                        <span class="accent-tag">葡 <i class="fa-solid fa-volume-low"></i></span><span id="word-phonetic-text">/'mez.mu/</span>
+                    </div>
+                    <div id="skeleton-bars" class="skeleton-bars hidden">
+                        <div class="skeleton-line short"></div><div class="skeleton-line long"></div>
+                    </div>
+                    <div id="definition-area" class="hidden">
+                        <div class="def-line"><span id="word-pos" class="pos-grey"></span> <span id="word-zh-title" class="zh-white"></span></div>
                     </div>
                 </div>
 
-                <div id="quiz-area" class="quiz-container">
-                    <div class="option" onclick="checkAnswer(0)"><div class="opt-content"></div></div>
-                    <div class="option" onclick="checkAnswer(1)"><div class="opt-content"></div></div>
-                    <div class="option" onclick="checkAnswer(2)"><div class="opt-content"></div></div>
-                    <div class="option" onclick="checkAnswer(3)"><div class="opt-content"></div></div>
+                <div id="quiz-area">
+                    <p class="hint-text">先回想词义再选择，想不起来「看答案」</p>
+                    <div class="options-list">
+                        <div class="option" onclick="checkAnswer(0)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(1)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(2)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(3)"><div class="opt-content"></div></div>
+                    </div>
                 </div>
 
-                <div id="detail-area" class="bubble answer-bubble hidden">
-                    <div class="answer-header">
-                        <span class="answer-title">释义 / <span id="word-pos" class="para-green"></span> <span id="word-pt-small" class="highlight-word"></span></span>
+                <div id="recognize-area" class="hidden">
+                    <div id="recognize-sentence-card" class="card sentence-card hidden"><p id="recognize-example-pt" class="en-text">...</p></div>
+                    <div id="recognize-blind-text" class="hidden"><p class="hint-text" style="text-align: center; margin-top: 100px;">本词最后一关😉：请在无提示的情况下判断</p></div>
+                    <div class="hint-btn-container" id="btn-hint"><div class="bulb-icon"><i class="fa-regular fa-lightbulb"></i></div><span>提示一下</span></div>
+                </div>
+
+                <div id="detail-area" class="hidden">
+                    <div class="card sentence-card" style="position: relative;">
+                        <p id="word-example-pt" class="en-text">...</p>
+                        <p id="word-example-zh" class="zh-text">...</p>
+                        
+                        <div class="expand-card-btn" id="btn-open-immersive">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect>
+                                <line x1="4" y1="16" x2="20" y2="16"></line>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="megaphone-row" id="btn-open-immersive">
-                        <i class="fa-solid fa-volume-high answer-megaphone"></i>
-                        <span style="font-size: 0.7rem; color: #ccc; margin-left: 5px;">查看详情卡片</span>
+                    
+                    <div class="card phrases-card">
+                        <div id="tab-content-container"></div>
+                        <div class="card-footer-tabs">
+                            <div class="tabs-left">
+                                <span class="tab active" data-target="phrases">词组搭配</span><span class="tab" data-target="derivatives">派生</span>
+                                <span class="tab" data-target="roots">词根</span><span class="tab" data-target="synonyms">近义</span>
+                            </div>
+                            <div class="tabs-right"><i class="fa-solid fa-pen"></i><i class="fa-solid fa-bars-staggered"></i></div>
+                        </div>
                     </div>
-                    <div class="meaning-row">
-                        <span class="pt-tag">pt</span>
-                        <span class="meaning-text" id="word-zh-title">...</span>
-                    </div>
-                    <p id="word-example-zh" style="font-size: 0.85rem; color: #999; margin-top: 10px;"></p>
                 </div>
             </main>
 
-            <footer class="footer-buttons">
-                <div id="footer-recognize" class="action-group hidden">
-                    <button class="btn btn-forgot" id="btn-not-recognize">不认识</button>
-                    <button class="btn btn-known" id="btn-recognize">认识</button>
+            <footer class="bottom-action">
+                <div id="footer-quiz" class="action-group hidden">
+                    <div class="action-item" onclick="showAnswerDirectly()"><span>看答案</span><div class="line red"></div></div>
                 </div>
-                <div id="footer-detail" class="action-group hidden">
-                    <button class="btn btn-forgot" id="btn-forgot">记错了</button>
-                    <button class="btn btn-known" id="btn-next">下一词</button>
+                <div id="footer-recognize" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-recognize"><span>认识</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-not-recognize"><span>不认识</span><div class="line red"></div></div>
+                </div>
+                <div id="footer-detail" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-next"><span>下一词</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-forgot"><span>记错了</span><div class="line red"></div></div>
                 </div>
             </footer>
         </div>
 
-        <div id="immersive-modal" class="view hidden" style="z-index: 50; background: #fff;">
-            <div class="im-header">
-                <i class="fa-solid fa-chevron-down im-close" id="im-btn-close"></i>
-            </div>
-            <div class="immersive-upper">
-                <div class="slider-window" id="upper-window">
-                    <div class="slider-track" id="upper-track"></div>
+
+        <div id="immersive-modal" class="view hidden" style="z-index: 50;">
+            <div class="immersive-bg" id="immersive-bg"></div>
+            
+            <div class="immersive-content-wrapper">
+                
+                <div class="immersive-upper">
+                    <div class="upper-header">
+                        <span class="source-tag" id="upper-source-tag">词典例句</span>
+                        <i class="fa-solid fa-ellipsis" style="color: rgba(255,255,255,0.6);"></i>
+                    </div>
+                    <div class="slider-window" id="upper-window">
+                        <div class="slider-track" id="upper-track"></div>
+                    </div>
+                    <div class="upper-pagination" id="upper-dots"></div>
                 </div>
-                <div class="upper-pagination" id="upper-dots"></div>
-            </div>
-            <div class="immersive-lower">
-                <div class="slider-window" id="lower-window">
-                    <div class="slider-track" id="lower-track"></div>
+
+                <div class="immersive-lower">
+                    <div class="slider-window" id="lower-window" style="height: 100%;">
+                        <div class="slider-track" id="lower-track"></div>
+                    </div>
+                    <div class="global-pagination" id="global-dots"></div>
                 </div>
-                <div class="global-pagination" id="global-dots"></div>
+
+                <div class="immersive-footer">
+                    <div class="im-footer-btn im-btn-next-word" id="im-btn-next-word">
+                        <i class="fa-solid fa-forward-step" style="font-size: 0.9rem;"></i> 下一词
+                    </div>
+                    <div class="im-footer-btn im-btn-close" id="im-btn-close">
+                        收起卡片 <i class="fa-solid fa-angle-down" style="font-size: 0.9rem;"></i>
+                    </div>
+                </div>
+
             </div>
         </div>
-
-        <div id="transition-view" class="view hidden" style="z-index: 55; background: radial-gradient(circle at 50% 30%, #2a1b3d 0%, #1a1a24 50%, #121212 100%);">
-            <div class="completion-screen">
+        <div id="transition-view" class="view hidden" style="z-index: 55;">
+            <div class="completion-container">
                 <h1 class="completion-title">首组单词辨识完成</h1>
                 <p class="completion-reward">+20 酷币</p>
-                <div class="completion-character">😀</div>
-                <div class="completion-panel">
-                    <p class="panel-hint">辨识后拼写，更能加强记忆哦</p>
-                    <button id="btn-start-spell" class="btn-primary-gradient">开始拼写</button>
-                    <button id="btn-skip-spell" class="btn-ghost">小结</button>
+                <div class="completion-emoji">😀</div>
+                <p class="completion-hint">辨识后拼写，更能加强记忆哦</p>
+                <div class="completion-actions">
+                    <button id="btn-start-spell" class="btn-primary">开始拼写</button>
+                    <button id="btn-skip-spell" class="btn-outline">小结</button>
+                </div>
+                <div class="bottom-setting">
+                    <span class="circle-icon"></span> 学习时不再拼写
                 </div>
             </div>
         </div>
-
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
-            <div class="spelling-container">
-                
-                <div class="spelling-header">
-                    <p id="spell-word-meaning" class="spelling-meaning">v. 使（价格、价值等）回升...</p>
-                </div>
-
-                <div class="spelling-body">
-                    <div class="spelling-input-area">
-                        <div id="letter-boxes" class="word-slots">
-                            </div>
-                        <input type="text" id="hidden-input" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                    </div>
-                    <div class="spelling-audio" id="spell-audio-btn">
-                        <i class="fa-solid fa-volume-high"></i>
-                    </div>
-                </div>
-
-                <div class="spelling-footer">
-                    <div id="hint-container" class="spell-action-btn">
-                        <i class="fa-regular fa-lightbulb" id="bulb-icon-spell"></i>
-                        <div id="phonetic-text" class="phonetic-text hidden" style="font-size: 1.2rem; margin-left: 10px; color: #f39c12; font-family: monospace;"></div>
-                    </div>
-                    <div id="btn-spell-forgot" class="spell-action-btn text-btn">
-                        不认识
-                    </div>
-                </div>
-
+            <div class="spell-top-bar">
+                <span id="spell-progress-text">1/10</span>
             </div>
+
+            <main class="spell-main">
+                <div class="meaning-area">
+                    <p id="spell-word-meaning">adj. 无所不在的</p>
+                </div>
+
+                <div class="input-container">
+                    <div id="letter-boxes" class="letter-boxes">
+                        </div>
+                    <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                </div>
+
+                <p class="submit-hint">输入完成后按 Enter 提交</p>
+            </main>
+
+            <footer class="hint-footer">
+                <div id="hint-container" class="hint-container">
+                    <div id="bulb-icon" class="bulb-icon">
+                        <i class="fa-regular fa-lightbulb"></i>
+                    </div>
+                    <div id="phonetic-text" class="phonetic-text hidden">
+                        </div>
+                </div>
+            </footer>
         </div>
 
-        <div id="summary-view" class="view hidden" style="z-index: 70; background: #f0f2f5;">
+        <div id="summary-view" class="view hidden" style="z-index: 70; background-color: #121212;">
             <header class="summary-header">
-                <h2 style="color:#333">学习小结</h2>
-                <p style="color:#999">本次共完成 <span id="total-words-count">0</span> 个单词</p>
+                <h2>学习小结</h2>
+                <p>本次共学习 <span id="total-words-count">10</span> 个单词</p>
             </header>
-            <div class="summary-list" id="summary-list"></div>
-            <div class="summary-footer"><button id="btn-finish" class="btn btn-known" style="width:90%">完成学习</button></div>
+            <div class="summary-list" id="summary-list">
+                </div>
+            <div class="summary-footer">
+                <button id="btn-finish" class="primary-btn-summary">完成学习</button>
+            </div>
         </div>
 
     </div>
