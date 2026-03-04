@@ -127,7 +127,6 @@
                     <div class="slider-window" id="lower-window" style="height: 100%;">
                         <div class="slider-track" id="lower-track"></div>
                     </div>
-                    
                     <div class="global-pagination" id="global-dots"></div>
                 </div>
 
@@ -135,7 +134,6 @@
                     <div class="im-footer-btn im-btn-next-word" id="im-btn-next-word">
                         <i class="fa-solid fa-forward-step" style="font-size: 0.9rem;"></i> 下一词
                     </div>
-                    
                     <div class="im-footer-btn im-btn-close" id="im-btn-close">
                         收起卡片 <i class="fa-solid fa-angle-down" style="font-size: 0.9rem;"></i>
                     </div>
@@ -143,7 +141,50 @@
 
             </div>
         </div>
+
+        <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
+            <div class="spell-top-bar">
+                <span id="spell-progress-text">1/10</span>
+            </div>
+
+            <main class="spell-main">
+                <div class="meaning-area">
+                    <p id="spell-word-meaning">adj. 无所不在的</p>
+                </div>
+
+                <div class="input-container">
+                    <div id="letter-boxes" class="letter-boxes">
+                        </div>
+                    <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                </div>
+
+                <p class="submit-hint">输入完成后按 Enter 提交</p>
+            </main>
+
+            <footer class="hint-footer">
+                <div id="hint-container" class="hint-container">
+                    <div id="bulb-icon" class="bulb-icon">
+                        <i class="fa-regular fa-lightbulb"></i>
+                    </div>
+                    <div id="phonetic-text" class="phonetic-text hidden">
+                        </div>
+                </div>
+            </footer>
         </div>
+
+        <div id="summary-view" class="view hidden" style="z-index: 70; background-color: #121212;">
+            <header class="summary-header">
+                <h2>学习小结</h2>
+                <p>本次共完成 <span id="total-words-count">10</span> 个单词的拼写</p>
+            </header>
+            <div class="summary-list" id="summary-list">
+                </div>
+            <div class="summary-footer">
+                <button id="btn-finish" class="primary-btn">完成学习</button>
+            </div>
+        </div>
+
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
