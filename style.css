@@ -168,17 +168,34 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .highlight-yellow { color: #f1c40f; }
 .im-zh-sentence { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.55; padding: 0 24px; }
 
-.upper-pagination { display: flex; gap: 8px; justify-content: flex-start; padding: 0 24px; margin-bottom: 10px; }
-.upper-pagination .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: background 0.3s; }
-.upper-pagination .dot.active { background: #fff; }
-
-/* -- 深度调整后的下层：释义面板区 -- */
-.immersive-lower { 
-    flex: 4; 
-    padding: 0 16px 35px 16px; /* 核心修改：底部腾出 35px 空间给考义胶囊点点 */
-    position: relative;        /* 核心修改：方便内部点点绝对定位 */
-    margin-bottom: 10px;
+/* ================= 核心修改 1：上层例句点点居中 ================= */
+.upper-pagination { 
+    display: flex; 
+    gap: 8px; 
+    justify-content: center; /* 从 flex-start 改为 center，绝对居中 */
+    padding: 0; /* 居中对齐后去掉原有的左右边距 */
+    margin-bottom: 10px; 
 }
+
+/* ================= 核心修改 2：下层释义卡片向下延伸 ================= */
+.immersive-lower { 
+    flex: 5.5; /* 从 4 增加到 5.5，极大增加卡片的垂直占比 */
+    padding: 0 16px 35px 16px; 
+    position: relative;        
+    margin-bottom: 0; /* 去掉原本的底部 margin，让它一直向下延伸 */
+}
+
+/* 压缩底部操作栏，把空间让给释义卡片 */
+.immersive-footer { 
+    height: 60px; /* 从 85px 压缩到 60px，给上方卡片腾出约三分之一的额外空间 */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 24px; 
+    background: rgba(20, 25, 30, 0.98); 
+    position: relative; 
+}
+
 
 .def-panel {
     background: rgba(35, 40, 50, 0.95); 
