@@ -1,5 +1,5 @@
 // ================= 序列 1：升维版数据结构 =================
-// 核心修改：增加了 errorCount 字段用于全局错误追踪
+// 增加 errorCount 字段用于全局错误追踪
 const vocabularyData = [
     { 
         pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", errorCount: 0,
@@ -37,11 +37,9 @@ let totalWords = 0;
 let currentWordObj = null;
 let currentOptionsData = [];
 
-// 沉浸式 Modal 的双维滑动状态
 let currentMeaningIndex = 0;
 let currentExampleIndex = 0;
 
-// 全新：拼写测试的状态
 let spellingQueue = [];
 let wrongWordsQueue = [];
 let currentSpellWord = null;
@@ -50,16 +48,15 @@ let spellTotalInRound = 0;
 let spellHasErroredThisTurn = false;
 let isSpellChecking = false;
 
-// DOM 视图路由
 const views = { 
     home: document.getElementById('home-view'), 
     learning: document.getElementById('learning-view'),
     immersive: document.getElementById('immersive-modal'),
+    transition: document.getElementById('transition-view'), // 全新：过渡视图
     spelling: document.getElementById('spelling-view'),
     summary: document.getElementById('summary-view')
 };
 
-// DOM 元素集合
 const els = {
     app: document.getElementById('app'),
     wordPt: document.getElementById('word-pt'),
@@ -86,7 +83,6 @@ const els = {
     fRecog: document.getElementById('footer-recognize'),
     fDetail: document.getElementById('footer-detail'),
     
-    // 大卡片专属元素
     btnOpenImmersive: document.getElementById('btn-open-immersive'),
     upperWindow: document.getElementById('upper-window'),
     upperTrack: document.getElementById('upper-track'),
@@ -97,6 +93,10 @@ const els = {
     globalDots: document.getElementById('global-dots'),
     btnImClose: document.getElementById('im-btn-close'),
     btnImNext: document.getElementById('im-btn-next-word'),
+
+    // 全新：过渡视图按钮
+    btnStartSpell: document.getElementById('btn-start-spell'),
+    btnSkipSpell: document.getElementById('btn-skip-spell'),
 
     // 全新：拼写与小结元素
     spellProgress: document.getElementById('spell-progress-text'),
@@ -125,8 +125,7 @@ document.getElementById('phonetic-container').addEventListener('click', () => pl
 
 document.getElementById('btn-learn').addEventListener('click', () => {
     if (vocabularyData.length === 0) return;
-    // 每次开始学习，重置所有错误计数
-    vocabularyData.forEach(w => w.errorCount = 0);
+    vocabularyData.forEach(w => w.errorCount = 0); // 重置错误计数
     learningQueue = vocabularyData.map(word => ({ ...word, stage: 0 }));
     totalWords = learningQueue.length;
     learnedCount = 0;
@@ -164,8 +163,8 @@ function updateDots(stage) {
 
 window.loadNextState = function() {
     if (learningQueue.length === 0) {
-        // 核心修改：学习队列清空后，不直接结束，进入拼写环节！
-        startSpellingPhase();
+        // 核心修改：学习队列清空后，弹出选择卡片！
+        showTransitionPhase();
         return;
     }
     currentWordObj = learningQueue.shift();
@@ -194,7 +193,6 @@ window.loadNextState = function() {
 
 
 // ================= 序列 4：测验出题与交互反馈逻辑 =================
-
 function renderStage0() {
     els.app.className = 'bg-blur';
     els.quizArea.classList.remove('hidden');
@@ -246,7 +244,6 @@ window.checkAnswer = function(selectedIndex) {
         `;
         setTimeout(() => showDetails(), 400); 
     } else {
-        // 核心修改：记录学习阶段的错误
         let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
         if (masterWord) masterWord.errorCount++;
 
@@ -309,7 +306,6 @@ document.getElementById('btn-not-recognize').addEventListener('click', punishAnd
 document.getElementById('btn-hint').addEventListener('click', punishAndShow);
 
 function punishAndShow() {
-    // 记录错误
     let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
     if (masterWord) masterWord.errorCount++;
 
@@ -318,7 +314,6 @@ function punishAndShow() {
 }
 
 window.showAnswerDirectly = function() {
-    // 记录错误
     let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
     if (masterWord) masterWord.errorCount++;
 
@@ -326,7 +321,6 @@ window.showAnswerDirectly = function() {
     setTimeout(() => showDetails(), 150);
 }
 
-// 底部 Tab
 els.tabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
         els.tabs.forEach(t => t.classList.remove('active'));
@@ -372,7 +366,6 @@ window.showDetails = function() {
 
 document.getElementById('btn-next').addEventListener('click', () => { setTimeout(() => loadNextState(), 150); });
 document.getElementById('btn-forgot').addEventListener('click', () => {
-    // 记录错误
     let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
     if (masterWord) masterWord.errorCount++;
 
@@ -383,43 +376,34 @@ document.getElementById('btn-forgot').addEventListener('click', () => {
 
 function highlightYellow(text) { return text.replace(/<strong>/g, '<span class="highlight-yellow">').replace(/<\/strong>/g, '</span>'); }
 
-// ================= 序列 6：沉浸大卡片核心系统 (二维滑动) =================
+
+// ================= 序列 6 & 7：沉浸大卡片与物理滑动 =================
 els.btnOpenImmersive.addEventListener('click', () => {
     if (!currentWordObj.meanings || currentWordObj.meanings.length === 0) return;
-    currentMeaningIndex = 0;
-    currentExampleIndex = 0;
+    currentMeaningIndex = 0; currentExampleIndex = 0;
     
     els.lowerTrack.innerHTML = '';
     currentWordObj.meanings.forEach((meaning, idx) => {
-        els.lowerTrack.innerHTML += `
-            <div class="slider-slide"><div class="def-panel"><p class="im-pos">${meaning.pos}</p><p class="im-en-def">${meaning.enDef}</p><p class="im-zh-def">${meaning.zhDef}</p><div class="meaning-counter">${idx + 1}/${currentWordObj.meanings.length}</div></div></div>
-        `;
+        els.lowerTrack.innerHTML += `<div class="slider-slide"><div class="def-panel"><p class="im-pos">${meaning.pos}</p><p class="im-en-def">${meaning.enDef}</p><p class="im-zh-def">${meaning.zhDef}</p><div class="meaning-counter">${idx + 1}/${currentWordObj.meanings.length}</div></div></div>`;
     });
 
-    updateGlobalDots();
-    populateUpperTrack(0); 
+    updateGlobalDots(); populateUpperTrack(0); 
     
-    els.lowerTrack.style.transition = 'none';
-    els.lowerTrack.style.transform = `translateX(0%)`;
-    void els.lowerTrack.offsetWidth;
+    els.lowerTrack.style.transition = 'none'; els.lowerTrack.style.transform = `translateX(0%)`; void els.lowerTrack.offsetWidth;
     els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
 
-    views.learning.classList.replace('active', 'hidden');
-    views.immersive.classList.replace('hidden', 'active');
+    views.learning.classList.replace('active', 'hidden'); views.immersive.classList.replace('hidden', 'active');
 });
 
 function populateUpperTrack(meaningIdx) {
-    const meaning = currentWordObj.meanings[meaningIdx];
-    currentExampleIndex = 0; 
+    const meaning = currentWordObj.meanings[meaningIdx]; currentExampleIndex = 0; 
     els.upperTrack.innerHTML = '';
     meaning.examples.forEach(ex => { els.upperTrack.innerHTML += `<div class="slider-slide"><p class="im-en-sentence">${highlightYellow(ex.pt)}</p><p class="im-zh-sentence">${ex.zh}</p></div>`; });
 
     els.upperDots.innerHTML = '';
     if (meaning.examples.length > 1) { meaning.examples.forEach((_, idx) => { els.upperDots.innerHTML += `<span class="dot ${idx === 0 ? 'active' : ''}"></span>`; }); }
 
-    els.upperTrack.style.transition = 'none';
-    els.upperTrack.style.transform = `translateX(0%)`;
-    void els.upperTrack.offsetWidth;
+    els.upperTrack.style.transition = 'none'; els.upperTrack.style.transform = `translateX(0%)`; void els.upperTrack.offsetWidth;
     els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
     els.upperSource.innerText = meaning.examples[0].source || "词典例句";
 }
@@ -432,8 +416,7 @@ function updateUpperTransform() {
 }
 
 function updateLowerTransform() {
-    els.lowerTrack.style.transform = `translateX(-${currentMeaningIndex * 100}%)`;
-    updateGlobalDots();
+    els.lowerTrack.style.transform = `translateX(-${currentMeaningIndex * 100}%)`; updateGlobalDots();
 }
 
 function updateGlobalDots() {
@@ -447,11 +430,8 @@ function updateGlobalDots() {
     }
 }
 
-// ================= 序列 7：手势滑动侦听 (加入原生物理拖动引擎) =================
 const SWIPE_THRESHOLD = 50; 
-
-let upperStartX = 0;
-let upperIsDragging = false;
+let upperStartX = 0; let upperIsDragging = false;
 els.upperWindow.addEventListener('touchstart', e => { upperStartX = e.touches[0].screenX; upperIsDragging = true; els.upperTrack.style.transition = 'none'; });
 els.upperWindow.addEventListener('touchmove', e => {
     if (!upperIsDragging) return;
@@ -466,7 +446,6 @@ els.upperWindow.addEventListener('touchend', e => {
     let diff = e.changedTouches[0].screenX - upperStartX;
     const totalEx = currentWordObj.meanings[currentMeaningIndex].examples.length;
     els.upperTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
-    
     if (Math.abs(diff) > SWIPE_THRESHOLD) {
         if (diff < 0 && currentExampleIndex < totalEx - 1) currentExampleIndex++; 
         else if (diff > 0 && currentExampleIndex > 0) currentExampleIndex--; 
@@ -474,8 +453,7 @@ els.upperWindow.addEventListener('touchend', e => {
     updateUpperTransform(); 
 });
 
-let lowerStartX = 0;
-let lowerIsDragging = false;
+let lowerStartX = 0; let lowerIsDragging = false;
 els.lowerWindow.addEventListener('touchstart', e => { lowerStartX = e.touches[0].screenX; lowerIsDragging = true; els.lowerTrack.style.transition = 'none'; });
 els.lowerWindow.addEventListener('touchmove', e => {
     if (!lowerIsDragging) return;
@@ -490,7 +468,6 @@ els.lowerWindow.addEventListener('touchend', e => {
     let diff = e.changedTouches[0].screenX - lowerStartX;
     const totalMeanings = currentWordObj.meanings.length;
     els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
-    
     if (Math.abs(diff) > SWIPE_THRESHOLD) {
         if (diff < 0 && currentMeaningIndex < totalMeanings - 1) {
             currentMeaningIndex++; updateLowerTransform(); setTimeout(() => { populateUpperTrack(currentMeaningIndex); }, 150); 
@@ -500,16 +477,31 @@ els.lowerWindow.addEventListener('touchend', e => {
     } else { updateLowerTransform(); }
 });
 
-// ================= 序列 8：大卡片底部操作 =================
 els.btnImClose.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); });
 els.btnImNext.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); setTimeout(() => loadNextState(), 150); });
 
+
+// ================= 全新序列 8.5：拼写过渡引导 =================
+function showTransitionPhase() {
+    views.learning.classList.replace('active', 'hidden');
+    views.transition.classList.replace('hidden', 'active');
+}
+
+els.btnStartSpell.addEventListener('click', () => {
+    views.transition.classList.replace('active', 'hidden');
+    startSpellingPhase();
+});
+
+els.btnSkipSpell.addEventListener('click', () => {
+    views.transition.classList.replace('active', 'hidden');
+    showSummaryPhase();
+});
+
+
 // ================= 全新序列 9：拼写测试逻辑 =================
 function startSpellingPhase() {
-    views.learning.classList.replace('active', 'hidden');
     views.spelling.classList.replace('hidden', 'active');
     
-    // 初始化拼写队列为本次学习的所有单词
     spellingQueue = [...vocabularyData];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
@@ -522,14 +514,12 @@ function startSpellingPhase() {
 function loadNextSpellWord() {
     if (spellingQueue.length === 0) {
         if (wrongWordsQueue.length > 0) {
-            // 原生弹窗提示，然后开启错词重练
             alert("接下来复习错词"); 
             spellingQueue = [...wrongWordsQueue];
             wrongWordsQueue = [];
             spellCurrentIndex = 0;
             spellTotalInRound = spellingQueue.length;
         } else {
-            // 彻底清空，进入小结
             showSummaryPhase();
             return;
         }
@@ -549,25 +539,19 @@ function updateSpellUI() {
     els.hiddenInput.value = '';
     els.hiddenInput.maxLength = currentSpellWord.pt.length;
     
-    // 生成字母格子
     els.letterBoxes.innerHTML = '';
     for (let i = 0; i < currentSpellWord.pt.length; i++) {
         els.letterBoxes.innerHTML += `<div class="letter-box"></div>`;
     }
     
     resetSpellHint();
-    
-    // 自动聚焦唤起键盘
     setTimeout(() => { els.hiddenInput.focus(); }, 100);
 }
 
-// 隐藏输入框事件监听
 els.hiddenInput.addEventListener('input', (e) => {
     if (isSpellChecking) { e.preventDefault(); return; }
-    
     const val = els.hiddenInput.value;
     const boxes = els.letterBoxes.children;
-    
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].innerText = val[i] || '';
         if (val[i]) boxes[i].classList.add('filled');
@@ -576,14 +560,12 @@ els.hiddenInput.addEventListener('input', (e) => {
 });
 
 els.hiddenInput.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter' && !isSpellChecking) {
-        checkSpelling();
-    }
+    if (e.key === 'Enter' && !isSpellChecking) checkSpelling();
 });
 
 function checkSpelling() {
     isSpellChecking = true;
-    els.hiddenInput.blur(); // 收起键盘
+    els.hiddenInput.blur(); 
     
     const userInput = els.hiddenInput.value.trim().toLowerCase();
     const targetWord = currentSpellWord.pt.toLowerCase();
@@ -592,16 +574,12 @@ function checkSpelling() {
     let isCorrect = (userInput === targetWord);
 
     if (isCorrect && !spellHasErroredThisTurn) {
-        // 拼写正确
         for (let i = 0; i < boxes.length; i++) { boxes[i].classList.add('correct'); }
         playAudio(currentSpellWord.pt);
-        setTimeout(loadNextSpellWord, 600); // 绿灯亮起，0.6秒后跳过
-        
+        setTimeout(loadNextSpellWord, 600); 
     } else {
-        // 拼错记录
         if (!spellHasErroredThisTurn) recordSpellError();
         
-        // 红绿覆盖逻辑
         for (let i = 0; i < targetWord.length; i++) {
             boxes[i].classList.remove('filled', 'correct', 'wrong', 'correction');
             if (userInput[i] === targetWord[i]) {
@@ -609,13 +587,13 @@ function checkSpelling() {
                 boxes[i].classList.add('correct');
             } else {
                 boxes[i].innerText = targetWord[i];
-                if (userInput[i]) boxes[i].classList.add('wrong'); // 写错了
-                else boxes[i].classList.add('correction'); // 漏写了
+                if (userInput[i]) boxes[i].classList.add('wrong'); 
+                else boxes[i].classList.add('correction'); 
             }
         }
         
         playAudio(currentSpellWord.pt);
-        setTimeout(loadNextSpellWord, 2000); // 停顿2秒，让用户看清正确拼写
+        setTimeout(loadNextSpellWord, 2000); 
     }
 }
 
@@ -623,15 +601,12 @@ function recordSpellError() {
     spellHasErroredThisTurn = true;
     wrongWordsQueue.push(currentSpellWord);
     
-    // 累加到全局数据
     let masterWord = vocabularyData.find(w => w.pt === currentSpellWord.pt);
     if (masterWord) masterWord.errorCount++;
 }
 
-// 灯泡提示
 els.hintContainer.addEventListener('click', () => {
     if (isSpellChecking || els.phoneticText.classList.contains('active')) return;
-    
     if (!spellHasErroredThisTurn) recordSpellError();
     
     els.bulbIcon.classList.add('hidden');
@@ -650,12 +625,13 @@ function resetSpellHint() {
 
 // ================= 全新序列 10：学习小结视图逻辑 =================
 function showSummaryPhase() {
-    views.spelling.classList.replace('active', 'hidden');
-    views.summary.classList.replace('hidden', 'active');
+    // 关闭所有可能活跃的上一级视图
+    views.spelling.classList.remove('active');
+    views.spelling.classList.add('hidden');
     
+    views.summary.classList.replace('hidden', 'active');
     els.summaryList.innerHTML = '';
     
-    // 渲染总结列表，结合了认词和拼写的所有错误总数
     vocabularyData.forEach(item => {
         const errCount = item.errorCount || 0;
         const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
