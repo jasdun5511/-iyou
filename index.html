@@ -142,30 +142,27 @@
             </div>
         </div>
         <div id="transition-view" class="view hidden" style="z-index: 55;">
-            <div class="completion-screen">
-                
+            <div class="completion-container">
                 <div class="completion-header">
                     <h1 class="completion-title">首组单词辨识完成</h1>
                     <p class="completion-reward">+20 酷币</p>
                 </div>
 
                 <div class="completion-character">
-                    <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Felix&backgroundColor=transparent" alt="3D Character Placeholder">
+                    <img src="https://api.dicebear.com/8.x/bottts-neutral/svg?seed=Felix&backgroundColor=transparent" alt="Felix Robot">
                 </div>
 
                 <div class="completion-panel">
                     <p class="panel-hint">辨识后拼写，更能加强记忆哦</p>
-                    <button id="btn-start-spell" class="btn-primary-gradient">开始拼写</button>
-                    <button id="btn-skip-spell" class="btn-ghost">小结</button>
+                    <div class="panel-actions">
+                        <button id="btn-start-spell" class="btn-capsule btn-primary">开始拼写</button>
+                        <button id="btn-skip-spell" class="btn-capsule btn-outline">小结</button>
+                    </div>
                 </div>
 
                 <div class="bottom-setting">
-                    <div class="checkbox-wrapper">
-                        <i class="fa-regular fa-circle"></i>
-                    </div>
-                    <span>学习时不再拼写</span>
+                    <i class="fa-regular fa-circle"></i> 学习时不再拼写
                 </div>
-
             </div>
         </div>
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
@@ -201,7 +198,7 @@
         <div id="summary-view" class="view hidden" style="z-index: 70; background-color: #121212;">
             <header class="summary-header">
                 <h2>学习小结</h2>
-                <p>本次共学习 <span id="total-words-count">10</span> 个单词</p>
+                <p>本次共完成 <span id="total-words-count">10</span> 个单词的拼写</p>
             </header>
             <div class="summary-list" id="summary-list">
                 </div>
