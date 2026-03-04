@@ -50,53 +50,17 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .pos-grey { font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-right: 8px; }
 .zh-white { font-size: 1.1rem; color: #fff; }
 
-/* ================= 经典的测验区样式 (恢复上下气泡排列，靠左对齐) ================= */
-.options-list { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 12px; 
-    width: 100%;
-}
-
-.option { 
-    background: rgba(255, 255, 255, 0.08); 
-    border-radius: 14px; 
-    padding: 16px 24px; /* 增加内边距，靠左更精致 */
-    cursor: pointer; 
-    min-height: 64px; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: flex-start; /* 核心修改：整体靠左对齐 */
-    transition: all 0.2s ease; 
-    border: 1px solid transparent; 
-}
+.options-list { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.option { background: rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 16px 24px; cursor: pointer; min-height: 64px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; transition: all 0.2s ease; border: 1px solid transparent; }
 .option:active, .option.active { background: rgba(255, 255, 255, 0.18); } 
-
 .opt-pos { font-size: 0.8rem; color: #2ecc71; margin-bottom: 4px; display: block; font-weight: 500;}
-.opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; text-align: left;} /* 核心修改：中文靠左 */
+.opt-zh { font-size: 1.05rem; color: #fff; line-height: 1.4; text-align: left;} 
 
-/* === 答错/答对的框体反馈 === */
-.option.wrong {
-    background-color: rgba(231, 76, 60, 0.12) !important; 
-    border: 1px solid rgba(231, 76, 60, 0.4);
-}
-.option.correct {
-    background-color: rgba(46, 204, 113, 0.12) !important; 
-    border: 1px solid rgba(46, 204, 113, 0.4);
-}
-
-/* === 选错后展示的双语排版 === */
-.opt-bilingual { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 4px; 
-    align-items: flex-start; /* 核心修改：双语强制靠左对齐 */
-}
+.option.wrong { background-color: rgba(231, 76, 60, 0.12) !important; border: 1px solid rgba(231, 76, 60, 0.4); }
+.option.correct { background-color: rgba(46, 204, 113, 0.12) !important; border: 1px solid rgba(46, 204, 113, 0.4); }
+.opt-bilingual { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .opt-pt-text { font-size: 1.15rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
-.opt-zh-text { font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); text-align: left;} /* 核心修改：翻译靠左 */
-
-/* ============================================================== */
+.opt-zh-text { font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); text-align: left;}
 
 .card { background: rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
 .sentence-card { background: rgba(255, 255, 255, 0.07); }
@@ -104,25 +68,8 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .en-text strong { font-weight: 600; }
 .zh-text { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
 
-/* 右下角带背景的圆形按钮样式 */
-.expand-card-btn {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.15); 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    z-index: 10;
-    -webkit-tap-highlight-color: transparent; 
-}
-.expand-card-btn:hover,
-.expand-card-btn:active { background-color: rgba(255, 255, 255, 0.25); }
+.expand-card-btn { position: absolute; bottom: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.15); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background-color 0.2s ease; z-index: 10; -webkit-tap-highlight-color: transparent; }
+.expand-card-btn:hover, .expand-card-btn:active { background-color: rgba(255, 255, 255, 0.25); }
 
 #tab-content-container { height: 160px; overflow: hidden; margin-bottom: 15px; }
 .phrase-item { margin-bottom: 15px; }
@@ -151,7 +98,6 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .hidden { display: none !important; }
 
 /* ================= 序列 3：沉浸式原生滑动 大卡片专属 ================= */
-
 .immersive-content-wrapper { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; z-index: 2; }
 .immersive-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(20, 25, 30, 0.95); z-index: 1; }
 
@@ -168,208 +114,61 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .highlight-yellow { color: #f1c40f; }
 .im-zh-sentence { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.55; padding: 0 24px; }
 
-/* 核心修改 1：上层例句点点居中 */
-.upper-pagination { 
-    display: flex; gap: 8px; justify-content: center; padding: 0; margin-bottom: 10px; 
-}
+.upper-pagination { display: flex; gap: 8px; justify-content: center; padding: 0; margin-bottom: 10px; }
 .upper-pagination .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); transition: background 0.3s; }
 .upper-pagination .dot.active { background: #fff; }
 
-/* 核心修改 2：下层释义卡片向下延伸 */
-.immersive-lower { 
-    flex: 5.5; 
-    padding: 0 16px 35px 16px; 
-    position: relative;        
-    margin-bottom: 0; 
-}
-
-.def-panel {
-    background: rgba(35, 40, 50, 0.95); 
-    border-radius: 20px; 
-    padding: 28px 24px; 
-    height: 100%; 
-    position: relative; 
-    box-shadow: 0 -8px 30px rgba(0,0,0,0.3);
-    margin: 0 6px; 
-    border: 1px solid rgba(255,255,255,0.03); 
-}
-
+.immersive-lower { flex: 5.5; padding: 0 16px 35px 16px; position: relative; margin-bottom: 0; }
+.def-panel { background: rgba(35, 40, 50, 0.95); border-radius: 20px; padding: 28px 24px; height: 100%; position: relative; box-shadow: 0 -8px 30px rgba(0,0,0,0.3); margin: 0 6px; border: 1px solid rgba(255,255,255,0.03); }
 .im-pos { font-size: 0.85rem; color: #2ecc71; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; }
 .im-en-def { font-size: 1.15rem; margin-bottom: 10px; line-height: 1.45; font-weight: 500;}
 .im-zh-def { font-size: 0.98rem; color: rgba(255,255,255,0.5); line-height: 1.5;}
-
 .meaning-counter { position: absolute; bottom: 22px; right: 24px; font-size: 0.85rem; color: rgba(255,255,255,0.3); font-weight: 600; }
 
-/* 压缩底部操作栏，把空间让给释义卡片 */
-.immersive-footer { 
-    height: 60px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 0 24px; background: rgba(20, 25, 30, 0.98); position: relative; 
-}
-
-.im-footer-btn { 
-    font-size: 0.92rem; color: rgba(255,255,255,0.85); cursor: pointer; 
-    display: flex; align-items: center; gap: 7px; font-weight: 500; transition: opacity 0.2s;
-}
+.immersive-footer { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: rgba(20, 25, 30, 0.98); position: relative; }
+.im-footer-btn { font-size: 0.92rem; color: rgba(255,255,255,0.85); cursor: pointer; display: flex; align-items: center; gap: 7px; font-weight: 500; transition: opacity 0.2s; }
 .im-footer-btn:active { opacity: 0.6; }
-
 .im-btn-next-word { color: #f39c12; } 
 .im-btn-close { color: rgba(255,255,255,0.6); }
 
-.global-pagination { 
-    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; 
-}
+.global-pagination { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; }
 .global-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .global-dot.capsule { width: auto; height: auto; background: #fff; color: #000; font-size: 0.7rem; font-weight: 600; padding: 2px 10px; border-radius: 10px; }
 
 
-/* ================= 高保真复刻版：拼写引导过渡视图 (像素级重构) ================= */
-
-/* 1. 沉浸式暗黑主题：深紫/暗蓝径向渐变虚化背景 */
+/* ================= 全新：拼写引导过渡视图 (高保真重构版) ================= */
 #transition-view { 
-    justify-content: center; 
-    align-items: center; 
     background: radial-gradient(circle at center, #2c1b3d 0%, #121626 60%, #0a0a0f 100%);
 }
 
 .completion-container {
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center;
-    height: 100%; width: 100%; 
-    padding: 0 24px; 
-    position: relative; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; width: 100%; padding: 0 24px; position: relative; 
     animation: fadeIn 0.4s ease-out;
 }
 
-/* 2. 顶部：标题与奖励 */
-.completion-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.completion-title { 
-    font-size: 1.8rem; 
-    font-weight: 700; 
-    color: #fff; 
-    margin-bottom: 8px; 
-    letter-spacing: 1px;
-}
-.completion-reward { 
-    font-size: 1.1rem; 
-    color: #FFB800; /* 醒目的橙黄色，原图金黄色效果 */
-    font-weight: 600; 
+.completion-title { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: 1px; }
+.completion-reward { font-size: 1.1rem; color: #EBB04D; font-weight: 600; margin-bottom: 40px; }
+.completion-emoji { font-size: 5.5rem; margin-bottom: 40px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
+.completion-hint { font-size: 0.85rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 20px; }
+
+.completion-actions { display: flex; gap: 15px; width: 100%; max-width: 340px; }
+.completion-actions button {
+    flex: 1; padding: 16px 0; border-radius: 50px; font-size: 1.1rem; font-weight: 600; 
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); 
+    display: flex; justify-content: center; align-items: center;
 }
 
-/* 3. 核心 3D 角色视觉中心 */
-.completion-character {
-    margin-bottom: 40px;
-    animation: float 3.5s ease-in-out infinite; /* 增加高级的上下悬浮动画 */
-}
-.completion-character img {
-    width: 180px;
-    height: 180px;
-    filter: drop-shadow(0 15px 25px rgba(0,0,0,0.4)); /* 增加立体投影感 */
-}
+.btn-primary { background-color: #EBB04D; color: #1a1a1a; border: none; box-shadow: 0 4px 15px rgba(235, 176, 77, 0.25); }
+.btn-outline { background-color: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+.completion-actions button:active { transform: scale(0.95); opacity: 0.9; }
 
-/* 4. 核心交互面板：深色圆角矩形面板 */
-.completion-panel {
-    background: rgba(35, 40, 50, 0.95); 
-    border-radius: 28px; /* 巨大的圆角 */
-    width: 100%;
-    max-width: 360px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border: 1px solid rgba(255,255,255,0.03); 
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-}
-
-/* 提示文本 */
-.panel-hint {
-    font-size: 0.85rem;
-    color: #A0A0A0; /* 灰色 */
-    margin-bottom: 24px;
-    text-align: center;
-    font-weight: 400;
-}
-
-/* 按钮排版 */
-.panel-actions {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-}
-
-/* 5. 胶囊型型按钮基础样式 */
-.btn-capsule {
-    flex: 1;
-    padding: 16px 0;
-    border-radius: 50px; /* 完全圆角化胶囊型按钮 */
-    font-size: 1.1rem;
-    font-weight: 700;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* 按钮点击物理缩放反馈 */
-.btn-capsule:active {
-    transform: scale(0.96);
-    opacity: 0.9;
-}
-
-/* 金黄色主按钮 */
-.btn-primary {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); /* 金黄色渐变背景 */
-    color: #121212;
-    border: 1px solid rgba(255, 215, 0, 0.6); /* 金色边框 */
-    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
-}
-
-/* 白描边次按钮 (幽灵按钮) */
-.btn-outline {
-    background: transparent;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2); /* 极细描边边框 */
-}
-.btn-outline:active {
-    background: rgba(255,255,255,0.05);
-}
-
-/* 6. 底部设置栏 */
 .bottom-setting {
-    position: absolute;
-    bottom: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.4); /* 低调、颜色淡 */
-    cursor: pointer;
-    font-weight: 400;
+    position: absolute; bottom: 50px; display: flex; align-items: center; gap: 8px; 
+    font-size: 0.85rem; color: rgba(255, 255, 255, 0.3); cursor: pointer;
 }
-.bottom-setting:active {
-    color: #fff;
-}
-.bottom-setting i {
-    font-size: 1.1rem;
-}
+.circle-icon { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.3); }
 
-/* 入场和悬浮浮动动画 */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-12px); }
-    100% { transform: translateY(0px); }
-}
-
-/* ============================================================== */
 
 /* ================= 全新：拼写测试与小结视图样式 ================= */
 
@@ -407,3 +206,5 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .summary-footer { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #121212 30%); }
 .primary-btn-summary { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #2ecc71; color: #121212; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
 .primary-btn-summary:active { opacity: 0.8; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
