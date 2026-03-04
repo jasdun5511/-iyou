@@ -141,15 +141,19 @@
 
             </div>
         </div>
-        <div id="transition-view" class="view hidden" style="z-index: 55; background-color: #121212;">
-            <div class="transition-content">
-                <div class="transition-icon"><i class="fa-solid fa-flag-checkered"></i></div>
-                <h2 class="transition-title">本组认读完成</h2>
-                <p class="transition-desc">是否进行拼写测试，进一步巩固记忆？</p>
-            </div>
-            <div class="transition-actions">
-                <button id="btn-start-spell" class="transition-btn primary">开始拼写</button>
-                <button id="btn-skip-spell" class="transition-btn secondary">跳过，直接看小结</button>
+        <div id="transition-view" class="view hidden" style="z-index: 55;">
+            <div class="completion-container">
+                <h1 class="completion-title">首组单词辨识完成</h1>
+                <p class="completion-reward">+20 酷币</p>
+                <div class="completion-emoji">😀</div>
+                <p class="completion-hint">辨识后拼写，更能加强记忆哦</p>
+                <div class="completion-actions">
+                    <button id="btn-start-spell" class="btn-primary">开始拼写</button>
+                    <button id="btn-skip-spell" class="btn-outline">小结</button>
+                </div>
+                <div class="bottom-setting">
+                    <span class="circle-icon"></span> 学习时不再拼写
+                </div>
             </div>
         </div>
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
@@ -190,7 +194,7 @@
             <div class="summary-list" id="summary-list">
                 </div>
             <div class="summary-footer">
-                <button id="btn-finish" class="primary-btn">完成学习</button>
+                <button id="btn-finish" class="primary-btn-summary">完成学习</button>
             </div>
         </div>
 
