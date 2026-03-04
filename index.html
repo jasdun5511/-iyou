@@ -142,6 +142,17 @@
             </div>
         </div>
 
+        <div id="transition-view" class="view hidden" style="z-index: 55;">
+            <div class="transition-card">
+                <div class="transition-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+                <h2 class="transition-title">本组认读完成</h2>
+                <p class="transition-desc">是否进行拼写测试，进一步巩固记忆？</p>
+                <div class="transition-actions">
+                    <button id="btn-start-spell" class="transition-btn primary">开始拼写</button>
+                    <button id="btn-skip-spell" class="transition-btn secondary">跳过，直接看小结</button>
+                </div>
+            </div>
+        </div>
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
             <div class="spell-top-bar">
                 <span id="spell-progress-text">1/10</span>
@@ -175,7 +186,7 @@
         <div id="summary-view" class="view hidden" style="z-index: 70; background-color: #121212;">
             <header class="summary-header">
                 <h2>学习小结</h2>
-                <p>本次共完成 <span id="total-words-count">10</span> 个单词的拼写</p>
+                <p>本次共学习 <span id="total-words-count">10</span> 个单词</p>
             </header>
             <div class="summary-list" id="summary-list">
                 </div>
