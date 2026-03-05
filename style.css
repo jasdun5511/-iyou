@@ -245,3 +245,51 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .cal-day .w { font-size: 0.65rem; color: rgba(255,255,255,0.4); font-weight: 600; }
 .cal-day .d { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 500; color: #fff; border-radius: 50%; }
 .cal-day.active .d { background: #EBB04D; color: #121212; font-weight: 700; box-shadow: 0 4px 10px rgba(235, 176, 77, 0.3); }
+
+
+/* ================= CSS 序列 9：词库视图 (Library) ================= */
+#library-view { color: #fff; overflow: hidden; } /* 禁止外层滚动，内部列表滚动 */
+
+.library-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 10px; font-size: 1.1rem; }
+.library-title { font-weight: 500; letter-spacing: 0.5px; }
+
+/* 搜索栏 */
+.library-search-container { padding: 10px 20px; }
+.library-search-box { background: #24283B; border-radius: 12px; display: flex; align-items: center; padding: 10px 15px; gap: 10px; }
+.library-search-box i { color: rgba(255,255,255,0.4); font-size: 0.9rem; }
+.library-search-box input { background: transparent; border: none; outline: none; color: #fff; font-size: 0.9rem; width: 100%; }
+.library-search-box input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* 导航标签栏 */
+.library-tabs-container { padding: 10px 0 20px 20px; }
+.library-primary-tabs { display: flex; gap: 20px; overflow-x: auto; font-size: 1rem; color: rgba(255,255,255,0.5); font-weight: 500; margin-bottom: 20px; padding-right: 20px; }
+.library-primary-tabs::-webkit-scrollbar { display: none; } /* 隐藏滚动条 */
+.library-primary-tabs span { white-space: nowrap; position: relative; padding-bottom: 5px; cursor: pointer; }
+.library-primary-tabs span.active { color: #EBB04D; font-weight: 600; }
+.library-primary-tabs span.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 14px; height: 3px; border-radius: 2px; background: #EBB04D; }
+.hot-badge { position: absolute; top: -8px; right: -18px; background: linear-gradient(to right, #f39c12, #e67e22); color: #fff; font-size: 0.5rem; padding: 1px 4px; border-radius: 6px 6px 6px 0; font-weight: 800; transform: scale(0.85); }
+
+.library-secondary-tabs { display: flex; flex-wrap: wrap; gap: 12px; padding-right: 20px; }
+.library-secondary-tabs span { background: #24283B; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; color: rgba(255,255,255,0.6); cursor: pointer; }
+.library-secondary-tabs span.active { background: #EBB04D; color: #1A1D27; font-weight: 600; }
+
+/* 词书列表区 */
+.library-content-wrapper { background: #24283B; border-radius: 24px 24px 0 0; flex: 1; padding: 25px 20px; overflow-y: auto; }
+.lib-book-item { display: flex; gap: 16px; margin-bottom: 28px; cursor: pointer; }
+.lib-book-item:last-child { margin-bottom: 50px; }
+
+/* 书籍封面 */
+.lib-book-cover { width: 70px; height: 95px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 2px 4px 12px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+.lib-book-cover::before { content: ''; position: absolute; left: 6px; top: 0; width: 2px; height: 100%; background: rgba(0,0,0,0.15); } /* 模仿书脊凹槽 */
+.cover-red { background: linear-gradient(135deg, #FF6B6B 0%, #E74C3C 100%); color: #fff; }
+.cover-blue { background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); color: #fff; }
+.cover-green { background: linear-gradient(135deg, #55efc4 0%, #00b894 100%); color: #fff; }
+.cover-purple { background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); color: #fff; }
+.cover-text { font-size: 0.85rem; font-weight: 800; text-align: center; line-height: 1.2; letter-spacing: 0.5px; }
+
+/* 书籍信息 */
+.lib-book-info { flex: 1; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 10px; }
+.lib-book-info h4 { font-size: 1.05rem; font-weight: 500; color: #fff; margin-bottom: 6px; }
+.lib-book-info p { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
+.lib-book-meta { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+.tag-learning { color: #EBB04D; font-weight: 600; }
