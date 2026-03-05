@@ -211,13 +211,20 @@
                     
                     <div class="dash-card learning-card">
                         <div class="book-row">
-                            <div class="book-cover">
+                            <div class="book-cover" id="btn-open-wordlist-cover" style="cursor: pointer;">
                                 <span>PORTUGUÊS</span>
                             </div>
-                            <div class="book-info">
-                                <h3>核心葡语词汇 <i class="fa-solid fa-ellipsis-vertical" style="float: right; color: rgba(255,255,255,0.4);"></i></h3>
+                            <div class="book-info" style="position: relative;">
+                                <h3>核心葡语词汇 <i class="fa-solid fa-ellipsis-vertical" id="btn-dashboard-more" style="float: right; color: rgba(255,255,255,0.4); cursor: pointer; padding: 0 10px;"></i></h3>
                                 <div class="vocab-tag">
                                     <i class="fa-regular fa-circle-check" style="color: #EBB04D;"></i> 生词本 <span id="dash-vocab-count">0</span>
+                                </div>
+                                
+                                <div id="dashboard-more-menu" class="hidden" style="position: absolute; right: 0; top: 25px; background: #2A2E42; border-radius: 12px; padding: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 10; width: 160px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="menu-item" id="btn-menu-wordlist"><i class="fa-solid fa-file-lines"></i> 查看词书单词表</div>
+                                    <div class="menu-item"><i class="fa-solid fa-cloud-arrow-down"></i> 下载离线单词包</div>
+                                    <div class="menu-item"><i class="fa-solid fa-rotate-left"></i> 重学词书</div>
+                                    <div class="menu-item"><i class="fa-solid fa-rotate"></i> 更新词书</div>
                                 </div>
                             </div>
                         </div>
@@ -295,7 +302,8 @@
             <header class="library-header">
                 <i class="fa-solid fa-chevron-left" id="btn-back-dashboard" style="cursor: pointer; padding: 10px 10px 10px 0;"></i>
                 <span class="library-title">词库</span>
-                <div style="width: 24px;"></div> </header>
+                <div style="width: 24px;"></div>
+            </header>
 
             <div class="library-search-container">
                 <div class="library-search-box">
@@ -380,6 +388,33 @@
                 </div>
 
             </div>
+        </div>
+
+        <div id="wordlist-view" class="view hidden" style="z-index: 95; background-color: #1A1D27; display: flex; flex-direction: column;">
+            
+            <header class="wordlist-header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fa-solid fa-chevron-left" id="btn-back-from-wordlist" style="cursor: pointer; padding: 10px 10px 10px 0;"></i>
+                    <span class="wordlist-title">核心葡语词汇</span>
+                </div>
+                <div class="wordlist-actions">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-regular fa-eye"></i>
+                </div>
+            </header>
+
+            <div class="wordlist-meta">
+                <span class="bar"></span> <span id="wordlist-total-count">0</span>词
+            </div>
+
+            <div class="wordlist-content">
+                <div class="wordlist-group">
+                    <div class="wordlist-group-title">Unit 1 <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-left: 8px;" id="wordlist-unit-count">0词</span></div>
+                    <div id="wordlist-items-container">
+                        </div>
+                </div>
+            </div>
+            
         </div>
 
     </div>
