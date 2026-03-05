@@ -485,7 +485,7 @@ els.btnFinish.addEventListener('click', () => {
 });
 
 
-// ================= 序列 8：重构版拼写逻辑引擎 (兼容葡语键盘) =================
+// ================= JS 序列 8：重构版拼写逻辑引擎 (无缝键盘+手动提交) =================
 function startSpellingPhase() {
     views.spelling.classList.replace('hidden', 'active');
     spellingQueue = [...vocabularyData];
@@ -527,9 +527,8 @@ function updateSpellUI() {
     els.spellProgress.innerText = `${spellCurrentIndex}/${spellTotalInRound}`;
     els.spellMeaning.innerText = `${currentSpellWord.pos} ${currentSpellWord.zh}`;
     
-    // 初始化隐藏的 input
+    // 初始化隐藏的 input，清空值
     els.hiddenInput.value = '';
-    els.hiddenInput.disabled = false;
     els.hiddenInput.maxLength = currentSpellWord.pt.length;
     
     // 动态生成字母槽
@@ -538,8 +537,8 @@ function updateSpellUI() {
         els.letterBoxes.innerHTML += `<div class="letter-box"></div>`;
     }
     
-    // 延迟聚焦，确保移动端视图渲染完毕后拉起键盘
-    setTimeout(() => { els.hiddenInput.focus(); }, 300);
+    // 强制聚焦，保持键盘弹起
+    setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
 
 // 防弹级：解决移动端键盘组合输入（葡语特殊字符）
@@ -549,19 +548,11 @@ els.hiddenInput.addEventListener('compositionend', (e) => {
     syncInputToSlots(e.target.value); 
 });
 
-// ================= 替换：序列 8 中的输入监听与提交逻辑 =================
-
-// 解决移动端键盘组合输入（葡语特殊字符）
-els.hiddenInput.addEventListener('compositionstart', () => { isComposing = true; });
-els.hiddenInput.addEventListener('compositionend', (e) => { 
-    isComposing = false; 
-    syncInputToSlots(e.target.value); 
-});
-
 // 监听标准输入
 els.hiddenInput.addEventListener('input', (e) => {
+    // 拦截动画期间的输入，但绝不禁用 input 导致键盘回缩
+    if (isSpellChecking) return; 
     syncInputToSlots(e.target.value);
-    // ⚠️ 注意：这里已经删除了原先的“到达长度自动 checkSpelling()”的逻辑
 });
 
 // 监听键盘的 Enter 键（软键盘右下角的换行/提交按钮）
@@ -571,12 +562,11 @@ els.hiddenInput.addEventListener('keyup', (e) => {
     }
 });
 
-// 绑定右下角新增的 √ 确认按钮
+// 绑定右下角的 √ 确认按钮
 document.getElementById('btn-submit-spell').addEventListener('click', () => {
     if (!isSpellChecking && els.hiddenInput.value.length > 0) {
         checkSpelling();
     } else if (els.hiddenInput.value.length === 0) {
-        // 防止还没打字就不小心按了提交
         els.hiddenInput.focus();
     }
 });
@@ -605,8 +595,7 @@ function checkSpelling() {
     if (isSpellChecking) return;
     isSpellChecking = true;
     
-    els.hiddenInput.blur(); 
-    els.hiddenInput.disabled = true; // 锁定输入，防止动画期间乱点
+    // 注意：删除了 blur() 和 disabled，保持手机键盘常驻不回缩！
     
     const userInput = els.hiddenInput.value.trim().toLowerCase();
     const targetWord = currentSpellWord.pt.toLowerCase();
