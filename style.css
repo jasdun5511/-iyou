@@ -200,3 +200,48 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 /* 右下角的打钩确认按钮（固定在右边） */
 .submit-icon { position: absolute; right: 24px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
 .submit-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
+
+/* ================= CSS 序列 8：数据仪表盘 (Dashboard) ================= */
+#dashboard-view { background-color: #1A1D27; color: #fff; display: flex; flex-direction: column; }
+
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.dash-title { font-weight: 500; letter-spacing: 0.5px; }
+
+.dashboard-main { padding: 0 20px 40px 20px; flex: 1; overflow-y: auto; }
+.dash-section { margin-top: 25px; }
+.dash-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.dash-section-header h2 { font-size: 1.15rem; font-weight: 600; color: #E0E0E0; }
+.btn-change-book { font-size: 0.8rem; color: #EBB04D; border: 1px solid rgba(235, 176, 77, 0.4); padding: 4px 10px; border-radius: 20px; }
+
+.dash-card { background: #24283B; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03); }
+
+/* 书本信息区 */
+.book-row { display: flex; gap: 15px; margin-bottom: 25px; }
+.book-cover { width: 70px; height: 95px; background: linear-gradient(135deg, #EBB04D 0%, #E67E22 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; box-shadow: 2px 4px 10px rgba(235, 176, 77, 0.2); }
+.book-cover::after { content: ''; position: absolute; top: 0; left: 10px; width: 2px; height: 100%; background: rgba(255,255,255,0.2); }
+.book-cover span { font-size: 0.6rem; font-weight: 800; color: rgba(255,255,255,0.9); letter-spacing: 1px; transform: rotate(-90deg); position: absolute; }
+.book-info { flex: 1; padding-top: 5px; }
+.book-info h3 { font-size: 1rem; font-weight: 500; margin-bottom: 15px; }
+.vocab-tag { display: inline-block; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; color: rgba(255,255,255,0.8); }
+
+/* 进度条区 */
+.progress-labels { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 10px; }
+.dash-progress-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
+.dash-progress-fill { height: 100%; background: #EBB04D; border-radius: 3px; transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+.progress-stats { display: flex; justify-content: space-between; font-size: 0.85rem; }
+
+/* 数据网格区 */
+.data-overview-title { font-size: 0.95rem; font-weight: 500; color: #fff; display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+.data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 15px; }
+.data-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.data-value { font-size: 1.6rem; font-weight: 600; color: #fff; }
+.data-value .unit { font-size: 0.75rem; font-weight: 400; color: rgba(255,255,255,0.4); margin-left: 2px; }
+
+/* 日历区 */
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 0.95rem; font-weight: 500; }
+.streak-tag { font-size: 0.8rem; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 4px; }
+.calendar-days { display: flex; justify-content: space-between; }
+.cal-day { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.cal-day .w { font-size: 0.65rem; color: rgba(255,255,255,0.4); font-weight: 600; }
+.cal-day .d { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 500; color: #fff; border-radius: 50%; }
+.cal-day.active .d { background: #EBB04D; color: #121212; font-weight: 700; box-shadow: 0 4px 10px rgba(235, 176, 77, 0.3); }
