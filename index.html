@@ -69,7 +69,6 @@
                     <div class="card sentence-card" style="position: relative;">
                         <p id="word-example-pt" class="en-text">...</p>
                         <p id="word-example-zh" class="zh-text">...</p>
-                        
                         <div class="expand-card-btn" id="btn-open-immersive">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect>
@@ -106,12 +105,9 @@
             </footer>
         </div>
 
-
         <div id="immersive-modal" class="view hidden" style="z-index: 50;">
             <div class="immersive-bg" id="immersive-bg"></div>
-            
             <div class="immersive-content-wrapper">
-                
                 <div class="immersive-upper">
                     <div class="upper-header">
                         <span class="source-tag" id="upper-source-tag">词典例句</span>
@@ -122,14 +118,12 @@
                     </div>
                     <div class="upper-pagination" id="upper-dots"></div>
                 </div>
-
                 <div class="immersive-lower">
                     <div class="slider-window" id="lower-window" style="height: 100%;">
                         <div class="slider-track" id="lower-track"></div>
                     </div>
                     <div class="global-pagination" id="global-dots"></div>
                 </div>
-
                 <div class="immersive-footer">
                     <div class="im-footer-btn im-btn-next-word" id="im-btn-next-word">
                         <i class="fa-solid fa-forward-step" style="font-size: 0.9rem;"></i> 下一词
@@ -138,9 +132,9 @@
                         收起卡片 <i class="fa-solid fa-angle-down" style="font-size: 0.9rem;"></i>
                     </div>
                 </div>
-
             </div>
         </div>
+
         <div id="transition-view" class="view hidden" style="z-index: 55;">
             <div class="completion-container">
                 <h1 class="completion-title">首组单词辨识完成</h1>
@@ -156,14 +150,24 @@
                 </div>
             </div>
         </div>
+
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
-            <div class="spell-top-bar">
-                <span id="spell-progress-text">1/10</span>
+            <header class="spell-header">
+                <i class="fa-solid fa-xmark" id="btn-close-spell"></i>
+                <div class="spell-title">
+                    <span class="app-name">Meu Vocabulário</span>
+                    <span class="app-domain">jasdun5511.github.io</span>
+                </div>
+                <i class="fa-solid fa-ellipsis"></i>
+            </header>
+            
+            <div class="spell-progress-top">
+                <span id="spell-progress-text">1/2</span>
             </div>
 
-            <main class="spell-main">
+            <main class="spell-main-content">
                 <div class="meaning-area">
-                    <p id="spell-word-meaning">adj. 无所不在的</p>
+                    <p id="spell-word-meaning">adv. 甚至，即使</p>
                 </div>
 
                 <div class="input-container">
@@ -175,13 +179,11 @@
                 <p class="submit-hint">输入完成后按 Enter 提交</p>
             </main>
 
-            <footer class="hint-footer">
+            <footer class="spell-footer">
                 <div id="hint-container" class="hint-container">
                     <div id="bulb-icon" class="bulb-icon">
                         <i class="fa-regular fa-lightbulb"></i>
                     </div>
-                    <div id="phonetic-text" class="phonetic-text hidden">
-                        </div>
                 </div>
             </footer>
         </div>
@@ -191,8 +193,7 @@
                 <h2>学习小结</h2>
                 <p>本次共学习 <span id="total-words-count">10</span> 个单词</p>
             </header>
-            <div class="summary-list" id="summary-list">
-                </div>
+            <div class="summary-list" id="summary-list"></div>
             <div class="summary-footer">
                 <button id="btn-finish" class="primary-btn-summary">完成学习</button>
             </div>
