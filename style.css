@@ -188,9 +188,13 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 
 .submit-hint { font-size: 0.85rem; color: rgba(255,255,255,0.3); text-align: center; margin-top: 40px; }
 
-/* 底部按钮改为悬浮在左右两角 */
-.spell-footer { position: absolute; bottom: 40px; left: 0; width: 100%; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; }
+/* 底部按钮改为：主容器居中(保证灯泡在正中间)，右侧按钮绝对定位 */
+.spell-footer { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
 .hint-container { display: flex; justify-content: center; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent;}
+
 .bulb-icon { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: rgba(255,255,255,0.6); transition: all 0.2s; cursor: pointer;}
 .bulb-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
-.submit-icon { color: #fff; } /* 确认键也是白色，和灯泡统一规格 */
+
+/* 右下角的打钩确认按钮（和灯泡大小一致，但固定在右边） */
+.submit-icon { position: absolute; right: 24px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+.submit-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
