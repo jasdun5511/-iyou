@@ -549,24 +549,45 @@ els.hiddenInput.addEventListener('compositionend', (e) => {
     syncInputToSlots(e.target.value); 
 });
 
+// ================= 替换：序列 8 中的输入监听与提交逻辑 =================
+
+// 解决移动端键盘组合输入（葡语特殊字符）
+els.hiddenInput.addEventListener('compositionstart', () => { isComposing = true; });
+els.hiddenInput.addEventListener('compositionend', (e) => { 
+    isComposing = false; 
+    syncInputToSlots(e.target.value); 
+});
+
 // 监听标准输入
 els.hiddenInput.addEventListener('input', (e) => {
     syncInputToSlots(e.target.value);
-    // 当输入长度达到目标，且没有在进行组合输入时，自动触发判定
-    if (!isComposing && e.target.value.length === currentSpellWord.pt.length) {
-        setTimeout(() => checkSpelling(), 150);
+    // ⚠️ 注意：这里已经删除了原先的“到达长度自动 checkSpelling()”的逻辑
+});
+
+// 监听键盘的 Enter 键（软键盘右下角的换行/提交按钮）
+els.hiddenInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter' && !isSpellChecking && els.hiddenInput.value.length > 0) {
+        checkSpelling();
+    }
+});
+
+// 绑定右下角新增的 √ 确认按钮
+document.getElementById('btn-submit-spell').addEventListener('click', () => {
+    if (!isSpellChecking && els.hiddenInput.value.length > 0) {
+        checkSpelling();
+    } else if (els.hiddenInput.value.length === 0) {
+        // 防止还没打字就不小心按了提交
+        els.hiddenInput.focus();
     }
 });
 
 // 核心同步函数：将真实 input 的值拆解到自定义字母槽中
 function syncInputToSlots(val) {
     const boxes = els.letterBoxes.children;
-    // 先清空所有槽位状态
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].innerText = '';
         boxes[i].classList.remove('filled');
     }
-    // 重新填入当前字符
     for (let i = 0; i < val.length; i++) {
         if (boxes[i]) {
             boxes[i].innerText = val[i];
