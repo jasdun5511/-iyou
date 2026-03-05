@@ -1,32 +1,6 @@
-// ================= 序列 1：升维版数据结构与全局状态 =================
-const vocabularyData = [
-    { 
-        pt: "mesmo", pos: "adv.", zh: "甚至，即使", phonetic: "/'mez.mu/", errorCount: 0,
-        example: { pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", zh: "即使在城市里，工作也很难找。" },
-        phrases: ["mesmo assim 尽管如此", "mesmo que 即使"],
-        derivatives: ["mesmíssimo (adj. 完全一样的)"],
-        roots: ["源自拉丁语 'metipsimus'"],
-        synonyms: ["ainda (adv. 还，甚至)", "até (prep. 直到，甚至)"],
-        meanings: [
-            { pos: "adv.", enDef: "even, exactly", zhDef: "甚至，即使", examples: [{ source: "柯林斯词典", pt: "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", zh: "即使在城市里，工作也很难找。" }] },
-            { pos: "adj.", enDef: "same, identical", zhDef: "同一个的", examples: [{ source: "小学教材", pt: "Nós moramos na <strong>mesma</strong> rua.", zh: "我们住在同一条街上。" }] },
-            { pos: "pron.", enDef: "oneself", zhDef: "(强调) 自己", examples: [{ source: "基础语法", pt: "Eu <strong>mesmo</strong> fiz o bolo.", zh: "我自己做了蛋糕。" }] }
-        ]
-    },
-    { 
-        pt: "encorajar", pos: "vt.", zh: "鼓励；劝告，怂恿", phonetic: "/ẽ.ku.ɾaˈʒaɾ/", errorCount: 0,
-        example: { pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" },
-        phrases: ["encorajar a violência 助长暴力", "encorajar o investimento 促进投资"],
-        derivatives: ["coragem (n. 勇气)", "encorajamento (n. 鼓励，怂恿)"],
-        roots: ["en- (使...) + coragem (勇气) + -ar (动词后缀)"],
-        synonyms: ["animar (vt. 使兴奋)"],
-        meanings: [
-            { pos: "vt.", enDef: "encourage, advise", zhDef: "鼓励，怂恿", examples: [{ source: "TED 演讲", pt: "Eu <strong>encorajo</strong> você a ser completamente honesto.", zh: "我鼓励你们说实话。" }] },
-            { pos: "vt.", enDef: "promote, stimulate", zhDef: "促进，刺激", examples: [{ source: "经济学人", pt: "O governo deve <strong>encorajar</strong> o investimento estrangeiro.", zh: "政府应该促进外国投资。" }] }
-        ]
-    }
-];
+// ================= 序列 1：高级数据引擎 (Data & Storage Engine) =================
 
+let globalVocabularyData = []; // 当前加载的词库完整数据
 let learningQueue = [];
 let learnedCount = 0;
 let totalWords = 0;
@@ -43,7 +17,71 @@ let spellCurrentIndex = 0;
 let spellTotalInRound = 0;
 let spellHasErroredThisTurn = false;
 let isSpellChecking = false;
-let isComposing = false; // 拼写状态标记：处理葡语特殊字符组合输入
+let isComposing = false;
+
+// 当前正在学习的词书 ID
+let currentBookId = 'core_pt'; 
+
+// --- 核心：本地进度管理器 (LocalStorage Manager) ---
+const StorageManager = {
+    getBookProgress: function(bookId) {
+        const data = localStorage.getItem(`splendid_progress_${bookId}`);
+        return data ? JSON.parse(data) : {};
+    },
+    saveWordError: function(bookId, wordId) {
+        let progress = this.getBookProgress(bookId);
+        if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
+        progress[wordId].errorCount += 1;
+        localStorage.setItem(`splendid_progress_${bookId}`, JSON.stringify(progress));
+    },
+    getWordError: function(bookId, wordId) {
+        let progress = this.getBookProgress(bookId);
+        return progress[wordId] ? progress[wordId].errorCount : 0;
+    }
+};
+
+// 统一的错误记录函数，同步更新本地存储和当前内存数据
+function recordError(wordObj) {
+    if (!wordObj || !wordObj.id) return;
+    StorageManager.saveWordError(currentBookId, wordObj.id);
+    let masterWord = globalVocabularyData.find(w => w.id === wordObj.id);
+    if (masterWord) {
+        masterWord.errorCount = StorageManager.getWordError(currentBookId, wordObj.id);
+    }
+}
+
+// --- 核心：异步拉取词书 (Fetch API) ---
+async function loadVocabularyBook(bookFileName) {
+    try {
+        console.log(`正在加载词书: ${bookFileName}.json ...`);
+        
+        // 注意：直接在同级目录下寻找 json 文件
+        const response = await fetch(`./${bookFileName}.json`);
+        if (!response.ok) throw new Error('网络请求失败');
+        
+        const rawData = await response.json();
+        
+        // 数据融合：纯净词典 + 本地错题记录
+        globalVocabularyData = rawData.map(word => {
+            return {
+                ...word,
+                errorCount: StorageManager.getWordError(currentBookId, word.id)
+            };
+        });
+
+        console.log('词书加载并融合完毕！包含单词数:', globalVocabularyData.length);
+        document.getElementById('learn-count').innerText = globalVocabularyData.length;
+        
+    } catch (error) {
+        console.error('加载词书出错啦:', error);
+        alert('加载词书失败，请确保本地服务器已开启 (如 Live Server)，并在同级目录下存有该 json 文件！');
+    }
+}
+
+// 页面加载完成后，立刻去拉取默认词书
+document.addEventListener('DOMContentLoaded', () => {
+    loadVocabularyBook('core_pt');
+});
 
 
 // ================= 序列 2：全局视图与 DOM 元素映射 =================
@@ -53,7 +91,10 @@ const views = {
     immersive: document.getElementById('immersive-modal'),
     transition: document.getElementById('transition-view'),
     spelling: document.getElementById('spelling-view'),
-    summary: document.getElementById('summary-view')
+    summary: document.getElementById('summary-view'),
+    dashboard: document.getElementById('dashboard-view'),
+    library: document.getElementById('library-view'),
+    wordlist: document.getElementById('wordlist-view')
 };
 
 const els = {
@@ -96,7 +137,6 @@ const els = {
     btnStartSpell: document.getElementById('btn-start-spell'),
     btnSkipSpell: document.getElementById('btn-skip-spell'),
 
-    // 重构版拼写 UI 元素
     btnCloseSpell: document.getElementById('btn-close-spell'),
     spellProgress: document.getElementById('spell-progress-text'),
     spellMeaning: document.getElementById('spell-word-meaning'),
@@ -110,8 +150,6 @@ const els = {
     btnFinish: document.getElementById('btn-finish')
 };
 
-document.getElementById('learn-count').innerText = vocabularyData.length;
-
 
 // ================= 序列 3：基础背词发音与流程控制 =================
 function playAudio(text) {
@@ -124,9 +162,11 @@ function playAudio(text) {
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
 document.getElementById('btn-learn').addEventListener('click', () => {
-    if (vocabularyData.length === 0) return;
-    vocabularyData.forEach(w => w.errorCount = 0);
-    learningQueue = vocabularyData.map(word => ({ ...word, stage: 0 }));
+    if (globalVocabularyData.length === 0) {
+        alert("词书还未加载完成，请稍后再试！");
+        return;
+    }
+    learningQueue = globalVocabularyData.map(word => ({ ...word, stage: 0 }));
     totalWords = learningQueue.length;
     learnedCount = 0;
     views.home.classList.replace('active', 'hidden');
@@ -200,7 +240,7 @@ function renderStage0() {
     els.fQuiz.innerHTML = `<div class="action-item" onclick="showAnswerDirectly()"><span>看答案</span><div class="line red"></div></div>`;
 
     let options = [{ wordObj: currentWordObj, isCorrect: true }];
-    let wrongCandidates = vocabularyData.filter(w => w.pt !== currentWordObj.pt);
+    let wrongCandidates = globalVocabularyData.filter(w => w.pt !== currentWordObj.pt);
     shuffleArray(wrongCandidates);
     
     for (let i = 0; i < 3 && i < wrongCandidates.length; i++) {
@@ -236,8 +276,8 @@ window.checkAnswer = function(selectedIndex) {
         els.optContents[selectedIndex].innerHTML = `<div class="opt-bilingual"><span class="opt-pt-text">${selectedData.wordObj.pt}</span><span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span></div>`;
         setTimeout(() => showDetails(), 400); 
     } else {
-        let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
-        if (masterWord) masterWord.errorCount++;
+        // 记录错误持久化
+        recordError(currentWordObj);
 
         currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0); 
         clickedBtn.classList.add('wrong');
@@ -286,8 +326,7 @@ document.getElementById('btn-not-recognize').addEventListener('click', punishAnd
 document.getElementById('btn-hint').addEventListener('click', punishAndShow);
 
 function punishAndShow() {
-    let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
-    if (masterWord) masterWord.errorCount++;
+    recordError(currentWordObj);
     currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0);
     setTimeout(() => showDetails(), 150);
 }
@@ -332,8 +371,7 @@ window.showDetails = function() {
 
 document.getElementById('btn-next').addEventListener('click', () => { setTimeout(() => loadNextState(), 150); });
 document.getElementById('btn-forgot').addEventListener('click', () => {
-    let masterWord = vocabularyData.find(w => w.pt === currentWordObj.pt);
-    if (masterWord) masterWord.errorCount++;
+    recordError(currentWordObj);
     if (currentWordObj.stage === 3) learnedCount--; 
     currentWordObj.stage = 0; learningQueue.push(currentWordObj);
     setTimeout(() => loadNextState(), 150);
@@ -465,7 +503,8 @@ function showSummaryPhase() {
     views.summary.classList.replace('hidden', 'active');
     els.summaryList.innerHTML = '';
     
-    vocabularyData.forEach(item => {
+    // 从 globalVocabularyData 读取最新的错误次数渲染
+    globalVocabularyData.forEach(item => {
         const errCount = item.errorCount || 0;
         const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
         const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
@@ -485,10 +524,10 @@ els.btnFinish.addEventListener('click', () => {
 });
 
 
-// ================= JS 序列 8：重构版拼写逻辑引擎 (无缝键盘+手动提交) =================
+// ================= 序列 8：重构版拼写逻辑引擎 (无缝键盘+手动提交) =================
 function startSpellingPhase() {
     views.spelling.classList.replace('hidden', 'active');
-    spellingQueue = [...vocabularyData];
+    spellingQueue = [...globalVocabularyData];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
     spellTotalInRound = spellingQueue.length;
@@ -527,42 +566,34 @@ function updateSpellUI() {
     els.spellProgress.innerText = `${spellCurrentIndex}/${spellTotalInRound}`;
     els.spellMeaning.innerText = `${currentSpellWord.pos} ${currentSpellWord.zh}`;
     
-    // 初始化隐藏的 input，清空值
     els.hiddenInput.value = '';
     els.hiddenInput.maxLength = currentSpellWord.pt.length;
     
-    // 动态生成字母槽
     els.letterBoxes.innerHTML = '';
     for (let i = 0; i < currentSpellWord.pt.length; i++) {
         els.letterBoxes.innerHTML += `<div class="letter-box"></div>`;
     }
     
-    // 强制聚焦，保持键盘弹起
     setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
 
-// 防弹级：解决移动端键盘组合输入（葡语特殊字符）
 els.hiddenInput.addEventListener('compositionstart', () => { isComposing = true; });
 els.hiddenInput.addEventListener('compositionend', (e) => { 
     isComposing = false; 
     syncInputToSlots(e.target.value); 
 });
 
-// 监听标准输入
 els.hiddenInput.addEventListener('input', (e) => {
-    // 拦截动画期间的输入，但绝不禁用 input 导致键盘回缩
     if (isSpellChecking) return; 
     syncInputToSlots(e.target.value);
 });
 
-// 监听键盘的 Enter 键（软键盘右下角的换行/提交按钮）
 els.hiddenInput.addEventListener('keyup', (e) => {
     if (e.key === 'Enter' && !isSpellChecking && els.hiddenInput.value.length > 0) {
         checkSpelling();
     }
 });
 
-// 绑定右下角的 √ 确认按钮
 document.getElementById('btn-submit-spell').addEventListener('click', () => {
     if (!isSpellChecking && els.hiddenInput.value.length > 0) {
         checkSpelling();
@@ -571,7 +602,6 @@ document.getElementById('btn-submit-spell').addEventListener('click', () => {
     }
 });
 
-// 核心同步函数：将真实 input 的值拆解到自定义字母槽中
 function syncInputToSlots(val) {
     const boxes = els.letterBoxes.children;
     for (let i = 0; i < boxes.length; i++) {
@@ -586,7 +616,6 @@ function syncInputToSlots(val) {
     }
 }
 
-// 确保用户点击屏幕空白处也能重新唤起键盘
 document.querySelector('.spell-main-content').addEventListener('click', () => {
     if(!isSpellChecking) els.hiddenInput.focus();
 });
@@ -594,8 +623,6 @@ document.querySelector('.spell-main-content').addEventListener('click', () => {
 function checkSpelling() {
     if (isSpellChecking) return;
     isSpellChecking = true;
-    
-    // 注意：删除了 blur() 和 disabled，保持手机键盘常驻不回缩！
     
     const userInput = els.hiddenInput.value.trim().toLowerCase();
     const targetWord = currentSpellWord.pt.toLowerCase();
@@ -608,7 +635,11 @@ function checkSpelling() {
         playAudio(currentSpellWord.pt);
         setTimeout(loadNextSpellWord, 800); 
     } else {
-        if (!spellHasErroredThisTurn) recordSpellError();
+        if (!spellHasErroredThisTurn) {
+            spellHasErroredThisTurn = true;
+            wrongWordsQueue.push(currentSpellWord);
+            recordError(currentSpellWord); // 拼写错误记录持久化
+        }
         
         for (let i = 0; i < targetWord.length; i++) {
             boxes[i].classList.remove('filled', 'correct', 'wrong');
@@ -625,111 +656,85 @@ function checkSpelling() {
     }
 }
 
-function recordSpellError() {
-    spellHasErroredThisTurn = true;
-    wrongWordsQueue.push(currentSpellWord);
-    
-    let masterWord = vocabularyData.find(w => w.pt === currentSpellWord.pt);
-    if (masterWord) masterWord.errorCount++;
-}
-
 els.hintContainer.addEventListener('click', () => {
     if (isSpellChecking) return;
-    if (!spellHasErroredThisTurn) recordSpellError();
+    if (!spellHasErroredThisTurn) {
+        spellHasErroredThisTurn = true;
+        wrongWordsQueue.push(currentSpellWord);
+        recordError(currentSpellWord);
+    }
     
-    // 提示时闪烁灯泡并自动填入正确拼写
     els.bulbIcon.style.backgroundColor = 'rgba(255,255,255,0.2)';
     setTimeout(() => { els.bulbIcon.style.backgroundColor = 'transparent'; }, 300);
     
     els.hiddenInput.value = currentSpellWord.pt;
     syncInputToSlots(currentSpellWord.pt);
-    checkSpelling(); // 提示完直接判错并进入下一题
+    checkSpelling(); 
 });
 
-// ================= JS 序列 9：数据仪表盘路由与动态统计 =================
 
-// 获取 DOM 元素
-views.dashboard = document.getElementById('dashboard-view');
+// ================= 序列 9：数据仪表盘路由与动态统计 =================
 const btnNavDashboard = document.getElementById('btn-nav-dashboard');
-const btnNavHome = document.getElementById('btn-nav-home'); // 主页的第一个图层图标
-const btnBackHome = document.getElementById('btn-back-home'); // 仪表盘的返回按钮
+const btnNavHome = document.getElementById('btn-nav-home'); 
+const btnBackHome = document.getElementById('btn-back-home'); 
 
-// 点击底部导航栏的图表按钮 -> 进入仪表盘
 btnNavDashboard.addEventListener('click', () => {
     views.home.classList.replace('active', 'hidden');
     views.dashboard.classList.replace('hidden', 'active');
     
-    // 切换底部图标的高亮状态
     btnNavDashboard.classList.add('active');
     btnNavHome.classList.remove('active');
     
-    // 渲染动态数据
     renderDashboardData();
 });
 
-// 点击仪表盘左上角返回 -> 回到主页
 btnBackHome.addEventListener('click', () => {
     views.dashboard.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
     
-    // 恢复底部图标的高亮状态
     btnNavDashboard.classList.remove('active');
     btnNavHome.classList.add('active');
 });
 
-// 核心数据渲染函数
 function renderDashboardData() {
-    // 1. 动态统计“生词本”数量（只要 errorCount 大于 0，就视为生词）
-    const vocabCount = vocabularyData.filter(word => word.errorCount > 0).length;
+    // 动态统计生词本数量 (依靠 localStorage 中的 errorCount)
+    const vocabCount = globalVocabularyData.filter(word => word.errorCount > 0).length;
     document.getElementById('dash-vocab-count').innerText = vocabCount;
 
-    // 2. 统计已学习词数和总词数
-    const totalWordsCount = vocabularyData.length;
+    const totalWordsCount = globalVocabularyData.length;
     document.getElementById('dash-total').innerText = totalWordsCount;
     document.getElementById('dash-learned').innerText = learnedCount;
     
-    // 这里简单映射“今日学习”和“累计学习”为当前学习量
     document.getElementById('dash-today-learned').innerText = learnedCount;
     document.getElementById('dash-total-learned').innerText = learnedCount;
 
-    // 3. 计算并执行进度条动画
     const progressPercent = totalWordsCount === 0 ? 0 : (learnedCount / totalWordsCount) * 100;
-    
-    // 延迟 50ms 触发，让 CSS 过渡动画生效，产生丝滑的填充效果
     setTimeout(() => {
         document.getElementById('dash-progress-fill').style.width = `${progressPercent}%`;
     }, 50);
 }
 
-// ================= JS 序列 10：词库视图路由交互 =================
 
-// 1. 获取对应的 DOM 元素
-views.library = document.getElementById('library-view');
-// 注意：仪表盘里的“换本词书”按钮类名是 .btn-change-book
+// ================= 序列 10：词库视图路由交互 =================
 const btnChangeBook = document.querySelector('.btn-change-book');
 const btnBackDashboard = document.getElementById('btn-back-dashboard');
 
-// 2. 从仪表盘进入词库
 if (btnChangeBook) {
     btnChangeBook.addEventListener('click', () => {
-        // 隐藏仪表盘，显示词库
         views.dashboard.classList.replace('active', 'hidden');
         views.library.classList.replace('hidden', 'active');
     });
 }
 
-// 3. 从词库返回仪表盘
 if (btnBackDashboard) {
     btnBackDashboard.addEventListener('click', () => {
-        // 隐藏词库，恢复仪表盘
         views.library.classList.replace('active', 'hidden');
         views.dashboard.classList.replace('hidden', 'active');
     });
 }
 
-// ================= JS 序列 11：仪表盘菜单与单词表视图 =================
 
-// 获取 DOM 元素
+// ================= 序列 11：仪表盘菜单与单词表视图 =================
 const btnDashboardMore = document.getElementById('btn-dashboard-more');
 const dashboardMoreMenu = document.getElementById('dashboard-more-menu');
 const btnOpenWordlistCover = document.getElementById('btn-open-wordlist-cover');
@@ -741,50 +746,40 @@ const wordlistItemsContainer = document.getElementById('wordlist-items-container
 const wordlistTotalCount = document.getElementById('wordlist-total-count');
 const wordlistUnitCount = document.getElementById('wordlist-unit-count');
 
-// 1. 点击三个点，切换下拉菜单显示/隐藏
 btnDashboardMore.addEventListener('click', (e) => {
-    e.stopPropagation(); // 阻止事件冒泡，防止点击时立刻触发全局关闭
+    e.stopPropagation(); 
     dashboardMoreMenu.classList.toggle('hidden');
 });
 
-// 2. 点击页面其他任何地方，自动收起下拉菜单
 document.addEventListener('click', (e) => {
     if (!dashboardMoreMenu.contains(e.target) && e.target !== btnDashboardMore) {
         dashboardMoreMenu.classList.add('hidden');
     }
 });
 
-// 3. 打开单词表的核心逻辑
 function openWordlist() {
-    // 先收起可能展开的菜单
     dashboardMoreMenu.classList.add('hidden');
     
-    // 视图切换
     document.getElementById('dashboard-view').classList.replace('active', 'hidden');
     wordlistView.classList.replace('hidden', 'active');
     
-    // 动态渲染词书数据 (读取我们全局的 vocabularyData)
-    const wordCount = vocabularyData.length;
+    // 动态渲染词书数据
+    const wordCount = globalVocabularyData.length;
     wordlistTotalCount.innerText = wordCount;
     wordlistUnitCount.innerText = `${wordCount}词`;
     
-    // 清空旧数据并生成新列表
     wordlistItemsContainer.innerHTML = '';
-    vocabularyData.forEach(word => {
-        // 原生 JS 动态渲染 HTML
+    globalVocabularyData.forEach(word => {
         wordlistItemsContainer.innerHTML += `
-            <div class="wordlist-item">${word.pt}</div>
+            <div class="wordlist-item">${word.pt} <span style="font-size:0.85rem; color:rgba(255,255,255,0.4); margin-left:10px;">${word.zh}</span></div>
         `;
     });
 }
 
-// 绑定两个入口：点击封面，或者点击菜单里的“查看词书单词表”
 btnOpenWordlistCover.addEventListener('click', openWordlist);
 btnMenuWordlist.addEventListener('click', openWordlist);
 
-// 4. 从单词表返回仪表盘
 btnBackFromWordlist.addEventListener('click', () => {
     wordlistView.classList.replace('active', 'hidden');
     document.getElementById('dashboard-view').classList.replace('hidden', 'active');
 });
-
