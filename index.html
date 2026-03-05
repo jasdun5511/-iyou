@@ -18,9 +18,9 @@
                     <div class="nav-card"><h3>Review</h3><span class="nav-count">0</span></div>
                 </div>
                 <nav class="bottom-nav">
-                    <i class="fa-solid fa-layer-group active"></i>
+                    <i class="fa-solid fa-layer-group active" id="btn-nav-home"></i>
                     <i class="fa-solid fa-box-archive"></i>
-                    <i class="fa-solid fa-chart-line"></i>
+                    <i class="fa-solid fa-chart-line" id="btn-nav-dashboard"></i>
                 </nav>
             </div>
         </div>
@@ -193,6 +193,101 @@
             <div class="summary-footer">
                 <button id="btn-finish" class="primary-btn-summary">完成学习</button>
             </div>
+        </div>
+
+        <div id="dashboard-view" class="view hidden" style="z-index: 80; background-color: #1A1D27; overflow-y: auto; padding-bottom: 50px;">
+            <header class="dashboard-header">
+                <i class="fa-solid fa-chevron-left" id="btn-back-home" style="cursor: pointer;"></i>
+                <span class="dash-title">仪表盘</span>
+                <i class="fa-solid fa-arrow-rotate-right" style="color: rgba(255,255,255,0.6);"></i>
+            </header>
+
+            <main class="dashboard-main">
+                <section class="dash-section">
+                    <div class="dash-section-header">
+                        <h2>正在学习</h2>
+                        <span class="btn-change-book">换本词书</span>
+                    </div>
+                    
+                    <div class="dash-card learning-card">
+                        <div class="book-row">
+                            <div class="book-cover">
+                                <span>PORTUGUÊS</span>
+                            </div>
+                            <div class="book-info">
+                                <h3>核心葡语词汇 <i class="fa-solid fa-ellipsis-vertical" style="float: right; color: rgba(255,255,255,0.4);"></i></h3>
+                                <div class="vocab-tag">
+                                    <i class="fa-regular fa-circle-check" style="color: #EBB04D;"></i> 生词本 <span id="dash-vocab-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="progress-area">
+                            <div class="progress-labels">
+                                <span style="color: rgba(255,255,255,0.6);">学习范围</span>
+                                <span>全部单元 <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem;"></i></span>
+                            </div>
+                            <div class="dash-progress-bg">
+                                <div class="dash-progress-fill" id="dash-progress-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="progress-stats">
+                                <span style="color: rgba(255,255,255,0.6);">已学习 <span id="dash-learned" style="color: #fff;">0</span></span>
+                                <span style="color: rgba(255,255,255,0.6);">总词数 <span id="dash-total" style="color: #fff;">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="dash-section">
+                    <div class="dash-section-header">
+                        <h2>我的数据</h2>
+                    </div>
+                    
+                    <div class="dash-card data-card">
+                        <div class="data-overview-title">
+                            <span>概览</span>
+                            <i class="fa-solid fa-chevron-right" style="color: rgba(255,255,255,0.3); font-size: 0.9rem;"></i>
+                        </div>
+                        
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-solid fa-bars-staggered" style="color: #EBB04D;"></i> 今日学习&复习</div>
+                                <div class="data-value"><span id="dash-today-learned">0</span> <span class="unit">词</span></div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-solid fa-arrow-trend-up" style="color: #E74C3C;"></i> 累计学习</div>
+                                <div class="data-value"><span id="dash-total-learned">0</span> <span class="unit">词</span></div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-regular fa-clock" style="color: #EBB04D;"></i> 今日总时长</div>
+                                <div class="data-value"><span>0</span> <span class="unit">分钟</span></div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-solid fa-clock-rotate-left" style="color: #E74C3C;"></i> 累计时长</div>
+                                <div class="data-value"><span>12</span> <span class="unit">分钟</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="dash-section">
+                    <div class="dash-card calendar-card">
+                        <div class="calendar-header">
+                            <span>日历</span>
+                            <span class="streak-tag">连续签到 1 天 <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i></span>
+                        </div>
+                        <div class="calendar-days">
+                            <div class="cal-day"><span class="w">MON</span><span class="d">2</span></div>
+                            <div class="cal-day"><span class="w">TUE</span><span class="d">3</span></div>
+                            <div class="cal-day"><span class="w">WED</span><span class="d">4</span></div>
+                            <div class="cal-day active"><span class="w">THU</span><span class="d">今</span></div>
+                            <div class="cal-day"><span class="w">FRI</span><span class="d">6</span></div>
+                            <div class="cal-day"><span class="w">SAT</span><span class="d">7</span></div>
+                            <div class="cal-day"><span class="w">SUN</span><span class="d">8</span></div>
+                        </div>
+                    </div>
+                </section>
+            </main>
         </div>
 
     </div>
