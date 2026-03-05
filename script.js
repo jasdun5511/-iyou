@@ -700,3 +700,29 @@ function renderDashboardData() {
         document.getElementById('dash-progress-fill').style.width = `${progressPercent}%`;
     }, 50);
 }
+
+// ================= JS 序列 10：词库视图路由交互 =================
+
+// 1. 获取对应的 DOM 元素
+views.library = document.getElementById('library-view');
+// 注意：仪表盘里的“换本词书”按钮类名是 .btn-change-book
+const btnChangeBook = document.querySelector('.btn-change-book');
+const btnBackDashboard = document.getElementById('btn-back-dashboard');
+
+// 2. 从仪表盘进入词库
+if (btnChangeBook) {
+    btnChangeBook.addEventListener('click', () => {
+        // 隐藏仪表盘，显示词库
+        views.dashboard.classList.replace('active', 'hidden');
+        views.library.classList.replace('hidden', 'active');
+    });
+}
+
+// 3. 从词库返回仪表盘
+if (btnBackDashboard) {
+    btnBackDashboard.addEventListener('click', () => {
+        // 隐藏词库，恢复仪表盘
+        views.library.classList.replace('active', 'hidden');
+        views.dashboard.classList.replace('hidden', 'active');
+    });
+}
