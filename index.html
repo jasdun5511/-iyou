@@ -152,18 +152,11 @@
         </div>
 
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
+            
             <header class="spell-header">
                 <i class="fa-solid fa-xmark" id="btn-close-spell"></i>
-                <div class="spell-title">
-                    <span class="app-name">Meu Vocabulário</span>
-                    <span class="app-domain">jasdun5511.github.io</span>
-                </div>
-                <i class="fa-solid fa-ellipsis"></i>
+                <span id="spell-progress-text" class="spell-progress-simple">1/2</span>
             </header>
-            
-            <div class="spell-progress-top">
-                <span id="spell-progress-text">1/2</span>
-            </div>
 
             <main class="spell-main-content">
                 <div class="meaning-area">
@@ -176,7 +169,7 @@
                     <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 </div>
 
-                <p class="submit-hint">输入完成后按 Enter 提交</p>
+                <p class="submit-hint">输入完成后点击右下角 √ 或按 Enter 提交</p>
             </main>
 
             <footer class="spell-footer">
@@ -184,6 +177,9 @@
                     <div id="bulb-icon" class="bulb-icon">
                         <i class="fa-regular fa-lightbulb"></i>
                     </div>
+                </div>
+                <div id="btn-submit-spell" class="submit-icon">
+                    <i class="fa-solid fa-check"></i>
                 </div>
             </footer>
         </div>
