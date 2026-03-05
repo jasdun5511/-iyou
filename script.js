@@ -645,3 +645,58 @@ els.hintContainer.addEventListener('click', () => {
     syncInputToSlots(currentSpellWord.pt);
     checkSpelling(); // 提示完直接判错并进入下一题
 });
+
+// ================= JS 序列 9：数据仪表盘路由与动态统计 =================
+
+// 获取 DOM 元素
+views.dashboard = document.getElementById('dashboard-view');
+const btnNavDashboard = document.getElementById('btn-nav-dashboard');
+const btnNavHome = document.getElementById('btn-nav-home'); // 主页的第一个图层图标
+const btnBackHome = document.getElementById('btn-back-home'); // 仪表盘的返回按钮
+
+// 点击底部导航栏的图表按钮 -> 进入仪表盘
+btnNavDashboard.addEventListener('click', () => {
+    views.home.classList.replace('active', 'hidden');
+    views.dashboard.classList.replace('hidden', 'active');
+    
+    // 切换底部图标的高亮状态
+    btnNavDashboard.classList.add('active');
+    btnNavHome.classList.remove('active');
+    
+    // 渲染动态数据
+    renderDashboardData();
+});
+
+// 点击仪表盘左上角返回 -> 回到主页
+btnBackHome.addEventListener('click', () => {
+    views.dashboard.classList.replace('active', 'hidden');
+    views.home.classList.replace('hidden', 'active');
+    
+    // 恢复底部图标的高亮状态
+    btnNavDashboard.classList.remove('active');
+    btnNavHome.classList.add('active');
+});
+
+// 核心数据渲染函数
+function renderDashboardData() {
+    // 1. 动态统计“生词本”数量（只要 errorCount 大于 0，就视为生词）
+    const vocabCount = vocabularyData.filter(word => word.errorCount > 0).length;
+    document.getElementById('dash-vocab-count').innerText = vocabCount;
+
+    // 2. 统计已学习词数和总词数
+    const totalWordsCount = vocabularyData.length;
+    document.getElementById('dash-total').innerText = totalWordsCount;
+    document.getElementById('dash-learned').innerText = learnedCount;
+    
+    // 这里简单映射“今日学习”和“累计学习”为当前学习量
+    document.getElementById('dash-today-learned').innerText = learnedCount;
+    document.getElementById('dash-total-learned').innerText = learnedCount;
+
+    // 3. 计算并执行进度条动画
+    const progressPercent = totalWordsCount === 0 ? 0 : (learnedCount / totalWordsCount) * 100;
+    
+    // 延迟 50ms 触发，让 CSS 过渡动画生效，产生丝滑的填充效果
+    setTimeout(() => {
+        document.getElementById('dash-progress-fill').style.width = `${progressPercent}%`;
+    }, 50);
+}
