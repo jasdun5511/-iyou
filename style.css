@@ -164,7 +164,7 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 
-/* ================= CSS 序列 7：全新重构版拼写视图 ================= */
+/* ================= CSS 序列 7：全新重构版拼写视图 (无下划线极简版) ================= */
 #spelling-view { display: flex; flex-direction: column; align-items: center; padding: 20px 24px; color: #fff; position: relative; }
 
 /* 极简顶部 */
@@ -178,23 +178,25 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 
 .input-container { position: relative; width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
 .letter-boxes { display: flex; gap: 12px; flex-wrap: nowrap; justify-content: center; z-index: 2; pointer-events: none; }
-.letter-box { width: 32px; height: 45px; border-bottom: 2px solid rgba(255,255,255,0.25); display: flex; justify-content: center; align-items: flex-end; padding-bottom: 6px; font-size: 32px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #fff; transition: border-bottom-color 0.2s ease; }
 
-.letter-box.filled { border-bottom-color: #fff; } 
-.letter-box.correct { border-bottom-color: #2ecc71; color: #2ecc71; }
-.letter-box.wrong { border-bottom-color: #e74c3c; color: #e74c3c; }
+/* 彻底删除 border-bottom，实现无下划线的极简浮空字效果 */
+.letter-box { width: 32px; height: 45px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 6px; font-size: 32px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #fff; transition: color 0.2s ease; }
+
+/* 状态样式：不再修改边框颜色，只修改文字颜色 */
+.letter-box.filled { color: #fff; } 
+.letter-box.correct { color: #2ecc71; }
+.letter-box.wrong { color: #e74c3c; }
 
 #hidden-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 3; font-size: 16px; color: transparent; background: transparent; border: none; outline: none; caret-color: transparent; }
 
 .submit-hint { font-size: 0.85rem; color: rgba(255,255,255,0.3); text-align: center; margin-top: 40px; }
 
-/* 底部按钮改为：主容器居中(保证灯泡在正中间)，右侧按钮绝对定位 */
+/* 底部操作区：主容器居中(保证灯泡在正中间)，右侧按钮绝对定位 */
 .spell-footer { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
 .hint-container { display: flex; justify-content: center; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent;}
-
 .bulb-icon { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: rgba(255,255,255,0.6); transition: all 0.2s; cursor: pointer;}
 .bulb-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
 
-/* 右下角的打钩确认按钮（和灯泡大小一致，但固定在右边） */
+/* 右下角的打钩确认按钮（固定在右边） */
 .submit-icon { position: absolute; right: 24px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
 .submit-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
