@@ -726,3 +726,65 @@ if (btnBackDashboard) {
         views.dashboard.classList.replace('hidden', 'active');
     });
 }
+
+// ================= JS 序列 11：仪表盘菜单与单词表视图 =================
+
+// 获取 DOM 元素
+const btnDashboardMore = document.getElementById('btn-dashboard-more');
+const dashboardMoreMenu = document.getElementById('dashboard-more-menu');
+const btnOpenWordlistCover = document.getElementById('btn-open-wordlist-cover');
+const btnMenuWordlist = document.getElementById('btn-menu-wordlist');
+
+const wordlistView = document.getElementById('wordlist-view');
+const btnBackFromWordlist = document.getElementById('btn-back-from-wordlist');
+const wordlistItemsContainer = document.getElementById('wordlist-items-container');
+const wordlistTotalCount = document.getElementById('wordlist-total-count');
+const wordlistUnitCount = document.getElementById('wordlist-unit-count');
+
+// 1. 点击三个点，切换下拉菜单显示/隐藏
+btnDashboardMore.addEventListener('click', (e) => {
+    e.stopPropagation(); // 阻止事件冒泡，防止点击时立刻触发全局关闭
+    dashboardMoreMenu.classList.toggle('hidden');
+});
+
+// 2. 点击页面其他任何地方，自动收起下拉菜单
+document.addEventListener('click', (e) => {
+    if (!dashboardMoreMenu.contains(e.target) && e.target !== btnDashboardMore) {
+        dashboardMoreMenu.classList.add('hidden');
+    }
+});
+
+// 3. 打开单词表的核心逻辑
+function openWordlist() {
+    // 先收起可能展开的菜单
+    dashboardMoreMenu.classList.add('hidden');
+    
+    // 视图切换
+    document.getElementById('dashboard-view').classList.replace('active', 'hidden');
+    wordlistView.classList.replace('hidden', 'active');
+    
+    // 动态渲染词书数据 (读取我们全局的 vocabularyData)
+    const wordCount = vocabularyData.length;
+    wordlistTotalCount.innerText = wordCount;
+    wordlistUnitCount.innerText = `${wordCount}词`;
+    
+    // 清空旧数据并生成新列表
+    wordlistItemsContainer.innerHTML = '';
+    vocabularyData.forEach(word => {
+        // 原生 JS 动态渲染 HTML
+        wordlistItemsContainer.innerHTML += `
+            <div class="wordlist-item">${word.pt}</div>
+        `;
+    });
+}
+
+// 绑定两个入口：点击封面，或者点击菜单里的“查看词书单词表”
+btnOpenWordlistCover.addEventListener('click', openWordlist);
+btnMenuWordlist.addEventListener('click', openWordlist);
+
+// 4. 从单词表返回仪表盘
+btnBackFromWordlist.addEventListener('click', () => {
+    wordlistView.classList.replace('active', 'hidden');
+    document.getElementById('dashboard-view').classList.replace('hidden', 'active');
+});
+
