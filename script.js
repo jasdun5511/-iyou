@@ -335,7 +335,8 @@ function renderStage1() {
     els.recognizeArea.classList.remove('hidden');
     els.recogSentenceCard.classList.remove('hidden');
     els.recogBlindText.classList.add('hidden');
-    els.recogExPt.innerHTML = highlightYellow(currentWordObj.example.pt); 
+    // 【修改点】：这里改为了 renderClickableSentence
+    els.recogExPt.innerHTML = renderClickableSentence(currentWordObj.example.pt); 
     els.fRecog.classList.remove('hidden');
 }
 
@@ -396,7 +397,8 @@ window.showDetails = function() {
     els.fQuiz.classList.add('hidden'); els.fRecog.classList.add('hidden');
     els.defArea.classList.remove('hidden'); els.detailArea.classList.remove('hidden'); els.fDetail.classList.remove('hidden');
 
-    document.getElementById('word-example-pt').innerHTML = highlightYellow(currentWordObj.example.pt);
+    // 【修改点】：详情页的例句也改为 renderClickableSentence
+    document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
     document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
     els.tabs[0].click(); 
 }
@@ -409,7 +411,20 @@ document.getElementById('btn-forgot').addEventListener('click', () => {
     setTimeout(() => loadNextState(), 150);
 });
 
-function highlightYellow(text) { return text.replace(/<strong>/g, '<span class="highlight-yellow">').replace(/<\/strong>/g, '</span>'); }
+// 【核心修改点】：全新的高亮与切词自动绑定函数
+function renderClickableSentence(htmlText) {
+    // 1. 先把核心词 <strong> 保护起来
+    let text = htmlText.replace(/<strong>(.*?)<\/strong>/g, '###START###$1###END###');
+    
+    // 2. 正则表达式：提取所有葡语单词（支持重音符号），用 <span> 包裹并绑定点击事件
+    text = text.replace(/([a-zA-ZÀ-ÿ]+)/g, '<span class="clickable-word" onclick="showWordPopup(\'$1\')">$1</span>');
+    
+    // 3. 恢复核心词的高亮样式
+    text = text.replace(/###START###/g, '<strong class="highlight-yellow">');
+    text = text.replace(/###END###/g, '</strong>');
+    
+    return text;
+}
 
 
 // ================= 序列 6：沉浸大卡片与物理滑动 =================
@@ -433,7 +448,10 @@ els.btnOpenImmersive.addEventListener('click', () => {
 function populateUpperTrack(meaningIdx) {
     const meaning = currentWordObj.meanings[meaningIdx]; currentExampleIndex = 0; 
     els.upperTrack.innerHTML = '';
-    meaning.examples.forEach(ex => { els.upperTrack.innerHTML += `<div class="slider-slide"><p class="im-en-sentence">${highlightYellow(ex.pt)}</p><p class="im-zh-sentence">${ex.zh}</p></div>`; });
+    meaning.examples.forEach(ex => { 
+        // 【修改点】：大卡片滑动视图中的例句也改为 renderClickableSentence
+        els.upperTrack.innerHTML += `<div class="slider-slide"><p class="im-en-sentence">${renderClickableSentence(ex.pt)}</p><p class="im-zh-sentence">${ex.zh}</p></div>`; 
+    });
 
     els.upperDots.innerHTML = '';
     if (meaning.examples.length > 1) { meaning.examples.forEach((_, idx) => { els.upperDots.innerHTML += `<span class="dot ${idx === 0 ? 'active' : ''}"></span>`; }); }
@@ -512,6 +530,8 @@ els.lowerWindow.addEventListener('touchend', e => {
 
 els.btnImClose.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); });
 els.btnImNext.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); setTimeout(() => loadNextState(), 150); });
+
+
 
 
 // ================= 序列 7：过渡阶段与小结视图 =================
