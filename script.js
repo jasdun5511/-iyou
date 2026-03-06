@@ -815,3 +815,46 @@ btnBackFromWordlist.addEventListener('click', () => {
     wordlistView.classList.replace('active', 'hidden');
     document.getElementById('dashboard-view').classList.replace('hidden', 'active');
 });
+
+// ================= JS 序列 12：一键换书魔法 =================
+
+const allLibraryBooks = document.querySelectorAll('.lib-book-item');
+const dashBookCover = document.getElementById('btn-open-wordlist-cover');
+const dashCoverText = document.getElementById('dash-cover-text');
+const dashBookTitleText = document.getElementById('dash-book-title-text');
+
+allLibraryBooks.forEach(bookItem => {
+    bookItem.addEventListener('click', async () => {
+        // 1. 读取这本书挂载的“隐形密码”
+        const fileName = bookItem.getAttribute('data-file');
+        const bookTitle = bookItem.getAttribute('data-title');
+        const coverClass = bookItem.getAttribute('data-cover');
+        const coverText = bookItem.getAttribute('data-cover-text');
+
+        // 如果你还没建 book_hujiao.json，就拦截一下提示
+        if (fileName !== 'book_core') {
+            alert(`《${bookTitle}》的数据文件 (${fileName}.json) 还没创建哦，先试试"核心葡语词汇"吧！`);
+            return;
+        }
+
+        // 2. 调用我们之前写好的神级架构：重新加载词典目录！
+        await loadVocabularyBook(fileName, bookTitle);
+
+        // 3. 瞬间替换仪表盘的 UI (封面颜色、封面字、大标题)
+        dashBookCover.className = `book-cover ${coverClass}`;
+        // 处理换行符（如果含有 \n 则替换为 <br>）
+        dashCoverText.innerHTML = coverText.replace('\\n', '<br>');
+        dashBookTitleText.innerText = bookTitle;
+
+        // 4. 更新“正在学习”的橙色 Tag 位置
+        document.querySelectorAll('.tag-learning').forEach(tag => tag.remove());
+        bookItem.querySelector('.lib-book-meta').innerHTML += '<span class="tag-learning">正在学习</span>';
+
+        // 5. 刷新仪表盘数字
+        renderDashboardData();
+
+        // 6. 丝滑退回仪表盘
+        document.getElementById('library-view').classList.replace('active', 'hidden');
+        document.getElementById('dashboard-view').classList.replace('hidden', 'active');
+    });
+});
