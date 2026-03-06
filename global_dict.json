@@ -1,17 +1,31 @@
 {
-    "pt_0001": {
+        "pt_0001": {
         "pt": "mesmo",
         "pos": "adv.",
         "zh": "甚至，即使",
         "phonetic": "/'mez.mu/",
         "example": { "pt": "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", "zh": "即使在城市里，工作也很难找。" },
-        "phrases": ["mesmo assim 尽管如此", "mesmo que 即使"],
-        "derivatives": ["mesmíssimo (adj. 完全一样的)"],
-        "roots": ["源自拉丁语 'metipsimus'"],
-        "synonyms": ["ainda", "até"],
+        "phrases": [
+            "mesmo assim 尽管如此", 
+            "mesmo que 即使",
+            "agora mesmo 就在刚才"
+        ],
+        "derivatives": [
+            "mesmíssimo (adj.) 完全一样的",
+            "mesmice (n.) 千篇一律，单调"
+        ],
+        "roots": ["源自拉丁语 'metipsimus' (正是那个)"],
+        "synonyms": [
+            "ainda 甚至，还", 
+            "até 直到，甚至",
+            "exatamente 确切地"
+        ],
+        "antonyms": [
+            "diferente 不同的",
+            "outro 其他的"
+        ],
         "meanings": [
-            { "pos": "adv.", "enDef": "even, exactly", "zhDef": "甚至，即使", "examples": [{ "source": "柯林斯词典", "pt": "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", "zh": "即使在城市里，工作也很难找。" }] },
-            { "pos": "adj.", "enDef": "same, identical", "zhDef": "同一个的", "examples": [{ "source": "日常对话", "pt": "Nós moramos na <strong>mesma</strong> rua.", "zh": "我们住在同一条街上。" }] }
+            { "pos": "adv.", "enDef": "even, exactly", "zhDef": "甚至，即使", "examples": [{ "source": "柯林斯词典", "pt": "<strong>Mesmo</strong> na cidade, o trabalho era difícil.", "zh": "即使在城市里，工作也很难找。" }] }
         ]
     },
     "pt_0002": {
