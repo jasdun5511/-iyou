@@ -1,6 +1,7 @@
-// ================= 序列 1：高级数据引擎 (Data & Storage Engine) =================
+// ================= 全新序列 1：总词典架构 & 高级数据引擎 =================
 
-let globalVocabularyData = []; // 当前加载的词库完整数据
+let globalDict = {}; // 存放世界上所有的葡语单词字典库！
+let globalVocabularyData = []; // 当前选中的词书中的单词列表 (拼装后)
 let learningQueue = [];
 let learnedCount = 0;
 let totalWords = 0;
@@ -10,6 +11,7 @@ let currentOptionsData = [];
 let currentMeaningIndex = 0;
 let currentExampleIndex = 0;
 
+// 拼写相关状态
 let spellingQueue = [];
 let wrongWordsQueue = [];
 let currentSpellWord = null;
@@ -19,69 +21,99 @@ let spellHasErroredThisTurn = false;
 let isSpellChecking = false;
 let isComposing = false;
 
-// 当前正在学习的词书 ID
-let currentBookId = 'core_pt'; 
+// 当前词书名称
+let currentBookName = '核心葡语词汇';
 
-// --- 核心：本地进度管理器 (LocalStorage Manager) ---
+// --- 核心：全局进度管理器 (跨词书同步进度) ---
 const StorageManager = {
-    getBookProgress: function(bookId) {
-        const data = localStorage.getItem(`splendid_progress_${bookId}`);
+    getProgress: function() {
+        const data = localStorage.getItem('splendid_global_progress');
         return data ? JSON.parse(data) : {};
     },
-    saveWordError: function(bookId, wordId) {
-        let progress = this.getBookProgress(bookId);
+    // 保存单个单词的错误次数 (不管在哪本书错的，都记在 ID 头上)
+    saveWordError: function(wordId) {
+        let progress = this.getProgress();
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
         progress[wordId].errorCount += 1;
-        localStorage.setItem(`splendid_progress_${bookId}`, JSON.stringify(progress));
+        localStorage.setItem('splendid_global_progress', JSON.stringify(progress));
     },
-    getWordError: function(bookId, wordId) {
-        let progress = this.getBookProgress(bookId);
+    // 读取单词的错误次数
+    getWordError: function(wordId) {
+        let progress = this.getProgress();
         return progress[wordId] ? progress[wordId].errorCount : 0;
     }
 };
 
-// 统一的错误记录函数，同步更新本地存储和当前内存数据
+// 统一的错误记录函数
 function recordError(wordObj) {
     if (!wordObj || !wordObj.id) return;
-    StorageManager.saveWordError(currentBookId, wordObj.id);
+    StorageManager.saveWordError(wordObj.id);
     let masterWord = globalVocabularyData.find(w => w.id === wordObj.id);
     if (masterWord) {
-        masterWord.errorCount = StorageManager.getWordError(currentBookId, wordObj.id);
+        masterWord.errorCount = StorageManager.getWordError(wordObj.id);
     }
 }
 
-// --- 核心：异步拉取词书 (Fetch API) ---
-async function loadVocabularyBook(bookFileName) {
+// --- 核心：系统初始化 (启动时加载总词典) ---
+async function initApp() {
     try {
-        console.log(`正在加载词书: ${bookFileName}.json ...`);
+        console.log("正在加载全局总词典 global_dict.json ...");
+        const dictRes = await fetch('./global_dict.json');
+        if (!dictRes.ok) throw new Error('找不到总词典');
         
-        // 注意：直接在同级目录下寻找 json 文件
-        const response = await fetch(`./${bookFileName}.json`);
-        if (!response.ok) throw new Error('网络请求失败');
-        
-        const rawData = await response.json();
-        
-        // 数据融合：纯净词典 + 本地错题记录
-        globalVocabularyData = rawData.map(word => {
-            return {
-                ...word,
-                errorCount: StorageManager.getWordError(currentBookId, word.id)
-            };
-        });
+        globalDict = await dictRes.json();
+        console.log(`总词典加载成功！共包含 ${Object.keys(globalDict).length} 个词条。`);
 
-        console.log('词书加载并融合完毕！包含单词数:', globalVocabularyData.length);
+        // 词典加载完后，自动去加载默认的“核心葡语词汇”目录
+        await loadVocabularyBook('book_core', '核心葡语词汇');
+        
+    } catch (error) {
+        console.error('初始化失败:', error);
+        alert('系统初始化失败，请检查是否在同级目录下创建了 global_dict.json！');
+    }
+}
+
+// --- 核心：加载特定词书 (动态拼装数据) ---
+async function loadVocabularyBook(bookFileName, bookTitle) {
+    try {
+        console.log(`正在加载词书目录: ${bookFileName}.json ...`);
+        currentBookName = bookTitle;
+        
+        const response = await fetch(`./${bookFileName}.json`);
+        if (!response.ok) throw new Error('词书文件不存在');
+        
+        const wordIds = await response.json(); // 提取纯 ID 数组: ["pt_0001", "pt_0002"]
+        
+        // 🚀 数据拼装魔法：拿着 ID 去总词典找详情，再融合本地错题记录
+        globalVocabularyData = wordIds.map(id => {
+            const wordData = globalDict[id];
+            if (!wordData) {
+                console.warn(`警告：词书里包含了总词典中不存在的 ID -> ${id}`);
+                return null; // 过滤掉找不到的死链
+            }
+            return {
+                ...wordData,
+                id: id, // 把 ID 塞回对象里方便后续操作
+                errorCount: StorageManager.getWordError(id) // 绑定跨书同步的进度！
+            };
+        }).filter(item => item !== null);
+
+        console.log(`《${bookTitle}》拼装完毕！包含单词数:`, globalVocabularyData.length);
+        
+        // 更新首页显示的数字
         document.getElementById('learn-count').innerText = globalVocabularyData.length;
         
     } catch (error) {
-        console.error('加载词书出错啦:', error);
-        alert('加载词书失败，请确保本地服务器已开启 (如 Live Server)，并在同级目录下存有该 json 文件！');
+        console.error('加载词书出错:', error);
+        alert(`无法加载词书 ${bookFileName}.json，请检查文件是否存在！`);
     }
 }
 
-// 页面加载完成后，立刻去拉取默认词书
+// 启动系统
 document.addEventListener('DOMContentLoaded', () => {
-    loadVocabularyBook('core_pt');
+    initApp();
 });
+
 
 
 // ================= 序列 2：全局视图与 DOM 元素映射 =================
