@@ -1,7 +1,7 @@
-// ================= 全新序列 1：总词典架构 & 高级数据引擎 =================
+// ================= 序列 1：总词典架构 & 高级数据引擎 =================
 
-let globalDict = {}; // 存放世界上所有的葡语单词字典库！
-let globalVocabularyData = []; // 当前选中的词书中的单词列表 (拼装后)
+let globalDict = {}; 
+let globalVocabularyData = []; 
 let learningQueue = [];
 let learnedCount = 0;
 let totalWords = 0;
@@ -11,7 +11,6 @@ let currentOptionsData = [];
 let currentMeaningIndex = 0;
 let currentExampleIndex = 0;
 
-// 拼写相关状态
 let spellingQueue = [];
 let wrongWordsQueue = [];
 let currentSpellWord = null;
@@ -21,30 +20,35 @@ let spellHasErroredThisTurn = false;
 let isSpellChecking = false;
 let isComposing = false;
 
-// 当前词书名称
 let currentBookName = '核心葡语词汇';
 
-// --- 核心：全局进度管理器 (跨词书同步进度) ---
+// --- 核心：全局进度管理器 ---
 const StorageManager = {
     getProgress: function() {
         const data = localStorage.getItem('splendid_global_progress');
         return data ? JSON.parse(data) : {};
     },
-    // 保存单个单词的错误次数 (不管在哪本书错的，都记在 ID 头上)
     saveWordError: function(wordId) {
         let progress = this.getProgress();
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
         progress[wordId].errorCount += 1;
         localStorage.setItem('splendid_global_progress', JSON.stringify(progress));
     },
-    // 读取单词的错误次数
     getWordError: function(wordId) {
         let progress = this.getProgress();
         return progress[wordId] ? progress[wordId].errorCount : 0;
+    },
+    // 【新增】：记录用户上次选的词书
+    getCurrentBook: function() {
+        const data = localStorage.getItem('splendid_current_book');
+        return data ? JSON.parse(data) : null;
+    },
+    // 【新增】：保存用户选的词书
+    setCurrentBook: function(bookData) {
+        localStorage.setItem('splendid_current_book', JSON.stringify(bookData));
     }
 };
 
-// 统一的错误记录函数
 function recordError(wordObj) {
     if (!wordObj || !wordObj.id) return;
     StorageManager.saveWordError(wordObj.id);
@@ -54,7 +58,7 @@ function recordError(wordObj) {
     }
 }
 
-// --- 核心：系统初始化 (启动时加载总词典) ---
+// --- 核心：系统初始化 ---
 async function initApp() {
     try {
         console.log("正在加载全局总词典 global_dict.json ...");
@@ -64,8 +68,17 @@ async function initApp() {
         globalDict = await dictRes.json();
         console.log(`总词典加载成功！共包含 ${Object.keys(globalDict).length} 个词条。`);
 
-        // 词典加载完后，自动去加载默认的“核心葡语词汇”目录
-        await loadVocabularyBook('book_core', '核心葡语词汇');
+        // 【修改点】：启动时检查用户是否选过书
+        const savedBook = StorageManager.getCurrentBook();
+        if (savedBook) {
+            // 如果选过，自动加载那本书
+            await loadVocabularyBook(savedBook.fileName, savedBook.title);
+            updateDashboardBookUI(savedBook); // 顺便更新仪表盘封面
+        } else {
+            // 如果没选过，把数字变成 0，等待用户去词库选
+            console.log("用户还未选择词书，等待选择...");
+            document.getElementById('learn-count').innerText = 0;
+        }
         
     } catch (error) {
         console.error('初始化失败:', error);
@@ -73,7 +86,7 @@ async function initApp() {
     }
 }
 
-// --- 核心：加载特定词书 (动态拼装数据) ---
+// --- 核心：加载特定词书 ---
 async function loadVocabularyBook(bookFileName, bookTitle) {
     try {
         console.log(`正在加载词书目录: ${bookFileName}.json ...`);
@@ -82,25 +95,18 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
         const response = await fetch(`./${bookFileName}.json`);
         if (!response.ok) throw new Error('词书文件不存在');
         
-        const wordIds = await response.json(); // 提取纯 ID 数组: ["pt_0001", "pt_0002"]
+        const wordIds = await response.json(); 
         
-        // 🚀 数据拼装魔法：拿着 ID 去总词典找详情，再融合本地错题记录
         globalVocabularyData = wordIds.map(id => {
             const wordData = globalDict[id];
-            if (!wordData) {
-                console.warn(`警告：词书里包含了总词典中不存在的 ID -> ${id}`);
-                return null; // 过滤掉找不到的死链
-            }
+            if (!wordData) return null;
             return {
                 ...wordData,
-                id: id, // 把 ID 塞回对象里方便后续操作
-                errorCount: StorageManager.getWordError(id) // 绑定跨书同步的进度！
+                id: id,
+                errorCount: StorageManager.getWordError(id) 
             };
         }).filter(item => item !== null);
 
-        console.log(`《${bookTitle}》拼装完毕！包含单词数:`, globalVocabularyData.length);
-        
-        // 更新首页显示的数字
         document.getElementById('learn-count').innerText = globalVocabularyData.length;
         
     } catch (error) {
@@ -109,11 +115,29 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
     }
 }
 
-// 启动系统
+// 【新增】：更新仪表盘 UI 的辅助函数
+window.updateDashboardBookUI = function(bookInfo) {
+    const dashBookCover = document.getElementById('btn-open-wordlist-cover');
+    const dashCoverText = document.getElementById('dash-cover-text');
+    const dashBookTitleText = document.getElementById('dash-book-title-text');
+
+    if(dashBookCover && dashCoverText && dashBookTitleText) {
+        dashBookCover.className = `book-cover ${bookInfo.coverClass}`;
+        dashCoverText.innerHTML = bookInfo.coverText.replace('\\n', '<br>');
+        dashBookTitleText.innerText = bookInfo.title;
+    }
+
+    // 更新词库列表里的“正在学习”黄色标签
+    document.querySelectorAll('.tag-learning').forEach(tag => tag.remove());
+    const activeBookItem = document.querySelector(`.lib-book-item[data-file="${bookInfo.fileName}"]`);
+    if(activeBookItem) {
+        activeBookItem.querySelector('.lib-book-meta').innerHTML += '<span class="tag-learning">正在学习</span>';
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
-
 
 
 // ================= 序列 2：全局视图与 DOM 元素映射 =================
@@ -194,10 +218,14 @@ function playAudio(text) {
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
 document.getElementById('btn-learn').addEventListener('click', () => {
+    // 【核心修改点】：如果词库数据是空的（证明没选书），直接带他去词库！
     if (globalVocabularyData.length === 0) {
-        alert("词书还未加载完成，请稍后再试！");
+        views.home.classList.replace('active', 'hidden');
+        views.library.classList.replace('hidden', 'active');
         return;
     }
+    
+    // 如果选了书，就开始正常的背词流程
     learningQueue = globalVocabularyData.map(word => ({ ...word, stage: 0 }));
     totalWords = learningQueue.length;
     learnedCount = 0;
@@ -205,6 +233,7 @@ document.getElementById('btn-learn').addEventListener('click', () => {
     views.learning.classList.replace('hidden', 'active');
     loadNextState();
 });
+
 
 document.getElementById('btn-back').addEventListener('click', () => {
     views.learning.classList.replace('active', 'hidden');
@@ -839,45 +868,40 @@ btnBackFromWordlist.addEventListener('click', () => {
 // ================= JS 序列 12：一键换书魔法 =================
 
 const allLibraryBooks = document.querySelectorAll('.lib-book-item');
-const dashBookCover = document.getElementById('btn-open-wordlist-cover');
-const dashCoverText = document.getElementById('dash-cover-text');
-const dashBookTitleText = document.getElementById('dash-book-title-text');
 
 allLibraryBooks.forEach(bookItem => {
     bookItem.addEventListener('click', async () => {
-        // 1. 读取这本书挂载的“隐形密码”
         const fileName = bookItem.getAttribute('data-file');
         const bookTitle = bookItem.getAttribute('data-title');
         const coverClass = bookItem.getAttribute('data-cover');
         const coverText = bookItem.getAttribute('data-cover-text');
 
-        // 如果你还没建 book_hujiao.json，就拦截一下提示
         if (fileName !== 'book_core') {
             alert(`《${bookTitle}》的数据文件 (${fileName}.json) 还没创建哦，先试试"核心葡语词汇"吧！`);
             return;
         }
 
-        // 2. 调用我们之前写好的神级架构：重新加载词典目录！
+        const bookInfo = { fileName, title: bookTitle, coverClass, coverText };
+        
+        // 1. 【新增】记住用户的选择，存进本地！
+        StorageManager.setCurrentBook(bookInfo);
+
+        // 2. 加载数据
         await loadVocabularyBook(fileName, bookTitle);
 
-        // 3. 瞬间替换仪表盘的 UI (封面颜色、封面字、大标题)
-        dashBookCover.className = `book-cover ${coverClass}`;
-        // 处理换行符（如果含有 \n 则替换为 <br>）
-        dashCoverText.innerHTML = coverText.replace('\\n', '<br>');
-        dashBookTitleText.innerText = bookTitle;
+        // 3. 更新仪表盘 UI
+        updateDashboardBookUI(bookInfo);
+        
+        if (typeof renderDashboardData === 'function') {
+            renderDashboardData();
+        }
 
-        // 4. 更新“正在学习”的橙色 Tag 位置
-        document.querySelectorAll('.tag-learning').forEach(tag => tag.remove());
-        bookItem.querySelector('.lib-book-meta').innerHTML += '<span class="tag-learning">正在学习</span>';
-
-        // 5. 刷新仪表盘数字
-        renderDashboardData();
-
-        // 6. 丝滑退回仪表盘
+        // 4. 退回仪表盘
         document.getElementById('library-view').classList.replace('active', 'hidden');
         document.getElementById('dashboard-view').classList.replace('hidden', 'active');
     });
 });
+
 
 // ================= JS 序列 13：跨库点击查词逻辑 =================
 
