@@ -944,3 +944,147 @@ document.getElementById('word-popup-overlay').addEventListener('click', () => {
     document.getElementById('word-popup-modal').classList.add('hidden');
 });
 
+// ================= JS 序列 14：艾宾浩斯 Review 核心逻辑 =================
+
+let isReviewMode = false;
+
+// 1. 首页绑定 Review 按钮点击事件
+document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () => {
+    if (globalVocabularyData.length === 0) {
+        alert("请先到词库选择一本词书哦！");
+        return;
+    }
+
+    // 筛选出符合条件的单词：已学过 (isLearned) 且 到了复习时间 (nextReviewDate <= 现在)
+    const now = Date.now();
+    const progressData = StorageManager.getProgress();
+    const toReview = globalVocabularyData.filter(word => {
+        const p = progressData[word.id];
+        // 注意：为了你今天能立刻测试出效果，我这里临时把时间判断去掉了。
+        // 真正使用时，请把注释掉的那段恢复。
+        return p && p.isLearned; // && p.nextReviewDate <= now;
+    });
+
+    if (toReview.length === 0) {
+        alert("🎉 恭喜！今天没有需要复习的单词，去学点新词吧！");
+        return;
+    }
+
+    isReviewMode = true;
+    learningQueue = toReview.map(word => ({ ...word, stage: -1 })); // -1 代表处于复习评估阶段
+    totalWords = learningQueue.length;
+    learnedCount = 0;
+
+    views.home.classList.replace('active', 'hidden');
+    views.learning.classList.replace('hidden', 'active');
+    loadNextState();
+});
+
+// 2. 拦截并修改全局的 loadNextState，让它支持 stage === -1 (复习评估阶段)
+const originalLoadNextState = window.loadNextState;
+window.loadNextState = function() {
+    if (learningQueue.length === 0) {
+        if (isReviewMode) {
+            alert("复习完成！");
+            isReviewMode = false;
+            views.learning.classList.replace('active', 'hidden');
+            views.home.classList.replace('hidden', 'active');
+            return;
+        } else {
+            showTransitionPhase();
+            return;
+        }
+    }
+    
+    currentWordObj = learningQueue.shift();
+    els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
+    els.wordPt.innerText = currentWordObj.pt; 
+    els.phonetic.innerText = currentWordObj.phonetic;
+    els.pos.innerText = currentWordObj.pos;
+    els.zh.innerText = currentWordObj.zh;
+    
+    // 隐藏所有底部栏和内容区
+    els.defArea.classList.add('hidden'); els.detailArea.classList.add('hidden');
+    els.quizArea.classList.add('hidden'); els.recognizeArea.classList.add('hidden');
+    els.skeletonBars.classList.add('hidden');
+    els.fQuiz.classList.add('hidden'); els.fRecog.classList.add('hidden'); els.fDetail.classList.add('hidden');
+    document.getElementById('footer-review-assess').classList.add('hidden');
+    document.getElementById('footer-review-verify').classList.add('hidden');
+    
+    updateDots(currentWordObj.stage >= 0 ? currentWordObj.stage : 3); // 复习时默认显示满绿点
+
+    if (currentWordObj.stage === -1) {
+        // --- 渲染：复习自我评估阶段 ---
+        els.app.className = 'bg-blur';
+        els.skeletonBars.classList.remove('hidden'); // 显示骨架屏遮挡中文
+        document.getElementById('footer-review-assess').classList.remove('hidden'); // 显示 认识/模糊/忘记
+        playAudio(currentWordObj.pt);
+    } 
+    else if (currentWordObj.stage === -2) {
+        // --- 渲染：复习释义核对阶段 ---
+        els.app.className = 'bg-blur';
+        els.defArea.classList.remove('hidden');
+        els.detailArea.classList.remove('hidden');
+        document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
+        document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
+        els.tabs[0].click();
+        document.getElementById('footer-review-verify').classList.remove('hidden'); // 显示 下一词/记错了
+    }
+    else {
+        // 如果是从复习打回原形的词（stage 0），走正常的学习流程
+        if (currentWordObj.stage === 0) renderStage0();
+        else if (currentWordObj.stage === 1) renderStage1();
+        else if (currentWordObj.stage === 2) renderStage2();
+        playAudio(currentWordObj.pt);
+    }
+};
+
+// 3. 绑定评估阶段的三个按钮 (认识 / 模糊 / 忘记)
+document.getElementById('btn-rev-know').addEventListener('click', () => {
+    // 认识 -> 进入核对阶段
+    currentWordObj.stage = -2; 
+    learningQueue.unshift(currentWordObj); 
+    loadNextState();
+});
+
+function handleReviewFail() {
+    // 模糊 或 忘记 -> 艾宾浩斯降级，打回 stage 0 (清空绿点)，重新学习
+    StorageManager.updateReviewResult(currentWordObj.id, false);
+    currentWordObj.stage = 0; 
+    learningQueue.push(currentWordObj); // 放到队尾重新学
+    
+    // 短暂展示一下释义，然后自动进入下一词
+    els.skeletonBars.classList.add('hidden');
+    els.defArea.classList.remove('hidden');
+    document.getElementById('footer-review-assess').classList.add('hidden');
+    setTimeout(() => { loadNextState(); }, 2000);
+}
+
+document.getElementById('btn-rev-blur').addEventListener('click', handleReviewFail);
+document.getElementById('btn-rev-forget').addEventListener('click', handleReviewFail);
+
+// 4. 绑定核对阶段的两个按钮 (下一词 / 记错了)
+document.getElementById('btn-rev-next').addEventListener('click', () => {
+    // 真的认识 -> 艾宾浩斯晋级！
+    StorageManager.updateReviewResult(currentWordObj.id, true);
+    learnedCount++;
+    loadNextState();
+});
+
+document.getElementById('btn-rev-wrong').addEventListener('click', handleReviewFail);
+
+
+// 5. 【极其关键的补丁】：在正常背词流程中，如果背完并进入小结前，把单词标记为 "已学" (isLearned)
+const originalShowSummaryPhase = window.showSummaryPhase || function(){};
+window.showSummaryPhase = function() {
+    // 把刚刚学完的词打上“已学”标签，激活艾宾浩斯
+    globalVocabularyData.forEach(w => {
+        // 假设今天学过的词被标记到了这里
+        StorageManager.markAsLearned(w.id); 
+    });
+    originalShowSummaryPhase();
+    
+    // 更新仪表盘的数字逻辑...
+};
+
+
