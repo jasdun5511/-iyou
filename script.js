@@ -437,16 +437,23 @@ els.tabs.forEach(tab => {
 function renderTabContent(targetType) {
     els.tabContent.innerHTML = ''; 
     let contentData = currentWordObj[targetType] || [];
+    
     if (contentData.length === 0) {
-        els.tabContent.innerHTML = `<div style="height: 100%; display: flex; align-items: center; justify-content: center;"><p style="color: rgba(255,255,255,0.4); font-size: 0.9rem;">暂无数据</p></div>`; return;
+        els.tabContent.innerHTML = `<div style="height: 100%; display: flex; align-items: center; justify-content: center;"><p style="color: rgba(255,255,255,0.4); font-size: 0.9rem;">暂无数据</p></div>`; 
+        return;
     }
+    
     contentData.forEach(item => {
-        if (targetType === 'phrases') {
-            const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
-            const en = splitIndex > 0 ? item.substring(0, splitIndex).trim() : item;
-            const zh = splitIndex > 0 ? item.substring(splitIndex).trim() : '';
-            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${en}</p><p class="phrase-zh">${zh}</p></div>`;
+        // 核心魔法：不论是词组、派生、近义还是反义，只要侦测到中文字符，就自动拆分左右排版！
+        const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
+        
+        if (splitIndex > 0) {
+            // 找到了中文，把前半截当葡语，后半截当中文释义
+            const pt = item.substring(0, splitIndex).trim();
+            const zh = item.substring(splitIndex).trim();
+            els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${pt}</p><p class="phrase-zh">${zh}</p></div>`;
         } else {
+            // 纯葡语（或者词根解析等纯文本），直接整行居左显示
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
         }
     });
