@@ -211,11 +211,11 @@
                     
                     <div class="dash-card learning-card">
                         <div class="book-row">
-                            <div class="book-cover" id="btn-open-wordlist-cover" style="cursor: pointer;">
-                                <span>PORTUGUÊS</span>
+                            <div class="book-cover cover-orange" id="btn-open-wordlist-cover" style="cursor: pointer;">
+                                <span id="dash-cover-text">PORTUGUÊS</span>
                             </div>
                             <div class="book-info" style="position: relative;">
-                                <h3>核心葡语词汇 <i class="fa-solid fa-ellipsis-vertical" id="btn-dashboard-more" style="float: right; color: rgba(255,255,255,0.4); cursor: pointer; padding: 0 10px;"></i></h3>
+                                <h3><span id="dash-book-title-text">核心葡语词汇</span> <i class="fa-solid fa-ellipsis-vertical" id="btn-dashboard-more" style="float: right; color: rgba(255,255,255,0.4); cursor: pointer; padding: 0 10px;"></i></h3>
                                 <div class="vocab-tag">
                                     <i class="fa-regular fa-circle-check" style="color: #EBB04D;"></i> 生词本 <span id="dash-vocab-count">0</span>
                                 </div>
@@ -334,20 +334,21 @@
 
             <div class="library-content-wrapper">
                 
-                <div class="lib-book-item">
-                    <div class="lib-book-cover cover-red">
-                        <i class="fa-solid fa-book-bookmark" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
-                        <div class="cover-text" style="font-size: 0.75rem;">生词本</div>
+                <div class="lib-book-item" data-file="book_core" data-title="核心葡语词汇" data-cover="cover-orange" data-cover-text="PORTUGUÊS">
+                    <div class="lib-book-cover cover-orange">
+                        <div class="cover-text" style="font-size: 0.6rem; transform: rotate(-90deg); letter-spacing: 2px;">PORTUGUÊS</div>
                     </div>
                     <div class="lib-book-info">
-                        <h4>生词本</h4>
+                        <h4>核心葡语词汇</h4>
+                        <p>基础高频词</p>
                         <div class="lib-book-meta">
-                            <span>199 词</span>
+                            <span>2 词</span>
+                            <span class="tag-learning">正在学习</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="lib-book-item">
+                <div class="lib-book-item" data-file="book_hujiao" data-title="沪教版六年级下册" data-cover="cover-blue" data-cover-text="沪教版\n英语">
                     <div class="lib-book-cover cover-blue">
                         <div class="cover-text">沪教版<br>英语</div>
                     </div>
@@ -356,30 +357,16 @@
                         <p>课改新版</p>
                         <div class="lib-book-meta">
                             <span>274 词</span>
-                            <span class="tag-learning">正在学习</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="lib-book-item">
-                    <div class="lib-book-cover cover-green">
-                        <div class="cover-text">沪教版<br>英语</div>
-                    </div>
-                    <div class="lib-book-info">
-                        <h4>沪教版六年级上册（2024版）</h4>
-                        <p>课改新版，五四学制</p>
-                        <div class="lib-book-meta">
-                            <span>286 词</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lib-book-item">
+                <div class="lib-book-item" data-file="book_ielts" data-title="雅思词汇 乱序版" data-cover="cover-purple" data-cover-text="IELTS">
                     <div class="lib-book-cover cover-purple">
                         <div class="cover-text">IELTS<br><span style="font-size: 0.5rem; font-weight: normal;">雅思词汇</span></div>
                     </div>
                     <div class="lib-book-info">
-                        <h4>雅思词汇 词根联想记忆法 旧版</h4>
+                        <h4>雅思词汇 词根联想记忆法</h4>
                         <p>2018.11 旧版 乱序版</p>
                         <div class="lib-book-meta">
                             <span>3835 词</span>
