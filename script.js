@@ -1129,4 +1129,17 @@ window.showSummaryPhase = function() {
     // 更新仪表盘的数字逻辑...
 };
 
+// ================= JS 序列 15：拼写界面圆形清空按钮逻辑 =================
+const btnSpellClear = document.getElementById('btn-spell-clear');
+if (btnSpellClear) {
+    btnSpellClear.addEventListener('click', () => {
+        const hiddenInput = document.getElementById('hidden-input');
+        if (hiddenInput) {
+            hiddenInput.value = ''; // 清空内容
+            hiddenInput.dispatchEvent(new Event('input')); // 触发刷新UI
+            hiddenInput.focus(); // 自动弹起键盘
+        }
+    });
+}
+
 
