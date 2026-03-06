@@ -423,35 +423,37 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .highlight-yellow .clickable-word { color: inherit; } /* 确保核心词仍然是黄色高亮 */
 
 
-/* ================= CSS 序列 12：全新高保真拼写视图 ================= */
+/* ================= CSS 序列 12：全新高保真拼写视图 (还原图二效果) ================= */
 #spelling-view {
     color: #fff; 
     display: flex; 
     flex-direction: column; 
     width: 100%; 
     height: 100%;
-    /* 核心修复：加回高级深色渐变背景，防止页面透明重叠！ */
-    background: linear-gradient(160deg, #2A2E42 0%, #1A1D27 100%);
-    z-index: 60; /* 确保层级在最上面，遮挡住后面的页面 */
+    /* 核心修复 1：加回高级深蓝-灰渐变背景，使页面不透明，遮挡背景！ */
+    background: linear-gradient(160deg, #3A4252 0%, #1A202C 100%);
+    /* 核心修复 2：设置层级，确保它浮在最上面 */
+    z-index: 60; 
 }
 
-/* 顶部栏 */
+/* 顶部栏排版 (复刻图二) */
 .spell-header-new {
     display: flex; justify-content: space-between; align-items: center; padding: 20px 24px;
+    color: rgba(255,255,255,0.6); font-size: 1.1rem; /* 顶部栏文字颜色变淡 */
 }
 .spell-header-left {
-    display: flex; align-items: center; gap: 10px; font-size: 1.15rem; color: rgba(255,255,255,0.7); cursor: pointer; font-weight: 500;
+    display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500;
 }
 .spell-header-right {
-    display: flex; gap: 18px; color: rgba(255,255,255,0.6); font-size: 1.2rem; cursor: pointer;
+    display: flex; gap: 18px; font-size: 1.2rem; cursor: pointer;
 }
 
 /* 中间内容区 */
 .spell-main-content-new {
-    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 30px; margin-top: -12vh; 
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 30px; margin-top: -10vh; /* 视觉中心上移 */
 }
 
-/* 隐藏原生输入框，消除原来的那个白色丑框 */
+/* 输入框隐藏逻辑 (保持现状) */
 .input-container-new {
     position: relative; margin-bottom: 25px; cursor: text; width: 100%;
 }
@@ -459,40 +461,52 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     position: absolute; opacity: 0; top: 0; left: 0; height: 100%; width: 100%; pointer-events: none;
 }
 
-/* 巨型单词渲染区 */
+/* 巨型单词渲染区 (关键：复刻图二无框、大字、下划线效果) */
 .letter-boxes-new {
     display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;
 }
 .letter-box {
-    font-size: 4.5rem; /* 超大字体，一比一还原图二的压迫感与清晰度 */
-    font-weight: 700; color: #fff; min-width: 28px; height: 80px; 
+    /* 复刻图二：巨型字体，纯文字反馈 */
+    font-size: 5rem; /* 超大号字体，視覺焦点 */
+    font-weight: 700; color: #fff; min-width: 30px; height: 85px; 
     display: flex; align-items: center; justify-content: center; 
-    border-bottom: 3px solid transparent; transition: all 0.2s; 
-    text-shadow: 0 4px 15px rgba(0,0,0,0.3); letter-spacing: 2px;
+    border-bottom: 3px solid transparent; /* 默认隐藏下划线 */
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    text-shadow: 0 4px 15px rgba(0,0,0,0.3); /* 字体立体感 */
+    letter-spacing: 2px;
 }
-/* 还没输入的字母状态：没有字，底部显示淡淡的一条线 */
-.letter-box.empty {
-    border-bottom: 3px solid rgba(255,255,255,0.2); color: transparent; 
-}
-/* 正在等待输入的字母：底部显示黄色高亮线 */
+
+/* 单词框不同状态反馈 */
 .letter-box.active {
+    /* 正在输入的字母位置：黄色高亮下划线 */
     border-bottom: 3px solid #EBB04D; 
 }
-/* 拼对与拼错的颜色反馈 */
+.letter-box.empty {
+    /* 还没输入的字母位置：淡白色下划线 */
+    border-bottom: 3px solid rgba(255,255,255,0.2);
+    color: transparent; 
+}
+.letter-box.entered {
+    /* 已经输入的字母：默认无下划线，或者极淡的线条 */
+    border-bottom: 3px solid rgba(255,255,255,0.05); 
+}
+/* 颜色反馈 (保持功能) */
 .letter-box.correct { color: #55efc4; }
 .letter-box.wrong { color: #ff7675; }
 
-/* 释义区 */
-.meaning-area-new { text-align: center; }
-#spell-word-meaning { font-size: 1.05rem; color: rgba(255,255,255,0.75); line-height: 1.6; letter-spacing: 0.5px; }
+/* 释义区 (变淡、居中) */
+.meaning-area-new { text-align: center; padding-top: 15px; }
+#spell-word-meaning { font-size: 1.05rem; color: rgba(255,255,255,0.7); line-height: 1.6; letter-spacing: 0.5px; }
 
-/* 底部三大圆形按钮 */
+/* 底部三大圆形按钮 (完全复刻图二) */
 .spell-footer-new {
     display: flex; justify-content: space-around; align-items: center; padding: 20px 40px 50px; width: 100%;
 }
 .round-btn {
-    width: 55px; height: 55px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.2); 
-    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: rgba(255,255,255,0.7); 
+    width: 55px; height: 55px; border-radius: 50%; 
+    border: 1.5px solid rgba(255,255,255,0.2); /* 淡淡的灰色圆圈 */
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; 
+    color: rgba(255,255,255,0.7); /* 按钮图标颜色也变淡 */
     cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .round-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.9); }
