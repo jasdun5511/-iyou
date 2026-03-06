@@ -319,3 +319,30 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .wordlist-item { padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem; font-weight: 500; color: #fff; letter-spacing: 0.5px; transition: background 0.2s; }
 .wordlist-item:active { background: rgba(255,255,255,0.02); }
 .wordlist-item:last-child { border-bottom: none; }
+
+/* ================= CSS 序列 11：单词点击交互弹窗 ================= */
+#word-popup-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; align-items: center; justify-content: center; }
+#word-popup-modal.hidden { display: none; }
+.word-popup-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+
+/* 弹窗卡片本体 */
+.word-popup-content { position: relative; width: 80%; max-width: 320px; background: #2A2E42; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 101; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid rgba(255,255,255,0.05); }
+.wp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.wp-header h2 { font-size: 1.6rem; color: #EBB04D; font-weight: 600; margin: 0; letter-spacing: 0.5px; }
+.wp-header i { color: rgba(255,255,255,0.4); font-size: 1.2rem; cursor: pointer; }
+.wp-phonetic { font-size: 0.85rem; color: rgba(255,255,255,0.4); margin-bottom: 16px; font-family: monospace; }
+
+/* 释义行 */
+.wp-meanings { font-size: 0.95rem; color: #fff; line-height: 1.5; margin-bottom: 16px; }
+.wp-meaning-line { margin-bottom: 8px; }
+.wp-pos { color: rgba(255,255,255,0.5); margin-right: 8px; font-size: 0.85rem; }
+
+.wp-footer { font-size: 0.8rem; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 5px; cursor: pointer; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; }
+
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+
+/* 句子中可点击的单词样式 */
+.clickable-word { cursor: pointer; transition: all 0.2s; display: inline-block; }
+.clickable-word:active { background: rgba(255,255,255,0.15); border-radius: 4px; transform: scale(0.95); }
+.highlight-yellow .clickable-word { color: inherit; } /* 确保核心词仍然是黄色高亮 */
+
