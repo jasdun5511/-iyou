@@ -422,3 +422,71 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 .clickable-word:active { background: rgba(255,255,255,0.15); border-radius: 4px; transform: scale(0.95); }
 .highlight-yellow .clickable-word { color: inherit; } /* 确保核心词仍然是黄色高亮 */
 
+
+/* ================= CSS 序列 12：全新高保真拼写视图 ================= */
+#spelling-view {
+    color: #fff; display: flex; flex-direction: column; width: 100%; height: 100%;
+}
+
+/* 顶部栏 */
+.spell-header-new {
+    display: flex; justify-content: space-between; align-items: center; padding: 20px 24px;
+}
+.spell-header-left {
+    display: flex; align-items: center; gap: 10px; font-size: 1.15rem; color: rgba(255,255,255,0.7); cursor: pointer; font-weight: 500;
+}
+.spell-header-right {
+    display: flex; gap: 18px; color: rgba(255,255,255,0.6); font-size: 1.2rem; cursor: pointer;
+}
+
+/* 中间内容区 */
+.spell-main-content-new {
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 30px; margin-top: -12vh; 
+}
+
+/* 隐藏原生输入框，消除原来的那个白色丑框 */
+.input-container-new {
+    position: relative; margin-bottom: 25px; cursor: text; width: 100%;
+}
+#hidden-input {
+    position: absolute; opacity: 0; top: 0; left: 0; height: 100%; width: 100%; pointer-events: none;
+}
+
+/* 巨型单词渲染区 */
+.letter-boxes-new {
+    display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;
+}
+.letter-box {
+    font-size: 4.5rem; /* 超大字体，一比一还原图二的压迫感与清晰度 */
+    font-weight: 700; color: #fff; min-width: 28px; height: 80px; 
+    display: flex; align-items: center; justify-content: center; 
+    border-bottom: 3px solid transparent; transition: all 0.2s; 
+    text-shadow: 0 4px 15px rgba(0,0,0,0.3); letter-spacing: 2px;
+}
+/* 还没输入的字母状态：没有字，底部显示淡淡的一条线 */
+.letter-box.empty {
+    border-bottom: 3px solid rgba(255,255,255,0.2); color: transparent; 
+}
+/* 正在等待输入的字母：底部显示黄色高亮线 */
+.letter-box.active {
+    border-bottom: 3px solid #EBB04D; 
+}
+/* 拼对与拼错的颜色反馈 */
+.letter-box.correct { color: #55efc4; }
+.letter-box.wrong { color: #ff7675; }
+
+/* 释义区 */
+.meaning-area-new { text-align: center; }
+#spell-word-meaning { font-size: 1.05rem; color: rgba(255,255,255,0.75); line-height: 1.6; letter-spacing: 0.5px; }
+
+/* 底部三大圆形按钮 */
+.spell-footer-new {
+    display: flex; justify-content: space-around; align-items: center; padding: 20px 40px 50px; width: 100%;
+}
+.round-btn {
+    width: 55px; height: 55px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.2); 
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: rgba(255,255,255,0.7); 
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.round-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.9); }
+
