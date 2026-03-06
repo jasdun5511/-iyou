@@ -22,28 +22,64 @@ let isComposing = false;
 
 let currentBookName = '核心葡语词汇';
 
-// --- 核心：全局进度管理器 ---
+// --- 核心：全局进度管理器 (融入艾宾浩斯遗忘曲线) ---
+const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30, 60]; // 艾宾浩斯复习间隔 (天数)
+
 const StorageManager = {
     getProgress: function() {
         const data = localStorage.getItem('splendid_global_progress');
         return data ? JSON.parse(data) : {};
     },
+    saveProgress: function(progress) {
+        localStorage.setItem('splendid_global_progress', JSON.stringify(progress));
+    },
+    // 错误记录
     saveWordError: function(wordId) {
         let progress = this.getProgress();
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
-        progress[wordId].errorCount += 1;
-        localStorage.setItem('splendid_global_progress', JSON.stringify(progress));
+        progress[wordId].errorCount = (progress[wordId].errorCount || 0) + 1;
+        this.saveProgress(progress);
     },
     getWordError: function(wordId) {
         let progress = this.getProgress();
         return progress[wordId] ? progress[wordId].errorCount : 0;
     },
-    // 【新增】：记录用户上次选的词书
+    
+    // 【新增】：当单词被首次学会时，打上标记，并安排明天复习
+    markAsLearned: function(wordId) {
+        let progress = this.getProgress();
+        if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
+        progress[wordId].isLearned = true;
+        progress[wordId].ebStage = 0; // 处于艾宾浩斯第 0 阶段
+        // 计算下一次复习时间：当前时间 + 1天 (测试时可以把 24 改成 0.01 来缩短时间测试)
+        progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000; 
+        this.saveProgress(progress);
+    },
+    
+    // 【新增】：处理复习结果（成功晋级，失败打回原形）
+    updateReviewResult: function(wordId, isSuccess) {
+        let progress = this.getProgress();
+        if (!progress[wordId]) return;
+        
+        if (isSuccess) {
+            // 复习成功：阶段 +1，延长下次复习时间
+            let nextStage = (progress[wordId].ebStage || 0) + 1;
+            if (nextStage >= EBBINGHAUS_INTERVALS.length) nextStage = EBBINGHAUS_INTERVALS.length - 1;
+            progress[wordId].ebStage = nextStage;
+            const daysToWait = EBBINGHAUS_INTERVALS[nextStage];
+            progress[wordId].nextReviewDate = Date.now() + daysToWait * 24 * 60 * 60 * 1000;
+        } else {
+            // 复习失败/模糊：打回原形 (降到第 0 阶段，明天重新复习)
+            progress[wordId].ebStage = 0;
+            progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000;
+        }
+        this.saveProgress(progress);
+    },
+
     getCurrentBook: function() {
         const data = localStorage.getItem('splendid_current_book');
         return data ? JSON.parse(data) : null;
     },
-    // 【新增】：保存用户选的词书
     setCurrentBook: function(bookData) {
         localStorage.setItem('splendid_current_book', JSON.stringify(bookData));
     }
@@ -68,14 +104,12 @@ async function initApp() {
         globalDict = await dictRes.json();
         console.log(`总词典加载成功！共包含 ${Object.keys(globalDict).length} 个词条。`);
 
-        // 【修改点】：启动时检查用户是否选过书
+        // 启动时检查用户是否选过书
         const savedBook = StorageManager.getCurrentBook();
         if (savedBook) {
-            // 如果选过，自动加载那本书
             await loadVocabularyBook(savedBook.fileName, savedBook.title);
-            updateDashboardBookUI(savedBook); // 顺便更新仪表盘封面
+            updateDashboardBookUI(savedBook); 
         } else {
-            // 如果没选过，把数字变成 0，等待用户去词库选
             console.log("用户还未选择词书，等待选择...");
             document.getElementById('learn-count').innerText = 0;
         }
@@ -115,7 +149,7 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
     }
 }
 
-// 【新增】：更新仪表盘 UI 的辅助函数
+// 更新仪表盘 UI 的辅助函数
 window.updateDashboardBookUI = function(bookInfo) {
     const dashBookCover = document.getElementById('btn-open-wordlist-cover');
     const dashCoverText = document.getElementById('dash-cover-text');
@@ -138,7 +172,6 @@ window.updateDashboardBookUI = function(bookInfo) {
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
-
 
 // ================= 序列 2：全局视图与 DOM 元素映射 =================
 const views = { 
