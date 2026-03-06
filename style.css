@@ -425,7 +425,14 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 
 /* ================= CSS 序列 12：全新高保真拼写视图 ================= */
 #spelling-view {
-    color: #fff; display: flex; flex-direction: column; width: 100%; height: 100%;
+    color: #fff; 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%; 
+    height: 100%;
+    /* 核心修复：加回高级深色渐变背景，防止页面透明重叠！ */
+    background: linear-gradient(160deg, #2A2E42 0%, #1A1D27 100%);
+    z-index: 60; /* 确保层级在最上面，遮挡住后面的页面 */
 }
 
 /* 顶部栏 */
@@ -489,4 +496,3 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .round-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.9); }
-
