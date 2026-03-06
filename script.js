@@ -397,7 +397,6 @@ function renderStage1() {
     els.recognizeArea.classList.remove('hidden');
     els.recogSentenceCard.classList.remove('hidden');
     els.recogBlindText.classList.add('hidden');
-    // 【修改点】：这里改为了 renderClickableSentence
     els.recogExPt.innerHTML = renderClickableSentence(currentWordObj.example.pt); 
     els.fRecog.classList.remove('hidden');
 }
@@ -459,7 +458,6 @@ window.showDetails = function() {
     els.fQuiz.classList.add('hidden'); els.fRecog.classList.add('hidden');
     els.defArea.classList.remove('hidden'); els.detailArea.classList.remove('hidden'); els.fDetail.classList.remove('hidden');
 
-    // 【修改点】：详情页的例句也改为 renderClickableSentence
     document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
     document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
     els.tabs[0].click(); 
@@ -473,20 +471,24 @@ document.getElementById('btn-forgot').addEventListener('click', () => {
     setTimeout(() => loadNextState(), 150);
 });
 
-// 【核心修改点】：全新的高亮与切词自动绑定函数
-function renderClickableSentence(htmlText) {
-    // 1. 先把核心词 <strong> 保护起来
-    let text = htmlText.replace(/<strong>(.*?)<\/strong>/g, '###START###$1###END###');
+// 【核心修改点】：修复了正则占位符被误伤的 Bug，现在不会有满屏的乱码了！
+window.renderClickableSentence = function(htmlText) {
+    if (!htmlText) return '';
     
-    // 2. 正则表达式：提取所有葡语单词（支持重音符号），用 <span> 包裹并绑定点击事件
+    // 1. 把 <strong> 替换为不含任何字母的纯数字符号，防止被下一步当成单词切碎
+    let text = htmlText.replace(/<strong>/g, '___111___');
+    text = text.replace(/<\/strong>/g, '___222___');
+    
+    // 2. 提取所有单词（支持葡语重音符号），用 <span> 包裹并绑定弹窗事件
     text = text.replace(/([a-zA-ZÀ-ÿ]+)/g, '<span class="clickable-word" onclick="showWordPopup(\'$1\')">$1</span>');
     
-    // 3. 恢复核心词的高亮样式
-    text = text.replace(/###START###/g, '<strong class="highlight-yellow">');
-    text = text.replace(/###END###/g, '</strong>');
+    // 3. 把占位符还原成带有黄色高亮样式的 <strong> 标签
+    text = text.replace(/___111___/g, '<strong class="highlight-yellow">');
+    text = text.replace(/___222___/g, '</strong>');
     
     return text;
 }
+
 
 
 // ================= 序列 6：沉浸大卡片与物理滑动 =================
