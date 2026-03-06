@@ -858,3 +858,45 @@ allLibraryBooks.forEach(bookItem => {
         document.getElementById('dashboard-view').classList.replace('hidden', 'active');
     });
 });
+
+// ================= JS 序列 13：跨库点击查词逻辑 =================
+
+window.showWordPopup = function(wordStr) {
+    // 去掉标点，转小写
+    const cleanWord = wordStr.toLowerCase().trim();
+    
+    // 🚀 核心魔法：去 globalDict (天下总库) 里面找这个单词！
+    // Object.values(globalDict) 会把总词典变成一个数组让我们查
+    let foundWordObj = Object.values(globalDict).find(w => w.pt.toLowerCase() === cleanWord);
+
+    if (foundWordObj) {
+        // 在词库中找到了这个词！渲染完美弹窗
+        document.getElementById('wp-word').innerText = foundWordObj.pt;
+        document.getElementById('wp-phonetic').innerText = foundWordObj.phonetic || '';
+
+        let meaningsHtml = '';
+        if (foundWordObj.meanings && foundWordObj.meanings.length > 0) {
+            foundWordObj.meanings.forEach(m => {
+                meaningsHtml += `<div class="wp-meaning-line"><span class="wp-pos">${m.pos}</span>${m.zhDef || m.zh}</div>`;
+            });
+        } else {
+            meaningsHtml = `<div class="wp-meaning-line"><span class="wp-pos">${foundWordObj.pos}</span>${foundWordObj.zh}</div>`;
+        }
+        document.getElementById('wp-meanings').innerHTML = meaningsHtml;
+
+    } else {
+        // 没找到词 (提示用户还没录入)
+        document.getElementById('wp-word').innerText = cleanWord;
+        document.getElementById('wp-phonetic').innerText = '';
+        document.getElementById('wp-meanings').innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 0.85rem; padding: 10px 0;">当前词典暂未收录该词汇哦。</div>`;
+    }
+
+    // 显示弹窗
+    document.getElementById('word-popup-modal').classList.remove('hidden');
+};
+
+// 点击遮罩层关闭弹窗
+document.getElementById('word-popup-overlay').addEventListener('click', () => {
+    document.getElementById('word-popup-modal').classList.add('hidden');
+});
+
