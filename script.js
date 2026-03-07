@@ -281,19 +281,29 @@ function shuffleArray(array) {
     return array;
 }
 
+
 function updateDots(stage) {
+    // 魔法技巧：清除旧动画并触发 DOM 重排 (Reflow)，确保每次切换都能丝滑淡入
+    els.dotsContainer.style.animation = 'none';
+    els.successBadge.style.animation = 'none';
+    void els.dotsContainer.offsetWidth; 
+    void els.successBadge.offsetWidth;
+
     if (stage >= 3) {
         els.dotsContainer.classList.add('hidden');
         els.successBadge.classList.remove('hidden'); 
+        els.successBadge.style.animation = 'fadeIn 0.3s ease-out'; // 加入平滑淡入
     } else {
         els.dotsContainer.classList.remove('hidden');
         els.successBadge.classList.add('hidden');
+        els.dotsContainer.style.animation = 'fadeIn 0.3s ease-out'; // 加入平滑淡入
         els.dots.forEach((dot, index) => {
             if(index < stage) dot.classList.add('active');
             else dot.classList.remove('active');
         });
     }
 }
+
 
 window.loadNextState = function() {
     if (learningQueue.length === 0) {
@@ -1081,28 +1091,30 @@ window.loadNextState = function() {
     }
 };
 
+
 // 3. 绑定评估阶段的三个按钮 (认识 / 模糊 / 忘记)
 document.getElementById('btn-rev-know').addEventListener('click', () => {
     // 认识 -> 进入核对阶段
     currentWordObj.stage = -2; 
     learningQueue.unshift(currentWordObj); 
-    loadNextState();
+    
+    // 【修改点】：延迟 150ms，等待按钮点击回弹动画播完再切页面
+    setTimeout(() => {
+        loadNextState();
+    }, 150);
 });
 
 function handleReviewFail() {
-    // 模糊 或 忘记 -> 艾宾浩斯降级，打回 stage 0 (清空绿点)，重新学习
     StorageManager.updateReviewResult(currentWordObj.id, false);
     currentWordObj.stage = 0; 
-    learningQueue.push(currentWordObj); // 放到队尾重新学
+    learningQueue.push(currentWordObj); 
     
-    // 【更新点】：动态清空顶部的绿点，给用户直观的“降级”反馈
-    updateDots(0);
-
-    // 【更新点】：隐藏当前的评估底部栏
-    document.getElementById('footer-review-assess').classList.add('hidden');
-    
-    // 【更新点】：调用全局详情展示函数，渲染完整信息卡片并等待用户手动点击“下一词”
-    showDetails();
+    // 【修改点】：延迟 150ms，给手指离开屏幕和按钮微交互留出时间
+    setTimeout(() => {
+        updateDots(0);
+        document.getElementById('footer-review-assess').classList.add('hidden');
+        showDetails();
+    }, 150);
 }
 
 document.getElementById('btn-rev-blur').addEventListener('click', handleReviewFail);
@@ -1113,10 +1125,15 @@ document.getElementById('btn-rev-next').addEventListener('click', () => {
     // 真的认识 -> 艾宾浩斯晋级！
     StorageManager.updateReviewResult(currentWordObj.id, true);
     learnedCount++;
-    loadNextState();
+    
+    // 【修改点】：延迟 150ms，丝滑进入下一个单词
+    setTimeout(() => {
+        loadNextState();
+    }, 150);
 });
 
 document.getElementById('btn-rev-wrong').addEventListener('click', handleReviewFail);
+
 
 
 // 5. 【极其关键的补丁】：在正常背词流程中，如果背完并进入小结前，把单词标记为 "已学" (isLearned)
