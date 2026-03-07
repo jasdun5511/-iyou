@@ -22,8 +22,12 @@ let isComposing = false;
 
 let currentBookName = '核心葡语词汇';
 
+// 复习专用全局状态
+let isReviewMode = false;
+let currentReviewWords = [];
+
 // --- 核心：全局进度管理器 (融入艾宾浩斯遗忘曲线) ---
-const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30, 60]; // 艾宾浩斯复习间隔 (天数)
+const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30, 60]; 
 
 const StorageManager = {
     getProgress: function() {
@@ -33,7 +37,6 @@ const StorageManager = {
     saveProgress: function(progress) {
         localStorage.setItem('splendid_global_progress', JSON.stringify(progress));
     },
-    // 错误记录
     saveWordError: function(wordId) {
         let progress = this.getProgress();
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
@@ -44,38 +47,29 @@ const StorageManager = {
         let progress = this.getProgress();
         return progress[wordId] ? progress[wordId].errorCount : 0;
     },
-    
-    // 【新增】：当单词被首次学会时，打上标记，并安排明天复习
     markAsLearned: function(wordId) {
         let progress = this.getProgress();
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
         progress[wordId].isLearned = true;
-        progress[wordId].ebStage = 0; // 处于艾宾浩斯第 0 阶段
-        // 计算下一次复习时间：当前时间 + 1天 (测试时可以把 24 改成 0.01 来缩短时间测试)
+        progress[wordId].ebStage = 0; 
         progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000; 
         this.saveProgress(progress);
     },
-    
-    // 【新增】：处理复习结果（成功晋级，失败打回原形）
     updateReviewResult: function(wordId, isSuccess) {
         let progress = this.getProgress();
         if (!progress[wordId]) return;
-        
         if (isSuccess) {
-            // 复习成功：阶段 +1，延长下次复习时间
             let nextStage = (progress[wordId].ebStage || 0) + 1;
             if (nextStage >= EBBINGHAUS_INTERVALS.length) nextStage = EBBINGHAUS_INTERVALS.length - 1;
             progress[wordId].ebStage = nextStage;
             const daysToWait = EBBINGHAUS_INTERVALS[nextStage];
             progress[wordId].nextReviewDate = Date.now() + daysToWait * 24 * 60 * 60 * 1000;
         } else {
-            // 复习失败/模糊：打回原形 (降到第 0 阶段，明天重新复习)
             progress[wordId].ebStage = 0;
             progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000;
         }
         this.saveProgress(progress);
     },
-
     getCurrentBook: function() {
         const data = localStorage.getItem('splendid_current_book');
         return data ? JSON.parse(data) : null;
@@ -94,17 +88,14 @@ function recordError(wordObj) {
     }
 }
 
-// --- 核心：系统初始化 ---
 async function initApp() {
     try {
         console.log("正在加载全局总词典 global_dict.json ...");
         const dictRes = await fetch('./global_dict.json');
         if (!dictRes.ok) throw new Error('找不到总词典');
-        
         globalDict = await dictRes.json();
         console.log(`总词典加载成功！共包含 ${Object.keys(globalDict).length} 个词条。`);
 
-        // 启动时检查用户是否选过书
         const savedBook = StorageManager.getCurrentBook();
         if (savedBook) {
             await loadVocabularyBook(savedBook.fileName, savedBook.title);
@@ -113,22 +104,18 @@ async function initApp() {
             console.log("用户还未选择词书，等待选择...");
             document.getElementById('learn-count').innerText = 0;
         }
-        
     } catch (error) {
         console.error('初始化失败:', error);
         alert('系统初始化失败，请检查是否在同级目录下创建了 global_dict.json！');
     }
 }
 
-// --- 核心：加载特定词书 ---
 async function loadVocabularyBook(bookFileName, bookTitle) {
     try {
         console.log(`正在加载词书目录: ${bookFileName}.json ...`);
         currentBookName = bookTitle;
-        
         const response = await fetch(`./${bookFileName}.json`);
         if (!response.ok) throw new Error('词书文件不存在');
-        
         const wordIds = await response.json(); 
         
         globalVocabularyData = wordIds.map(id => {
@@ -142,14 +129,12 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
         }).filter(item => item !== null);
 
         document.getElementById('learn-count').innerText = globalVocabularyData.length;
-        
     } catch (error) {
         console.error('加载词书出错:', error);
         alert(`无法加载词书 ${bookFileName}.json，请检查文件是否存在！`);
     }
 }
 
-// 更新仪表盘 UI 的辅助函数
 window.updateDashboardBookUI = function(bookInfo) {
     const dashBookCover = document.getElementById('btn-open-wordlist-cover');
     const dashCoverText = document.getElementById('dash-cover-text');
@@ -161,7 +146,6 @@ window.updateDashboardBookUI = function(bookInfo) {
         dashBookTitleText.innerText = bookInfo.title;
     }
 
-    // 更新词库列表里的“正在学习”黄色标签
     document.querySelectorAll('.tag-learning').forEach(tag => tag.remove());
     const activeBookItem = document.querySelector(`.lib-book-item[data-file="${bookInfo.fileName}"]`);
     if(activeBookItem) {
@@ -169,9 +153,8 @@ window.updateDashboardBookUI = function(bookInfo) {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    initApp();
-});
+document.addEventListener('DOMContentLoaded', () => { initApp(); });
+
 
 // ================= 序列 2：全局视图与 DOM 元素映射 =================
 const views = { 
@@ -240,7 +223,42 @@ const els = {
 };
 
 
-// ================= 序列 3：基础背词发音与流程控制 =================
+// ================= 序列 3：全局 UI 引擎 & 基础背词流程 =================
+
+window.showToast = function(message) {
+    let toast = document.getElementById('splendid-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'splendid-toast';
+        toast.style.cssText = `
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            background: rgba(45, 45, 45, 0.95); color: #ffffff; padding: 10px 24px;
+            border-radius: 50px; font-size: 0.95rem; font-weight: 500; z-index: 9999;
+            opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.innerText = message;
+    void toast.offsetWidth; 
+    toast.style.opacity = '1';
+    
+    if (toast.hideTimer) clearTimeout(toast.hideTimer);
+    toast.hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+};
+
+window.applyBackgroundContext = function(context) {
+    els.app.className = ''; 
+    if (context === 'reset') {
+        // 首页清晰模式，无需添加类名
+    } else if (context === 'learning-blur') {
+        els.app.classList.add('bg-blur');
+    } else if (context === 'learning-green') {
+        els.app.classList.add('bg-blur', 'bg-green'); 
+    }
+}
+
 function playAudio(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -250,15 +268,15 @@ function playAudio(text) {
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
+// 正常学习流程入口
 document.getElementById('btn-learn').addEventListener('click', () => {
-    // 【核心修改点】：如果词库数据是空的（证明没选书），直接带他去词库！
     if (globalVocabularyData.length === 0) {
         views.home.classList.replace('active', 'hidden');
         views.library.classList.replace('hidden', 'active');
         return;
     }
-    
-    // 如果选了书，就开始正常的背词流程
+    isReviewMode = false;
+    applyBackgroundContext('learning-blur');
     learningQueue = globalVocabularyData.map(word => ({ ...word, stage: 0 }));
     totalWords = learningQueue.length;
     learnedCount = 0;
@@ -267,10 +285,10 @@ document.getElementById('btn-learn').addEventListener('click', () => {
     loadNextState();
 });
 
-
 document.getElementById('btn-back').addEventListener('click', () => {
     views.learning.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
+    applyBackgroundContext('reset');
 });
 
 function shuffleArray(array) {
@@ -281,9 +299,7 @@ function shuffleArray(array) {
     return array;
 }
 
-
 function updateDots(stage) {
-    // 魔法技巧：清除旧动画并触发 DOM 重排 (Reflow)，确保每次切换都能丝滑淡入
     els.dotsContainer.style.animation = 'none';
     els.successBadge.style.animation = 'none';
     void els.dotsContainer.offsetWidth; 
@@ -292,18 +308,17 @@ function updateDots(stage) {
     if (stage >= 3) {
         els.dotsContainer.classList.add('hidden');
         els.successBadge.classList.remove('hidden'); 
-        els.successBadge.style.animation = 'fadeIn 0.3s ease-out'; // 加入平滑淡入
+        els.successBadge.style.animation = 'fadeIn 0.3s ease-out'; 
     } else {
         els.dotsContainer.classList.remove('hidden');
         els.successBadge.classList.add('hidden');
-        els.dotsContainer.style.animation = 'fadeIn 0.3s ease-out'; // 加入平滑淡入
+        els.dotsContainer.style.animation = 'fadeIn 0.3s ease-out'; 
         els.dots.forEach((dot, index) => {
             if(index < stage) dot.classList.add('active');
             else dot.classList.remove('active');
         });
     }
 }
-
 
 window.loadNextState = function() {
     if (learningQueue.length === 0) {
@@ -318,26 +333,45 @@ window.loadNextState = function() {
     els.pos.innerText = currentWordObj.pos;
     els.zh.innerText = currentWordObj.zh;
     
-    els.defArea.classList.add('hidden');
-    els.detailArea.classList.add('hidden');
-    els.quizArea.classList.add('hidden');
-    els.recognizeArea.classList.add('hidden');
+    els.defArea.classList.add('hidden'); els.detailArea.classList.add('hidden');
+    els.quizArea.classList.add('hidden'); els.recognizeArea.classList.add('hidden');
     els.skeletonBars.classList.add('hidden');
-    els.fQuiz.classList.add('hidden');
-    els.fRecog.classList.add('hidden');
-    els.fDetail.classList.add('hidden');
+    els.fQuiz.classList.add('hidden'); els.fRecog.classList.add('hidden'); els.fDetail.classList.add('hidden');
+    document.getElementById('footer-review-assess').classList.add('hidden');
+    document.getElementById('footer-review-verify').classList.add('hidden');
     
-    updateDots(currentWordObj.stage);
-    if (currentWordObj.stage === 0) renderStage0();
-    else if (currentWordObj.stage === 1) renderStage1();
-    else if (currentWordObj.stage === 2) renderStage2();
-    playAudio(currentWordObj.pt);
+    updateDots(currentWordObj.stage >= 0 ? currentWordObj.stage : 3);
+
+    if (currentWordObj.stage === -1) {
+        // 复习：自我评估阶段
+        applyBackgroundContext('learning-blur');
+        els.skeletonBars.classList.remove('hidden'); 
+        document.getElementById('footer-review-assess').classList.remove('hidden'); 
+        playAudio(currentWordObj.pt);
+    } 
+    else if (currentWordObj.stage === -2) {
+        // 复习：释义核对阶段
+        applyBackgroundContext('learning-blur');
+        els.defArea.classList.remove('hidden');
+        els.detailArea.classList.remove('hidden');
+        document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
+        document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
+        els.tabs[0].click();
+        document.getElementById('footer-review-verify').classList.remove('hidden'); 
+    }
+    else {
+        // 学习流程
+        if (currentWordObj.stage === 0) renderStage0();
+        else if (currentWordObj.stage === 1) renderStage1();
+        else if (currentWordObj.stage === 2) renderStage2();
+        playAudio(currentWordObj.pt);
+    }
 }
 
 
 // ================= 序列 4：测验出题与交互反馈 (Stage 0) =================
 function renderStage0() {
-    els.app.className = 'bg-blur';
+    applyBackgroundContext('learning-blur');
     els.quizArea.classList.remove('hidden');
     els.fQuiz.classList.remove('hidden');
 
@@ -380,9 +414,7 @@ window.checkAnswer = function(selectedIndex) {
         els.optContents[selectedIndex].innerHTML = `<div class="opt-bilingual"><span class="opt-pt-text">${selectedData.wordObj.pt}</span><span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span></div>`;
         setTimeout(() => showDetails(), 400); 
     } else {
-        // 记录错误持久化
         recordError(currentWordObj);
-
         currentWordObj.stage = 0; learningQueue.push(currentWordObj); updateDots(0); 
         clickedBtn.classList.add('wrong');
         els.optContents[selectedIndex].innerHTML = `<div class="opt-bilingual"><span class="opt-pt-text">${selectedData.wordObj.pt}</span><span class="opt-zh-text">${selectedData.wordObj.pos} ${selectedData.wordObj.zh}</span></div>`;
@@ -393,7 +425,6 @@ window.checkAnswer = function(selectedIndex) {
                 els.optContents[index].innerHTML = `<div class="opt-bilingual"><span class="opt-pt-text">${opt.wordObj.pt}</span><span class="opt-zh-text">${opt.wordObj.pos} ${opt.wordObj.zh}</span></div>`;
             }
         });
-        
         playAudio(selectedData.wordObj.pt);
         els.fQuiz.innerHTML = `<div class="action-item" onclick="showDetails()" style="animation: fadeIn 0.3s;"><span style="color: #fff; font-weight: 500;">查看详情</span><div class="line" style="background-color: #f39c12;"></div></div>`;
     }
@@ -402,7 +433,7 @@ window.checkAnswer = function(selectedIndex) {
 
 // ================= 序列 5：复习认词与详情逻辑 (Stage 1-3) =================
 function renderStage1() {
-    els.app.className = 'bg-green';
+    applyBackgroundContext('learning-green');
     els.skeletonBars.classList.remove('hidden');
     els.recognizeArea.classList.remove('hidden');
     els.recogSentenceCard.classList.remove('hidden');
@@ -412,7 +443,7 @@ function renderStage1() {
 }
 
 function renderStage2() {
-    els.app.className = 'bg-green';
+    applyBackgroundContext('learning-green');
     els.skeletonBars.classList.remove('hidden');
     els.recognizeArea.classList.remove('hidden');
     els.recogSentenceCard.classList.add('hidden');
@@ -447,37 +478,43 @@ els.tabs.forEach(tab => {
 function renderTabContent(targetType) {
     els.tabContent.innerHTML = ''; 
     let contentData = currentWordObj[targetType] || [];
-    
     if (contentData.length === 0) {
         els.tabContent.innerHTML = `<div style="height: 100%; display: flex; align-items: center; justify-content: center;"><p style="color: rgba(255,255,255,0.4); font-size: 0.9rem;">暂无数据</p></div>`; 
         return;
     }
-    
     contentData.forEach(item => {
-        // 核心魔法：不论是词组、派生、近义还是反义，只要侦测到中文字符，就自动拆分左右排版！
         const splitIndex = item.search(/[\u4e00-\u9fa5]/); 
-        
         if (splitIndex > 0) {
-            // 找到了中文，把前半截当葡语，后半截当中文释义
             const pt = item.substring(0, splitIndex).trim();
             const zh = item.substring(splitIndex).trim();
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${pt}</p><p class="phrase-zh">${zh}</p></div>`;
         } else {
-            // 纯葡语（或者词根解析等纯文本），直接整行居左显示
             els.tabContent.innerHTML += `<div class="phrase-item"><p class="phrase-en">${item}</p></div>`;
         }
     });
 }
 
 window.showDetails = function() {
-    els.app.className = 'bg-blur'; els.skeletonBars.classList.add('hidden');
+    applyBackgroundContext('learning-blur');
+    els.skeletonBars.classList.add('hidden');
     els.quizArea.classList.add('hidden'); els.recognizeArea.classList.add('hidden');
     els.fQuiz.classList.add('hidden'); els.fRecog.classList.add('hidden');
-    els.defArea.classList.remove('hidden'); els.detailArea.classList.remove('hidden'); els.fDetail.classList.remove('hidden');
+    
+    els.defArea.classList.remove('hidden'); 
+    els.detailArea.classList.remove('hidden'); 
+    els.fDetail.classList.remove('hidden');
 
     document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
     document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
     els.tabs[0].click(); 
+
+    // 默认恢复双按钮状态，拦截器会自动覆盖
+    const fDetail = document.getElementById('footer-detail');
+    if (fDetail) {
+        fDetail.classList.add('dual-btns');
+        const btnForgot = document.getElementById('btn-forgot');
+        if (btnForgot) btnForgot.style.display = 'flex';
+    }
 }
 
 document.getElementById('btn-next').addEventListener('click', () => { setTimeout(() => loadNextState(), 150); });
@@ -488,24 +525,15 @@ document.getElementById('btn-forgot').addEventListener('click', () => {
     setTimeout(() => loadNextState(), 150);
 });
 
-// 【核心修改点】：修复了正则占位符被误伤的 Bug，现在不会有满屏的乱码了！
 window.renderClickableSentence = function(htmlText) {
     if (!htmlText) return '';
-    
-    // 1. 把 <strong> 替换为不含任何字母的纯数字符号，防止被下一步当成单词切碎
     let text = htmlText.replace(/<strong>/g, '___111___');
     text = text.replace(/<\/strong>/g, '___222___');
-    
-    // 2. 提取所有单词（支持葡语重音符号），用 <span> 包裹并绑定弹窗事件
     text = text.replace(/([a-zA-ZÀ-ÿ]+)/g, '<span class="clickable-word" onclick="showWordPopup(\'$1\')">$1</span>');
-    
-    // 3. 把占位符还原成带有黄色高亮样式的 <strong> 标签
     text = text.replace(/___111___/g, '<strong class="highlight-yellow">');
     text = text.replace(/___222___/g, '</strong>');
-    
     return text;
 }
-
 
 
 // ================= 序列 6：沉浸大卡片与物理滑动 =================
@@ -519,10 +547,8 @@ els.btnOpenImmersive.addEventListener('click', () => {
     });
 
     updateGlobalDots(); populateUpperTrack(0); 
-    
     els.lowerTrack.style.transition = 'none'; els.lowerTrack.style.transform = `translateX(0%)`; void els.lowerTrack.offsetWidth;
     els.lowerTrack.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
-
     views.learning.classList.replace('active', 'hidden'); views.immersive.classList.replace('hidden', 'active');
 });
 
@@ -530,7 +556,6 @@ function populateUpperTrack(meaningIdx) {
     const meaning = currentWordObj.meanings[meaningIdx]; currentExampleIndex = 0; 
     els.upperTrack.innerHTML = '';
     meaning.examples.forEach(ex => { 
-        // 【修改点】：大卡片滑动视图中的例句也改为 renderClickableSentence
         els.upperTrack.innerHTML += `<div class="slider-slide"><p class="im-en-sentence">${renderClickableSentence(ex.pt)}</p><p class="im-zh-sentence">${ex.zh}</p></div>`; 
     });
 
@@ -613,12 +638,11 @@ els.btnImClose.addEventListener('click', () => { views.immersive.classList.repla
 els.btnImNext.addEventListener('click', () => { views.immersive.classList.replace('active', 'hidden'); views.learning.classList.replace('hidden', 'active'); setTimeout(() => loadNextState(), 150); });
 
 
-
-
 // ================= 序列 7：过渡阶段与小结视图 =================
 function showTransitionPhase() {
     views.learning.classList.replace('active', 'hidden');
     views.transition.classList.replace('hidden', 'active');
+    applyBackgroundContext('learning-blur');
 }
 
 els.btnStartSpell.addEventListener('click', () => {
@@ -627,17 +651,21 @@ els.btnStartSpell.addEventListener('click', () => {
 });
 
 els.btnSkipSpell.addEventListener('click', () => {
-    views.transition.classList.replace('active', 'hidden');
     showSummaryPhase();
 });
 
-function showSummaryPhase() {
+window.showSummaryPhase = function() {
+    views.transition.classList.replace('active', 'hidden'); 
     views.spelling.classList.replace('active', 'hidden');
     views.summary.classList.replace('hidden', 'active');
-    els.summaryList.innerHTML = '';
+    applyBackgroundContext('learning-blur');
     
-    // 从 globalVocabularyData 读取最新的错误次数渲染
-    globalVocabularyData.forEach(item => {
+    els.summaryList.innerHTML = '';
+    const dataSource = isReviewMode ? window.currentReviewWords : globalVocabularyData;
+    document.getElementById('total-words-count').innerText = dataSource.length;
+    
+    dataSource.forEach(item => {
+        StorageManager.markAsLearned(item.id); 
         const errCount = item.errorCount || 0;
         const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
         const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
@@ -649,18 +677,22 @@ function showSummaryPhase() {
             </div>
         `;
     });
-}
+    isReviewMode = false; // 重置复习状态，防止串台
+};
 
 els.btnFinish.addEventListener('click', () => {
     views.summary.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
+    applyBackgroundContext('reset'); // 返回首页，恢复清晰
 });
 
 
-// ================= 序列 8：重构版拼写逻辑引擎 (无缝键盘+手动提交) =================
-function startSpellingPhase() {
+// ================= 序列 8：重构版拼写逻辑引擎 =================
+window.startSpellingPhase = function() {
     views.spelling.classList.replace('hidden', 'active');
-    spellingQueue = [...globalVocabularyData];
+    applyBackgroundContext('learning-blur');
+    
+    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
     spellTotalInRound = spellingQueue.length;
@@ -677,7 +709,7 @@ els.btnCloseSpell.addEventListener('click', () => {
 function loadNextSpellWord() {
     if (spellingQueue.length === 0) {
         if (wrongWordsQueue.length > 0) {
-            alert("接下来复习错词"); 
+            window.showToast("接下来复习错词"); 
             spellingQueue = [...wrongWordsQueue];
             wrongWordsQueue = [];
             spellCurrentIndex = 0;
@@ -691,7 +723,6 @@ function loadNextSpellWord() {
     spellCurrentIndex++;
     spellHasErroredThisTurn = false;
     isSpellChecking = false;
-    
     updateSpellUI();
 }
 
@@ -706,7 +737,6 @@ function updateSpellUI() {
     for (let i = 0; i < currentSpellWord.pt.length; i++) {
         els.letterBoxes.innerHTML += `<div class="letter-box"></div>`;
     }
-    
     setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
 
@@ -728,11 +758,8 @@ els.hiddenInput.addEventListener('keyup', (e) => {
 });
 
 document.getElementById('btn-submit-spell').addEventListener('click', () => {
-    if (!isSpellChecking && els.hiddenInput.value.length > 0) {
-        checkSpelling();
-    } else if (els.hiddenInput.value.length === 0) {
-        els.hiddenInput.focus();
-    }
+    if (!isSpellChecking && els.hiddenInput.value.length > 0) checkSpelling();
+    else if (els.hiddenInput.value.length === 0) els.hiddenInput.focus();
 });
 
 function syncInputToSlots(val) {
@@ -771,9 +798,8 @@ function checkSpelling() {
         if (!spellHasErroredThisTurn) {
             spellHasErroredThisTurn = true;
             wrongWordsQueue.push(currentSpellWord);
-            recordError(currentSpellWord); // 拼写错误记录持久化
+            recordError(currentSpellWord); 
         }
-        
         for (let i = 0; i < targetWord.length; i++) {
             boxes[i].classList.remove('filled', 'correct', 'wrong');
             if (userInput[i] === targetWord[i]) {
@@ -814,30 +840,25 @@ const btnBackHome = document.getElementById('btn-back-home');
 btnNavDashboard.addEventListener('click', () => {
     views.home.classList.replace('active', 'hidden');
     views.dashboard.classList.replace('hidden', 'active');
-    
     btnNavDashboard.classList.add('active');
     btnNavHome.classList.remove('active');
-    
     renderDashboardData();
 });
 
 btnBackHome.addEventListener('click', () => {
     views.dashboard.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
-    
     btnNavDashboard.classList.remove('active');
     btnNavHome.classList.add('active');
+    applyBackgroundContext('reset'); // 重置氛围
 });
 
 function renderDashboardData() {
-    // 动态统计生词本数量 (依靠 localStorage 中的 errorCount)
     const vocabCount = globalVocabularyData.filter(word => word.errorCount > 0).length;
     document.getElementById('dash-vocab-count').innerText = vocabCount;
-
     const totalWordsCount = globalVocabularyData.length;
     document.getElementById('dash-total').innerText = totalWordsCount;
     document.getElementById('dash-learned').innerText = learnedCount;
-    
     document.getElementById('dash-today-learned').innerText = learnedCount;
     document.getElementById('dash-total-learned').innerText = learnedCount;
 
@@ -892,11 +913,9 @@ document.addEventListener('click', (e) => {
 
 function openWordlist() {
     dashboardMoreMenu.classList.add('hidden');
-    
     document.getElementById('dashboard-view').classList.replace('active', 'hidden');
     wordlistView.classList.replace('hidden', 'active');
     
-    // 动态渲染词书数据
     const wordCount = globalVocabularyData.length;
     wordlistTotalCount.innerText = wordCount;
     wordlistUnitCount.innerText = `${wordCount}词`;
@@ -917,8 +936,7 @@ btnBackFromWordlist.addEventListener('click', () => {
     document.getElementById('dashboard-view').classList.replace('hidden', 'active');
 });
 
-// ================= JS 序列 12：一键换书魔法 =================
-
+// ================= 序列 12：一键换书魔法 =================
 const allLibraryBooks = document.querySelectorAll('.lib-book-item');
 
 allLibraryBooks.forEach(bookItem => {
@@ -934,42 +952,25 @@ allLibraryBooks.forEach(bookItem => {
         }
 
         const bookInfo = { fileName, title: bookTitle, coverClass, coverText };
-        
-        // 1. 【新增】记住用户的选择，存进本地！
         StorageManager.setCurrentBook(bookInfo);
-
-        // 2. 加载数据
         await loadVocabularyBook(fileName, bookTitle);
-
-        // 3. 更新仪表盘 UI
         updateDashboardBookUI(bookInfo);
-        
-        if (typeof renderDashboardData === 'function') {
-            renderDashboardData();
-        }
+        if (typeof renderDashboardData === 'function') renderDashboardData();
 
-        // 4. 退回仪表盘
         document.getElementById('library-view').classList.replace('active', 'hidden');
         document.getElementById('dashboard-view').classList.replace('hidden', 'active');
     });
 });
 
 
-// ================= JS 序列 13：跨库点击查词逻辑 =================
-
+// ================= 序列 13：跨库点击查词逻辑 =================
 window.showWordPopup = function(wordStr) {
-    // 去掉标点，转小写
     const cleanWord = wordStr.toLowerCase().trim();
-    
-    // 🚀 核心魔法：去 globalDict (天下总库) 里面找这个单词！
-    // Object.values(globalDict) 会把总词典变成一个数组让我们查
     let foundWordObj = Object.values(globalDict).find(w => w.pt.toLowerCase() === cleanWord);
 
     if (foundWordObj) {
-        // 在词库中找到了这个词！渲染完美弹窗
         document.getElementById('wp-word').innerText = foundWordObj.pt;
         document.getElementById('wp-phonetic').innerText = foundWordObj.phonetic || '';
-
         let meaningsHtml = '';
         if (foundWordObj.meanings && foundWordObj.meanings.length > 0) {
             foundWordObj.meanings.forEach(m => {
@@ -979,239 +980,95 @@ window.showWordPopup = function(wordStr) {
             meaningsHtml = `<div class="wp-meaning-line"><span class="wp-pos">${foundWordObj.pos}</span>${foundWordObj.zh}</div>`;
         }
         document.getElementById('wp-meanings').innerHTML = meaningsHtml;
-
     } else {
-        // 没找到词 (提示用户还没录入)
         document.getElementById('wp-word').innerText = cleanWord;
         document.getElementById('wp-phonetic').innerText = '';
         document.getElementById('wp-meanings').innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 0.85rem; padding: 10px 0;">当前词典暂未收录该词汇哦。</div>`;
     }
-
-    // 显示弹窗
     document.getElementById('word-popup-modal').classList.remove('hidden');
 };
 
-// 点击遮罩层关闭弹窗
 document.getElementById('word-popup-overlay').addEventListener('click', () => {
     document.getElementById('word-popup-modal').classList.add('hidden');
 });
 
-// ================= JS 序列 14：艾宾浩斯 Review 核心逻辑 =================
+// ================= 序列 14：艾宾浩斯 Review 核心逻辑 =================
 
-// 【动态黑科技】：全局注入极简 Toast 弹窗（无需修改 HTML）
-window.showToast = function(message) {
-    let toast = document.getElementById('splendid-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'splendid-toast';
-        toast.style.cssText = `
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-            background: rgba(45, 45, 45, 0.95); color: #ffffff; padding: 10px 24px;
-            border-radius: 50px; font-size: 0.95rem; font-weight: 500; z-index: 9999;
-            opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(8px);
-        `;
-        document.body.appendChild(toast);
-    }
-    toast.innerText = message;
-    void toast.offsetWidth; // 强制重绘
-    toast.style.opacity = '1';
-    
-    if (toast.hideTimer) clearTimeout(toast.hideTimer);
-    toast.hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-};
-
-// 【全局拦截器】：确保普通学习模式下的卡片依然是双按钮
-const originalShowDetails = window.showDetails;
-window.showDetails = function() {
-    originalShowDetails(); 
-    
-    const fDetail = document.getElementById('footer-detail');
-    if (fDetail) {
-        fDetail.classList.add('dual-btns');
-        const btnForgot = document.getElementById('btn-forgot');
-        if (btnForgot) btnForgot.style.display = 'flex';
-    }
-};
-
-let isReviewMode = false;
-window.currentReviewWords = []; // 【新增】：独立保存当前正在复习的单词队列
-
-// 防串台：确保点击“学习”时，彻底关闭复习模式
-document.getElementById('btn-learn').addEventListener('click', () => { isReviewMode = false; });
-
-// 1. 首页绑定 Review 按钮点击事件
+// 1. 进入复习模式
 document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () => {
-    if (globalVocabularyData.length === 0) {
-        alert("请先到词库选择一本词书哦！");
-        return;
-    }
-
+    if (globalVocabularyData.length === 0) { alert("请先到词库选择一本词书哦！"); return; }
     const progressData = StorageManager.getProgress();
     const toReview = globalVocabularyData.filter(word => {
         const p = progressData[word.id];
-        return p && p.isLearned; // 实际使用时这里加上时间判断
+        return p && p.isLearned; // 实际使用时需加上时间判断 p.nextReviewDate <= Date.now()
     });
-
-    if (toReview.length === 0) {
-        alert("🎉 恭喜！今天没有需要复习的单词，去学点新词吧！");
-        return;
-    }
-
+    
+    if (toReview.length === 0) { alert("🎉 恭喜！今天没有需要复习的单词，去学点新词吧！"); return; }
+    
     isReviewMode = true;
-    window.currentReviewWords = toReview; // 缓存这一批复习词，留给等会的拼写环节
+    window.currentReviewWords = toReview; 
     learningQueue = toReview.map(word => ({ ...word, stage: -1 })); 
     totalWords = learningQueue.length;
     learnedCount = 0;
 
+    applyBackgroundContext('learning-blur');
     views.home.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
     loadNextState();
 });
 
-// 2. 拦截并修改全局的 loadNextState
-const originalLoadNextState = window.loadNextState;
-window.loadNextState = function() {
-    if (learningQueue.length === 0) {
-        // 【核心修改点 1】：复习完了不再直接弹窗退出，而是和学习一样，无缝进入过渡页准备拼写！
-        showTransitionPhase();
-        return;
-    }
-    
-    currentWordObj = learningQueue.shift();
-    els.progressText.innerText = `${learnedCount + 1}/${totalWords}`;
-    els.wordPt.innerText = currentWordObj.pt; 
-    els.phonetic.innerText = currentWordObj.phonetic;
-    els.pos.innerText = currentWordObj.pos;
-    els.zh.innerText = currentWordObj.zh;
-    
-    els.defArea.classList.add('hidden'); els.detailArea.classList.add('hidden');
-    els.quizArea.classList.add('hidden'); els.recognizeArea.classList.add('hidden');
-    els.skeletonBars.classList.add('hidden');
-    els.fQuiz.classList.add('hidden'); els.fRecog.classList.add('hidden'); els.fDetail.classList.add('hidden');
-    document.getElementById('footer-review-assess').classList.add('hidden');
-    document.getElementById('footer-review-verify').classList.add('hidden');
-    
-    updateDots(currentWordObj.stage >= 0 ? currentWordObj.stage : 3); 
-
-    if (currentWordObj.stage === -1) {
-        els.app.className = 'bg-blur';
-        els.skeletonBars.classList.remove('hidden'); 
-        document.getElementById('footer-review-assess').classList.remove('hidden'); 
-        playAudio(currentWordObj.pt);
-    } 
-    else if (currentWordObj.stage === -2) {
-        els.app.className = 'bg-blur';
-        els.defArea.classList.remove('hidden');
-        els.detailArea.classList.remove('hidden');
-        document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
-        document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
-        els.tabs[0].click();
-        document.getElementById('footer-review-verify').classList.remove('hidden'); 
-    }
-    else {
-        if (currentWordObj.stage === 0) renderStage0();
-        else if (currentWordObj.stage === 1) renderStage1();
-        else if (currentWordObj.stage === 2) renderStage2();
-        playAudio(currentWordObj.pt);
-    }
-};
-
-// 3. 绑定评估阶段的三个按钮 
+// 2. 认识按钮 (阶段 -1 进入 -2)
 document.getElementById('btn-rev-know').addEventListener('click', () => {
     currentWordObj.stage = -2; 
     learningQueue.unshift(currentWordObj); 
     setTimeout(() => { loadNextState(); }, 150);
 });
 
-function handleReviewFail(reason) {
+// 3. 统一复习失败处理机制
+window.handleReviewFail = function(reason) {
     StorageManager.updateReviewResult(currentWordObj.id, false);
     currentWordObj.stage = 0; 
     learningQueue.push(currentWordObj); 
     
     setTimeout(() => {
         updateDots(0);
+        applyBackgroundContext('learning-blur');
         document.getElementById('footer-review-assess').classList.add('hidden');
         document.getElementById('footer-review-verify').classList.add('hidden'); 
         
         showDetails();
-
+        
+        // 动态单按钮居中
         const fDetail = document.getElementById('footer-detail');
         fDetail.classList.remove('dual-btns');
         const btnForgot = document.getElementById('btn-forgot');
         if (btnForgot) btnForgot.style.display = 'none';
-
+        
         if (reason === 'wrong') window.showToast("已改为「忘记了」");
     }, 150);
 }
 
-document.getElementById('btn-rev-blur').addEventListener('click', () => handleReviewFail('blur'));
-document.getElementById('btn-rev-forget').addEventListener('click', () => handleReviewFail('forget'));
+document.getElementById('btn-rev-blur').addEventListener('click', () => window.handleReviewFail('blur'));
+document.getElementById('btn-rev-forget').addEventListener('click', () => window.handleReviewFail('forget'));
+document.getElementById('btn-rev-wrong').addEventListener('click', () => window.handleReviewFail('wrong'));
 
-// 4. 绑定核对阶段的两个按钮
+// 4. 核对成功 (完成复习晋级)
 document.getElementById('btn-rev-next').addEventListener('click', () => {
     StorageManager.updateReviewResult(currentWordObj.id, true);
     learnedCount++;
-    setTimeout(() => { loadNextState(); }, 150);
+    setTimeout(() => loadNextState(), 150);
 });
 
-document.getElementById('btn-rev-wrong').addEventListener('click', () => handleReviewFail('wrong'));
 
-
-// 5. 【极其核心：动态覆盖拼写与小结逻辑】
-// 覆盖原有的 startSpellingPhase，使其聪明地支持“只拼写复习词”
-window.startSpellingPhase = function() {
-    views.spelling.classList.replace('hidden', 'active');
-    // 【魔法】：如果是复习模式，就只把刚刚复习的词放进拼写队列！
-    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
-    wrongWordsQueue = [];
-    spellCurrentIndex = 0;
-    spellTotalInRound = spellingQueue.length;
-    els.totalCount.innerText = spellTotalInRound;
-    loadNextSpellWord();
-};
-
-// 覆盖小结列表展示，确保数据源准确，并在退出时重置模式
-window.showSummaryPhase = function() {
-    views.transition.classList.replace('active', 'hidden'); 
-    views.spelling.classList.replace('active', 'hidden');
-    views.summary.classList.replace('hidden', 'active');
-    els.summaryList.innerHTML = '';
-    
-    // 动态决定小结列表展示哪一波词
-    const dataSource = isReviewMode ? window.currentReviewWords : globalVocabularyData;
-    document.getElementById('total-words-count').innerText = dataSource.length;
-    
-    dataSource.forEach(item => {
-        StorageManager.markAsLearned(item.id); 
-        
-        const errCount = item.errorCount || 0;
-        const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
-        const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
-        
-        els.summaryList.innerHTML += `
-            <div class="summary-item">
-                <span class="summary-word">${item.pt}</span>
-                <span class="${errorClass}">${errorText}</span>
-            </div>
-        `;
-    });
-    
-    isReviewMode = false; // 小结彻底结束后，注销复习状态
-};
-
-// ================= JS 序列 15：拼写界面圆形清空按钮逻辑 =================
+// ================= 序列 15：拼写界面圆形清空按钮逻辑 =================
 const btnSpellClear = document.getElementById('btn-spell-clear');
 if (btnSpellClear) {
     btnSpellClear.addEventListener('click', () => {
         const hiddenInput = document.getElementById('hidden-input');
         if (hiddenInput) {
-            hiddenInput.value = ''; // 清空内容
-            hiddenInput.dispatchEvent(new Event('input')); // 触发刷新UI
-            hiddenInput.focus(); // 自动弹起键盘
+            hiddenInput.value = ''; 
+            hiddenInput.dispatchEvent(new Event('input')); 
+            hiddenInput.focus(); 
         }
     });
 }
-
-
