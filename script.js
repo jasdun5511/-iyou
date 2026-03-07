@@ -1005,44 +1005,28 @@ window.showToast = function(message) {
         toast = document.createElement('div');
         toast.id = 'splendid-toast';
         toast.style.cssText = `
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(45, 45, 45, 0.95);
-            color: #ffffff;
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.08);
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            background: rgba(45, 45, 45, 0.95); color: #ffffff; padding: 10px 24px;
+            border-radius: 50px; font-size: 0.95rem; font-weight: 500; z-index: 9999;
+            opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);
             backdrop-filter: blur(8px);
         `;
         document.body.appendChild(toast);
     }
     toast.innerText = message;
-    
-    // 强制重绘，确保每次都能触发丝滑淡入动画
-    void toast.offsetWidth;
+    void toast.offsetWidth; // 强制重绘
     toast.style.opacity = '1';
     
     if (toast.hideTimer) clearTimeout(toast.hideTimer);
-    toast.hideTimer = setTimeout(() => {
-        toast.style.opacity = '0';
-    }, 2000);
+    toast.hideTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
 };
 
 // 【全局拦截器】：确保普通学习模式下的卡片依然是双按钮
 const originalShowDetails = window.showDetails;
 window.showDetails = function() {
-    originalShowDetails(); // 调用原有的逻辑展示卡片
+    originalShowDetails(); 
     
-    // 强制恢复默认的 "下一词" 和 "记错了" 双按钮状态
     const fDetail = document.getElementById('footer-detail');
     if (fDetail) {
         fDetail.classList.add('dual-btns');
@@ -1052,6 +1036,10 @@ window.showDetails = function() {
 };
 
 let isReviewMode = false;
+window.currentReviewWords = []; // 【新增】：独立保存当前正在复习的单词队列
+
+// 防串台：确保点击“学习”时，彻底关闭复习模式
+document.getElementById('btn-learn').addEventListener('click', () => { isReviewMode = false; });
 
 // 1. 首页绑定 Review 按钮点击事件
 document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () => {
@@ -1063,7 +1051,7 @@ document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () =>
     const progressData = StorageManager.getProgress();
     const toReview = globalVocabularyData.filter(word => {
         const p = progressData[word.id];
-        return p && p.isLearned; 
+        return p && p.isLearned; // 实际使用时这里加上时间判断
     });
 
     if (toReview.length === 0) {
@@ -1072,7 +1060,8 @@ document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () =>
     }
 
     isReviewMode = true;
-    learningQueue = toReview.map(word => ({ ...word, stage: -1 })); // -1 代表处于复习评估阶段
+    window.currentReviewWords = toReview; // 缓存这一批复习词，留给等会的拼写环节
+    learningQueue = toReview.map(word => ({ ...word, stage: -1 })); 
     totalWords = learningQueue.length;
     learnedCount = 0;
 
@@ -1085,16 +1074,9 @@ document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () =>
 const originalLoadNextState = window.loadNextState;
 window.loadNextState = function() {
     if (learningQueue.length === 0) {
-        if (isReviewMode) {
-            alert("复习完成！");
-            isReviewMode = false;
-            views.learning.classList.replace('active', 'hidden');
-            views.home.classList.replace('hidden', 'active');
-            return;
-        } else {
-            showTransitionPhase();
-            return;
-        }
+        // 【核心修改点 1】：复习完了不再直接弹窗退出，而是和学习一样，无缝进入过渡页准备拼写！
+        showTransitionPhase();
+        return;
     }
     
     currentWordObj = learningQueue.shift();
@@ -1143,7 +1125,6 @@ document.getElementById('btn-rev-know').addEventListener('click', () => {
     setTimeout(() => { loadNextState(); }, 150);
 });
 
-// 【核心修改点】：增加了触发来源 reason
 function handleReviewFail(reason) {
     StorageManager.updateReviewResult(currentWordObj.id, false);
     currentWordObj.stage = 0; 
@@ -1156,39 +1137,68 @@ function handleReviewFail(reason) {
         
         showDetails();
 
-        // 动态修改 DOM：去除双按钮排版，隐藏“记错了”，让“下一词”自动居中
         const fDetail = document.getElementById('footer-detail');
         fDetail.classList.remove('dual-btns');
         const btnForgot = document.getElementById('btn-forgot');
         if (btnForgot) btnForgot.style.display = 'none';
 
-        // 如果是通过点击“记错了”进来的，弹出顶部提示
-        if (reason === 'wrong') {
-            window.showToast("已改为「忘记了」");
-        }
+        if (reason === 'wrong') window.showToast("已改为「忘记了」");
     }, 150);
 }
 
 document.getElementById('btn-rev-blur').addEventListener('click', () => handleReviewFail('blur'));
 document.getElementById('btn-rev-forget').addEventListener('click', () => handleReviewFail('forget'));
 
-// 4. 绑定核对阶段的两个按钮 (下一词 / 记错了)
+// 4. 绑定核对阶段的两个按钮
 document.getElementById('btn-rev-next').addEventListener('click', () => {
     StorageManager.updateReviewResult(currentWordObj.id, true);
     learnedCount++;
     setTimeout(() => { loadNextState(); }, 150);
 });
 
-// 传入 'wrong' 标志，激活 Toast 弹窗
 document.getElementById('btn-rev-wrong').addEventListener('click', () => handleReviewFail('wrong'));
 
-// 5. 补充：小结标记
-const originalShowSummaryPhase = window.showSummaryPhase || function(){};
+
+// 5. 【极其核心：动态覆盖拼写与小结逻辑】
+// 覆盖原有的 startSpellingPhase，使其聪明地支持“只拼写复习词”
+window.startSpellingPhase = function() {
+    views.spelling.classList.replace('hidden', 'active');
+    // 【魔法】：如果是复习模式，就只把刚刚复习的词放进拼写队列！
+    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
+    wrongWordsQueue = [];
+    spellCurrentIndex = 0;
+    spellTotalInRound = spellingQueue.length;
+    els.totalCount.innerText = spellTotalInRound;
+    loadNextSpellWord();
+};
+
+// 覆盖小结列表展示，确保数据源准确，并在退出时重置模式
 window.showSummaryPhase = function() {
-    globalVocabularyData.forEach(w => {
-        StorageManager.markAsLearned(w.id); 
+    views.transition.classList.replace('active', 'hidden'); 
+    views.spelling.classList.replace('active', 'hidden');
+    views.summary.classList.replace('hidden', 'active');
+    els.summaryList.innerHTML = '';
+    
+    // 动态决定小结列表展示哪一波词
+    const dataSource = isReviewMode ? window.currentReviewWords : globalVocabularyData;
+    document.getElementById('total-words-count').innerText = dataSource.length;
+    
+    dataSource.forEach(item => {
+        StorageManager.markAsLearned(item.id); 
+        
+        const errCount = item.errorCount || 0;
+        const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
+        const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
+        
+        els.summaryList.innerHTML += `
+            <div class="summary-item">
+                <span class="summary-word">${item.pt}</span>
+                <span class="${errorClass}">${errorText}</span>
+            </div>
+        `;
     });
-    originalShowSummaryPhase();
+    
+    isReviewMode = false; // 小结彻底结束后，注销复习状态
 };
 
 // ================= JS 序列 15：拼写界面圆形清空按钮逻辑 =================
