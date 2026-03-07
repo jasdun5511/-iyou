@@ -687,24 +687,7 @@ els.btnFinish.addEventListener('click', () => {
 });
 
 
-/* ================= 附加到 JS 序列 8 开头 ================= */
-
-// 【重构补丁】：绑定底部栏新❌退出键的点击事件
-document.addEventListener('DOMContentLoaded', () => {
-    const newCloseBtn = document.getElementById('btn-close-spell');
-    if (newCloseBtn) {
-        newCloseBtn.addEventListener('click', () => {
-            // 复用原有的确认退出逻辑
-            if (confirm('确定要退出拼写直接看小结吗？')) {
-                // 必须在退出前注销复习状态，防止路由串台
-                if (typeof isReviewMode !== 'undefined') isReviewMode = false;
-                showSummaryPhase();
-            }
-        });
-    }
-});
-
-
+// ================= 序列 8：重构版拼写逻辑引擎 =================
 window.startSpellingPhase = function() {
     views.spelling.classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
