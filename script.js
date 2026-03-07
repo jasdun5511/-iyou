@@ -998,6 +998,59 @@ document.getElementById('word-popup-overlay').addEventListener('click', () => {
 
 // ================= JS 序列 14：艾宾浩斯 Review 核心逻辑 =================
 
+// 【动态黑科技】：全局注入极简 Toast 弹窗（无需修改 HTML）
+window.showToast = function(message) {
+    let toast = document.getElementById('splendid-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'splendid-toast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(45, 45, 45, 0.95);
+            color: #ffffff;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.innerText = message;
+    
+    // 强制重绘，确保每次都能触发丝滑淡入动画
+    void toast.offsetWidth;
+    toast.style.opacity = '1';
+    
+    if (toast.hideTimer) clearTimeout(toast.hideTimer);
+    toast.hideTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 2000);
+};
+
+// 【全局拦截器】：确保普通学习模式下的卡片依然是双按钮
+const originalShowDetails = window.showDetails;
+window.showDetails = function() {
+    originalShowDetails(); // 调用原有的逻辑展示卡片
+    
+    // 强制恢复默认的 "下一词" 和 "记错了" 双按钮状态
+    const fDetail = document.getElementById('footer-detail');
+    if (fDetail) {
+        fDetail.classList.add('dual-btns');
+        const btnForgot = document.getElementById('btn-forgot');
+        if (btnForgot) btnForgot.style.display = 'flex';
+    }
+};
+
 let isReviewMode = false;
 
 // 1. 首页绑定 Review 按钮点击事件
@@ -1007,14 +1060,10 @@ document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () =>
         return;
     }
 
-    // 筛选出符合条件的单词：已学过 (isLearned) 且 到了复习时间 (nextReviewDate <= 现在)
-    const now = Date.now();
     const progressData = StorageManager.getProgress();
     const toReview = globalVocabularyData.filter(word => {
         const p = progressData[word.id];
-        // 注意：为了你今天能立刻测试出效果，我这里临时把时间判断去掉了。
-        // 真正使用时，请把注释掉的那段恢复。
-        return p && p.isLearned; // && p.nextReviewDate <= now;
+        return p && p.isLearned; 
     });
 
     if (toReview.length === 0) {
@@ -1032,7 +1081,7 @@ document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () =>
     loadNextState();
 });
 
-// 2. 拦截并修改全局的 loadNextState，让它支持 stage === -1 (复习评估阶段)
+// 2. 拦截并修改全局的 loadNextState
 const originalLoadNextState = window.loadNextState;
 window.loadNextState = function() {
     if (learningQueue.length === 0) {
@@ -1055,7 +1104,6 @@ window.loadNextState = function() {
     els.pos.innerText = currentWordObj.pos;
     els.zh.innerText = currentWordObj.zh;
     
-    // 隐藏所有底部栏和内容区
     els.defArea.classList.add('hidden'); els.detailArea.classList.add('hidden');
     els.quizArea.classList.add('hidden'); els.recognizeArea.classList.add('hidden');
     els.skeletonBars.classList.add('hidden');
@@ -1063,27 +1111,24 @@ window.loadNextState = function() {
     document.getElementById('footer-review-assess').classList.add('hidden');
     document.getElementById('footer-review-verify').classList.add('hidden');
     
-    updateDots(currentWordObj.stage >= 0 ? currentWordObj.stage : 3); // 复习时默认显示满绿点
+    updateDots(currentWordObj.stage >= 0 ? currentWordObj.stage : 3); 
 
     if (currentWordObj.stage === -1) {
-        // --- 渲染：复习自我评估阶段 ---
         els.app.className = 'bg-blur';
-        els.skeletonBars.classList.remove('hidden'); // 显示骨架屏遮挡中文
-        document.getElementById('footer-review-assess').classList.remove('hidden'); // 显示 认识/模糊/忘记
+        els.skeletonBars.classList.remove('hidden'); 
+        document.getElementById('footer-review-assess').classList.remove('hidden'); 
         playAudio(currentWordObj.pt);
     } 
     else if (currentWordObj.stage === -2) {
-        // --- 渲染：复习释义核对阶段 ---
         els.app.className = 'bg-blur';
         els.defArea.classList.remove('hidden');
         els.detailArea.classList.remove('hidden');
         document.getElementById('word-example-pt').innerHTML = renderClickableSentence(currentWordObj.example.pt);
         document.getElementById('word-example-zh').innerText = currentWordObj.example.zh;
         els.tabs[0].click();
-        document.getElementById('footer-review-verify').classList.remove('hidden'); // 显示 下一词/记错了
+        document.getElementById('footer-review-verify').classList.remove('hidden'); 
     }
     else {
-        // 如果是从复习打回原形的词（stage 0），走正常的学习流程
         if (currentWordObj.stage === 0) renderStage0();
         else if (currentWordObj.stage === 1) renderStage1();
         else if (currentWordObj.stage === 2) renderStage2();
@@ -1091,66 +1136,59 @@ window.loadNextState = function() {
     }
 };
 
-
-// 3. 绑定评估阶段的三个按钮 (认识 / 模糊 / 忘记)
+// 3. 绑定评估阶段的三个按钮 
 document.getElementById('btn-rev-know').addEventListener('click', () => {
-    // 认识 -> 进入核对阶段
     currentWordObj.stage = -2; 
     learningQueue.unshift(currentWordObj); 
-    
-    // 【修改点】：延迟 150ms，等待按钮点击回弹动画播完再切页面
-    setTimeout(() => {
-        loadNextState();
-    }, 150);
+    setTimeout(() => { loadNextState(); }, 150);
 });
 
-
-function handleReviewFail() {
+// 【核心修改点】：增加了触发来源 reason
+function handleReviewFail(reason) {
     StorageManager.updateReviewResult(currentWordObj.id, false);
     currentWordObj.stage = 0; 
     learningQueue.push(currentWordObj); 
     
     setTimeout(() => {
         updateDots(0);
-        // 【关键修复】：不管当前是处于“评估栏”还是“核对栏”，统统隐藏掉，防止和 showDetails 的按钮撞车重叠
         document.getElementById('footer-review-assess').classList.add('hidden');
         document.getElementById('footer-review-verify').classList.add('hidden'); 
         
         showDetails();
+
+        // 动态修改 DOM：去除双按钮排版，隐藏“记错了”，让“下一词”自动居中
+        const fDetail = document.getElementById('footer-detail');
+        fDetail.classList.remove('dual-btns');
+        const btnForgot = document.getElementById('btn-forgot');
+        if (btnForgot) btnForgot.style.display = 'none';
+
+        // 如果是通过点击“记错了”进来的，弹出顶部提示
+        if (reason === 'wrong') {
+            window.showToast("已改为「忘记了」");
+        }
     }, 150);
 }
 
-
-document.getElementById('btn-rev-blur').addEventListener('click', handleReviewFail);
-document.getElementById('btn-rev-forget').addEventListener('click', handleReviewFail);
+document.getElementById('btn-rev-blur').addEventListener('click', () => handleReviewFail('blur'));
+document.getElementById('btn-rev-forget').addEventListener('click', () => handleReviewFail('forget'));
 
 // 4. 绑定核对阶段的两个按钮 (下一词 / 记错了)
 document.getElementById('btn-rev-next').addEventListener('click', () => {
-    // 真的认识 -> 艾宾浩斯晋级！
     StorageManager.updateReviewResult(currentWordObj.id, true);
     learnedCount++;
-    
-    // 【修改点】：延迟 150ms，丝滑进入下一个单词
-    setTimeout(() => {
-        loadNextState();
-    }, 150);
+    setTimeout(() => { loadNextState(); }, 150);
 });
 
-document.getElementById('btn-rev-wrong').addEventListener('click', handleReviewFail);
+// 传入 'wrong' 标志，激活 Toast 弹窗
+document.getElementById('btn-rev-wrong').addEventListener('click', () => handleReviewFail('wrong'));
 
-
-
-// 5. 【极其关键的补丁】：在正常背词流程中，如果背完并进入小结前，把单词标记为 "已学" (isLearned)
+// 5. 补充：小结标记
 const originalShowSummaryPhase = window.showSummaryPhase || function(){};
 window.showSummaryPhase = function() {
-    // 把刚刚学完的词打上“已学”标签，激活艾宾浩斯
     globalVocabularyData.forEach(w => {
-        // 假设今天学过的词被标记到了这里
         StorageManager.markAsLearned(w.id); 
     });
     originalShowSummaryPhase();
-    
-    // 更新仪表盘的数字逻辑...
 };
 
 // ================= JS 序列 15：拼写界面圆形清空按钮逻辑 =================
