@@ -1104,18 +1104,22 @@ document.getElementById('btn-rev-know').addEventListener('click', () => {
     }, 150);
 });
 
+
 function handleReviewFail() {
     StorageManager.updateReviewResult(currentWordObj.id, false);
     currentWordObj.stage = 0; 
     learningQueue.push(currentWordObj); 
     
-    // 【修改点】：延迟 150ms，给手指离开屏幕和按钮微交互留出时间
     setTimeout(() => {
         updateDots(0);
+        // 【关键修复】：不管当前是处于“评估栏”还是“核对栏”，统统隐藏掉，防止和 showDetails 的按钮撞车重叠
         document.getElementById('footer-review-assess').classList.add('hidden');
+        document.getElementById('footer-review-verify').classList.add('hidden'); 
+        
         showDetails();
     }, 150);
 }
+
 
 document.getElementById('btn-rev-blur').addEventListener('click', handleReviewFail);
 document.getElementById('btn-rev-forget').addEventListener('click', handleReviewFail);
