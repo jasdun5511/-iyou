@@ -1095,11 +1095,14 @@ function handleReviewFail() {
     currentWordObj.stage = 0; 
     learningQueue.push(currentWordObj); // 放到队尾重新学
     
-    // 短暂展示一下释义，然后自动进入下一词
-    els.skeletonBars.classList.add('hidden');
-    els.defArea.classList.remove('hidden');
+    // 【更新点】：动态清空顶部的绿点，给用户直观的“降级”反馈
+    updateDots(0);
+
+    // 【更新点】：隐藏当前的评估底部栏
     document.getElementById('footer-review-assess').classList.add('hidden');
-    setTimeout(() => { loadNextState(); }, 2000);
+    
+    // 【更新点】：调用全局详情展示函数，渲染完整信息卡片并等待用户手动点击“下一词”
+    showDetails();
 }
 
 document.getElementById('btn-rev-blur').addEventListener('click', handleReviewFail);
