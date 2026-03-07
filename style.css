@@ -199,42 +199,109 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 
-/* ================= CSS 序列 7：全新重构版拼写视图 (无下划线极简版) ================= */
-#spelling-view { display: flex; flex-direction: column; align-items: center; padding: 20px 24px; color: #fff; position: relative; }
+/* ================= CSS 序列 7：重塑 2.0 拼写视图 ================= */
+#spelling-view {
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between; /* 整体改为纵向上下分布 */
+    padding: 0 24px; color: #fff; position: relative;
+    /* 继承全局沉浸模糊背景 */
+}
 
-/* 极简顶部 */
-.spell-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.spell-header i { font-size: 1.4rem; color: #fff; cursor: pointer; padding: 5px; margin-left: -5px; }
-.spell-progress-simple { font-size: 1.05rem; color: rgba(255,255,255,0.6); font-weight: 500; }
+/* 1. 顶部栏：仅保留进度 */
+.spell-header {
+    width: 100%; display: flex; justify-content: flex-start; align-items: center;
+    padding-top: 50px; /* 顶部预留状态栏高度 */
+    margin-bottom: 20px;
+}
+.spell-header i { display: none !important; } /* 彻底隐藏顶部的退出键 */
+.spell-progress-simple {
+    font-size: 1.05rem; color: rgba(255,255,255,0.7); font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif; /* 确保字体风格 */
+}
 
-.spell-main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -15vh; }
-.meaning-area { margin-bottom: 80px; text-align: center; }
-#spell-word-meaning { font-size: 1.4rem; color: #e0e0e0; line-height: 1.5; letter-spacing: 1px; font-weight: 400; }
+/* 2. 主内容区（单词与释义） */
+.spell-main-content {
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    width: 100%; margin-top: -5vh; /* 微微上移以平衡视觉 */
+}
 
-.input-container { position: relative; width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
-.letter-boxes { display: flex; gap: 12px; flex-wrap: nowrap; justify-content: center; z-index: 2; pointer-events: none; }
+/* 核心：输入区布局调整 */
+.input-container {
+    position: relative; width: 100%; display: flex; justify-content: center;
+    margin-bottom: 25px; /* 与下方释义的间距 */
+}
 
-/* 彻底删除 border-bottom，实现无下划线的极简浮空字效果 */
-.letter-box { width: 32px; height: 45px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 6px; font-size: 32px; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #fff; transition: color 0.2s ease; }
+/* 核心魔法：紧凑字母排版 */
+.letter-boxes {
+    display: flex; gap: 0px !important; /* 【核心修改】：彻底清除字母间距 */
+    flex-wrap: nowrap; justify-content: center;
+}
 
-/* 状态样式：不再修改边框颜色，只修改文字颜色 */
-.letter-box.filled { color: #fff; } 
-.letter-box.correct { color: #2ecc71; }
-.letter-box.wrong { color: #e74c3c; }
+/* 【核心修改】：继承图二的大字体风格，清除盒子和下划线 */
+.letter-box {
+    width: auto; height: auto; /* 自动宽度，不再是死板的格子 */
+    padding: 0 2px; /* 极微小的内边距防止字母粘连 */
+    display: flex; justify-content: center; align-items: center;
+    
+    font-size: 3.5rem; /* 【核心修改】：超级大字体，同图二 */
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: rgba(255,255,255,0.2); /* 默认未输入状态为极淡的灰色 */
+    transition: all 0.2s ease;
+    border-bottom: none !important; /* 彻底移除下划线 */
+}
 
-#hidden-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 3; font-size: 16px; color: transparent; background: transparent; border: none; outline: none; caret-color: transparent; }
+/* 状态样式 */
+.letter-box.filled { color: #fff; } /* 已输入为纯白 */
+.letter-box.correct { color: #2ecc71; } /* 正确为薄荷绿 */
+.letter-box.wrong { color: #e74c3c; text-decoration: line-through; } /* 错误为红且带删除线 */
 
-.submit-hint { font-size: 0.85rem; color: rgba(255,255,255,0.3); text-align: center; margin-top: 40px; }
+#hidden-input { position: absolute; opacity: 0; z-index: 10; }
 
-/* 底部操作区：主容器居中(保证灯泡在正中间)，右侧按钮绝对定位 */
-.spell-footer { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; }
-.hint-container { display: flex; justify-content: center; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent;}
-.bulb-icon { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: rgba(255,255,255,0.6); transition: all 0.2s; cursor: pointer;}
-.bulb-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
+/* 3. 释义区（移至单词下方） */
+.meaning-area { margin-bottom: 0; text-align: center; }
+#spell-word-meaning {
+    font-size: 1.15rem; /* 稍微缩小中文体积，弱化视觉 */
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5; font-weight: 400;
+}
+.submit-hint { display: none !important; } /* 隐藏旧版提示 */
 
-/* 右下角的打钩确认按钮（固定在右边） */
-.submit-icon { position: absolute; right: 24px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
-.submit-icon:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
+
+/* 4. 底部栏：重构布局，放置❌ */
+.spell-footer {
+    width: 100%; height: 90px;
+    display: flex; justify-content: space-between; align-items: center; /* 左❌右✓ */
+    padding: 0 10px 30px 10px; /* 预留底部手势区 padding */
+    border: none;
+}
+
+/* 左下角退出键（❌）样式 */
+#btn-close-spell {
+    display: flex !important; /* 强制显示 */
+    visibility: visible !important;
+    position: static; /* 移除旧版绝对定位 */
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); /* 极淡的圆形氛围背景 */
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; color: rgba(255,255,255,0.7); cursor: pointer;
+    transition: all 0.2s;
+}
+#btn-close-spell:active { transform: scale(0.9); background: rgba(255,255,255,0.15); }
+
+/* 右下角提交键（✓）样式 */
+.submit-icon {
+    position: static; /* 移除旧版绝对定位 */
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #fff; /* 纯白底色 */
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; color: #1a1a1a; /* 黑星✓号 */
+    cursor: pointer; transition: all 0.2s;
+}
+.submit-icon:active { transform: scale(0.9); opacity: 0.9; }
+
+/* 隐藏旧版提示灯泡 */
+.hint-container { display: none !important; }
+
 
 /* ================= CSS 序列 8：数据仪表盘 (Dashboard) ================= */
 #dashboard-view { background-color: #1A1D27; color: #fff; display: flex; flex-direction: column; }
