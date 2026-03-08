@@ -688,10 +688,12 @@ els.btnFinish.addEventListener('click', () => {
 
 
 // ================= 序列 8：重构版拼写逻辑引擎 =================
+
 window.startSpellingPhase = function() {
     views.spelling.classList.replace('hidden', 'active');
-    applyBackgroundContext('learning-blur');
+    applyBackgroundContext('learning-blur'); // 激活沉浸模糊
     
+    // 智能拦截：复习模式下只拼写复习词汇
     spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
@@ -737,6 +739,12 @@ function updateSpellUI() {
     for (let i = 0; i < currentSpellWord.pt.length; i++) {
         els.letterBoxes.innerHTML += `<div class="letter-box"></div>`;
     }
+    
+    // 初始化时，给第一个空盒子加上闪烁光标
+    if (els.letterBoxes.children.length > 0) {
+        els.letterBoxes.children[0].classList.add('has-cursor');
+    }
+    
     setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
 
@@ -766,13 +774,18 @@ function syncInputToSlots(val) {
     const boxes = els.letterBoxes.children;
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].innerText = '';
-        boxes[i].classList.remove('filled');
+        // 清空内容时，连光标状态一起清掉
+        boxes[i].classList.remove('filled', 'has-cursor');
     }
     for (let i = 0; i < val.length; i++) {
         if (boxes[i]) {
             boxes[i].innerText = val[i];
             boxes[i].classList.add('filled');
         }
+    }
+    // 判断当前输入的长度，给下一个待输入的空盒子贴上光标标签
+    if (val.length < boxes.length) {
+        boxes[val.length].classList.add('has-cursor');
     }
 }
 
@@ -787,6 +800,11 @@ function checkSpelling() {
     const userInput = els.hiddenInput.value.trim().toLowerCase();
     const targetWord = currentSpellWord.pt.toLowerCase();
     const boxes = els.letterBoxes.children;
+    
+    // 开始核对答案前，先把所有光标强制抹除，防止动画重叠
+    for (let i = 0; i < boxes.length; i++) {
+        boxes[i].classList.remove('has-cursor');
+    }
     
     let isCorrect = (userInput === targetWord);
 
