@@ -855,11 +855,18 @@ els.hintContainer.addEventListener('click', () => {
         recordError(currentSpellWord);
     }
     
-    // 核心：直接将灯泡替换为金色的音标，保持输入焦点
     els.hintContainer.innerHTML = `<span style="color: #EBB04D; font-size: 1.1rem; letter-spacing: 1px; font-weight: 500;">${currentSpellWord.phonetic}</span>`;
-    
     els.hiddenInput.focus();
+
+    // 核心：1.5秒后自动变回原有的灯泡图标
+    clearTimeout(window.hintTimeout);
+    window.hintTimeout = setTimeout(() => {
+        if (!isSpellChecking && window.originalHintHTML) {
+            els.hintContainer.innerHTML = window.originalHintHTML;
+        }
+    }, 1500);
 });
+
 
 
 // ================= 序列 9：数据仪表盘路由与动态统计 =================
