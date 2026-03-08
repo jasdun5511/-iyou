@@ -414,5 +414,45 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     margin-top: 0 !important; 
 }
 
+/* ================= 魔法补丁：拼写页退出按键重置 ================= */
+
+/* 1. 清除原顶部标题栏的排版，释放空间 */
+.spell-header {
+    display: block !important;
+    text-align: center !important; /* 让进度数字居中 */
+}
+
+/* 2. 强行剥离原退出按键，移至底部，并加个圈 */
+#btn-close-spell {
+    position: fixed !important;
+    bottom: 40px !important;  /* 和右下角提交按钮高度一致 */
+    left: 24px !important;    /* 和原 Bulb 按钮位置对称 */
+    top: auto !important;     /* 清除顶部定位 */
+    
+    /* 核心魔法：加上圈，使其看起来像个底部 Action 按钮 */
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    background: transparent !important;
+    
+    /* 确保图标在圈里居中 */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.2rem !important;
+    color: #fff !important;
+    
+    transition: all 0.2s ease !important;
+    z-index: 10 !important;
+    cursor: pointer !important;
+}
+
+/* 按钮点击动效，保持系统一致性 */
+#btn-close-spell:active {
+    background: rgba(255,255,255,0.1) !important;
+    transform: scale(0.95) !important;
+}
+
 
 
