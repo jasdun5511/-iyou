@@ -27,20 +27,23 @@ let currentReviewWords = [];
 
 const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30, 60]; 
 
-// 推算基于“凌晨 4 点”为跨天界限的下一次复习时间戳
+// 获取以凌晨4点为界限的真实“今天”的日期字符串 (YYYY-MM-DD)
+function getTodayDateKey() {
+    let now = new Date();
+    if (now.getHours() < 4) now.setDate(now.getDate() - 1);
+    return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
+function formatDateKey(dateObj) {
+    return `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+}
+
 function getNextReviewTime(days) {
     let now = new Date();
     let targetDate = new Date(now);
-    
-    // 如果当前时间是凌晨 4 点前，依然算作“昨天”的学习
-    if (now.getHours() < 4) {
-        targetDate.setDate(targetDate.getDate() - 1);
-    }
-    
-    // 加上指定的复习间隔天数，并将时间严格锁定在当天的凌晨 4:00:00
+    if (now.getHours() < 4) targetDate.setDate(targetDate.getDate() - 1);
     targetDate.setDate(targetDate.getDate() + days);
     targetDate.setHours(4, 0, 0, 0);
-    
     return targetDate.getTime();
 }
 
@@ -51,6 +54,26 @@ const StorageManager = {
     },
     saveProgress: function(progress) {
         localStorage.setItem('splendid_global_progress', JSON.stringify(progress));
+    },
+    // 新增：获取时长和签到数据
+    getStats: function() {
+        const data = localStorage.getItem('splendid_user_stats');
+        return data ? JSON.parse(data) : { dates: [], timeByDate: {}, totalTime: 0 };
+    },
+    // 新增：保存时长和签到数据
+    saveStats: function(stats) {
+        localStorage.setItem('splendid_user_stats', JSON.stringify(stats));
+    },
+    // 新增：增加有效学习时长，并自动点亮签到日历
+    addActiveTime: function(seconds) {
+        let stats = this.getStats();
+        let dateKey = getTodayDateKey();
+        
+        stats.totalTime = (stats.totalTime || 0) + seconds;
+        stats.timeByDate[dateKey] = (stats.timeByDate[dateKey] || 0) + seconds;
+        
+        if (!stats.dates.includes(dateKey)) stats.dates.push(dateKey);
+        this.saveStats(stats);
     },
     saveWordError: function(wordId) {
         let progress = this.getProgress();
@@ -67,8 +90,6 @@ const StorageManager = {
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
         progress[wordId].isLearned = true;
         progress[wordId].ebStage = 0; 
-        
-        // 第一次学完，固定为明天的凌晨 4 点进入复习
         progress[wordId].nextReviewDate = getNextReviewTime(1); 
         this.saveProgress(progress);
     },
@@ -77,14 +98,12 @@ const StorageManager = {
         if (!progress[wordId]) return;
         
         if (isSuccess) {
-            // 复习成功：晋级下一阶段，从今天开始往后推算新的天数
             let nextStage = (progress[wordId].ebStage || 0) + 1;
             if (nextStage >= EBBINGHAUS_INTERVALS.length) nextStage = EBBINGHAUS_INTERVALS.length - 1;
             progress[wordId].ebStage = nextStage;
             const daysToWait = EBBINGHAUS_INTERVALS[nextStage];
             progress[wordId].nextReviewDate = getNextReviewTime(daysToWait);
         } else {
-            // 复习失败（忘记/拼错）：阶段清零，明早 4 点重新复习
             progress[wordId].ebStage = 0;
             progress[wordId].nextReviewDate = getNextReviewTime(1);
         }
@@ -103,12 +122,9 @@ function recordError(wordObj) {
     if (!wordObj || !wordObj.id) return;
     StorageManager.saveWordError(wordObj.id);
     let masterWord = globalVocabularyData.find(w => w.id === wordObj.id);
-    if (masterWord) {
-        masterWord.errorCount = StorageManager.getWordError(wordObj.id);
-    }
+    if (masterWord) masterWord.errorCount = StorageManager.getWordError(wordObj.id);
 }
 
-// 动态计算首页的待学/待复习数字
 window.updateHomeCounts = function() {
     if (!globalVocabularyData) return;
     const progressData = StorageManager.getProgress();
@@ -117,21 +133,38 @@ window.updateHomeCounts = function() {
     const toLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
     const toReview = globalVocabularyData.filter(w => progressData[w.id]?.isLearned && progressData[w.id].nextReviewDate <= now);
     
-    // 更新学习数字
     const learnCountEl = document.getElementById('learn-count');
     if (learnCountEl) learnCountEl.innerText = toLearn.length;
     
-    // 更新复习数字（只保留数字）
     const reviewSubtitle = document.getElementById('review-count') || 
                            document.querySelector('#btn-review .nav-count') || 
                            document.querySelector('.nav-card:nth-child(2) .nav-count');
                            
-    if (reviewSubtitle) {
-        reviewSubtitle.innerText = toReview.length;
-    }
+    if (reviewSubtitle) reviewSubtitle.innerText = toReview.length;
 };
 
+// ================= 超苛刻时长追踪引擎 =================
+let lastInteractionTime = Date.now();
 
+// 监听一切能证明“人还在”的操作
+['click', 'touchstart', 'keydown', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, () => lastInteractionTime = Date.now(), {passive: true});
+});
+
+function startStrictTimeTracker() {
+    setInterval(() => {
+        const isLearningActive = document.getElementById('learning-view')?.classList.contains('active');
+        const isSpellingActive = document.getElementById('spelling-view')?.classList.contains('active');
+        
+        // 只有在学习页或拼写页才算
+        if (!isLearningActive && !isSpellingActive) return;
+        
+        // 苛刻条件：超过 30 秒无操作，彻底冻结时间计算
+        if (Date.now() - lastInteractionTime < 30000) {
+            StorageManager.addActiveTime(1); // 加 1 秒
+        }
+    }, 1000);
+}
 
 async function initApp() {
     try {
@@ -146,6 +179,9 @@ async function initApp() {
         } else {
             document.getElementById('learn-count').innerText = 0;
         }
+        
+        startStrictTimeTracker(); // 启动时长追踪系统
+
     } catch (error) {
         alert('系统初始化失败，请检查是否在同级目录下创建了 global_dict.json！');
     }
@@ -161,11 +197,7 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
         globalVocabularyData = wordIds.map(id => {
             const wordData = globalDict[id];
             if (!wordData) return null;
-            return {
-                ...wordData,
-                id: id,
-                errorCount: StorageManager.getWordError(id) 
-            };
+            return { ...wordData, id: id, errorCount: StorageManager.getWordError(id) };
         }).filter(item => item !== null);
 
         updateHomeCounts(); 
@@ -193,6 +225,7 @@ window.updateDashboardBookUI = function(bookInfo) {
 };
 
 document.addEventListener('DOMContentLoaded', () => { initApp(); });
+
 
 
 // ================= 序列 2：全局视图与 DOM 元素映射 =================
