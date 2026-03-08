@@ -290,13 +290,12 @@ window.showToast = function(message) {
 window.applyBackgroundContext = function(context) {
     els.app.className = ''; 
     if (context === 'reset') {
-        // 首页清晰模式，不加滤镜
+        // 首页清晰模式，无模糊
     } else if (context === 'learning-blur' || context === 'learning-green') {
-        // 核心修复：无论是正常学习还是过关，都统一只使用黑透高斯模糊，坚决不要绿色滤镜！
+        // 修复：统一只用高级黑透模糊，坚决不要绿色滤镜
         els.app.classList.add('bg-blur'); 
     }
 }
-
 
 function playAudio(text) {
     if ('speechSynthesis' in window) {
@@ -307,7 +306,38 @@ function playAudio(text) {
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
-// 正常学习流程入口：过滤掉已学过的词
+// 【核心魔法 1】：定义“瞬间抓拍”进度的函数
+window.saveCurrentSessionProgress = function() {
+    if (isReviewMode || !globalVocabularyData || globalVocabularyData.length === 0) return;
+    
+    let progress = StorageManager.getProgress();
+    let hasChanges = false;
+    
+    // 保存屏幕上正在背的这个词的进度点
+    if (currentWordObj && currentWordObj.id) {
+        if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
+        progress[currentWordObj.id].currentStage = currentWordObj.stage;
+        hasChanges = true;
+    }
+    
+    // 保存队列里还在排队的所有词的进度点
+    learningQueue.forEach(w => {
+        if (!progress[w.id]) progress[w.id] = { errorCount: 0 };
+        progress[w.id].currentStage = w.stage;
+        hasChanges = true;
+    });
+    
+    if (hasChanges) StorageManager.saveProgress(progress);
+};
+
+// 【核心魔法 2】：监听手机切到后台、息屏或意外关闭，瞬间触发保存
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        saveCurrentSessionProgress();
+    }
+});
+
+// 正常学习流程入口
 document.getElementById('btn-learn').addEventListener('click', () => {
     if (globalVocabularyData.length === 0) {
         views.home.classList.replace('active', 'hidden');
@@ -325,7 +355,13 @@ document.getElementById('btn-learn').addEventListener('click', () => {
 
     isReviewMode = false;
     applyBackgroundContext('learning-blur');
-    learningQueue = toLearn.map(word => ({ ...word, stage: 0 }));
+    
+    // 【核心魔法 3】：生成学习队列时，精准读取它上次遗留的进度点 (stage)
+    learningQueue = toLearn.map(word => ({ 
+        ...word, 
+        stage: progressData[word.id]?.currentStage || 0 
+    }));
+    
     totalWords = learningQueue.length;
     learnedCount = 0;
     views.home.classList.replace('active', 'hidden');
@@ -334,6 +370,7 @@ document.getElementById('btn-learn').addEventListener('click', () => {
 });
 
 document.getElementById('btn-back').addEventListener('click', () => {
+    saveCurrentSessionProgress(); // 【核心魔法 4】：正常点击返回主页也触发保存
     views.learning.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
     applyBackgroundContext('reset');
