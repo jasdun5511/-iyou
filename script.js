@@ -290,13 +290,13 @@ window.showToast = function(message) {
 window.applyBackgroundContext = function(context) {
     els.app.className = ''; 
     if (context === 'reset') {
-        // 首页清晰模式，无需添加类名
-    } else if (context === 'learning-blur') {
-        els.app.classList.add('bg-blur');
-    } else if (context === 'learning-green') {
-        els.app.classList.add('bg-blur', 'bg-green'); 
+        // 首页清晰模式，不加滤镜
+    } else if (context === 'learning-blur' || context === 'learning-green') {
+        // 核心修复：无论是正常学习还是过关，都统一只使用黑透高斯模糊，坚决不要绿色滤镜！
+        els.app.classList.add('bg-blur'); 
     }
 }
+
 
 function playAudio(text) {
     if ('speechSynthesis' in window) {
