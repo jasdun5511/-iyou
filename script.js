@@ -121,16 +121,16 @@ window.updateHomeCounts = function() {
     const learnCountEl = document.getElementById('learn-count');
     if (learnCountEl) learnCountEl.innerText = toLearn.length;
     
-    // 核心修复：更新复习数字（增加多种常见 HTML 结构的兼容）
+    // 更新复习数字（只保留数字）
     const reviewSubtitle = document.getElementById('review-count') || 
-                           document.querySelector('#btn-review .nav-subtitle') || 
-                           document.querySelectorAll('.nav-subtitle')[1] || 
-                           document.querySelector('.nav-card:nth-child(2) p');
+                           document.querySelector('#btn-review .nav-count') || 
+                           document.querySelector('.nav-card:nth-child(2) .nav-count');
                            
     if (reviewSubtitle) {
-        reviewSubtitle.innerText = `需复习 ${toReview.length} 词`;
+        reviewSubtitle.innerText = toReview.length;
     }
 };
+
 
 
 async function initApp() {
