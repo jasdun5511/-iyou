@@ -744,6 +744,10 @@ function updateSpellUI() {
         els.letterBoxes.children[0].style.display = 'flex';
     }
     
+    // 动态保存灯泡的原始 HTML，并在切词时恢复
+    if (!window.originalHintHTML) window.originalHintHTML = els.hintContainer.innerHTML;
+    els.hintContainer.innerHTML = window.originalHintHTML;
+    
     setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
 
@@ -844,20 +848,18 @@ function checkSpelling() {
 
 els.hintContainer.addEventListener('click', () => {
     if (isSpellChecking) return;
+    
     if (!spellHasErroredThisTurn) {
         spellHasErroredThisTurn = true;
         wrongWordsQueue.push(currentSpellWord);
         recordError(currentSpellWord);
     }
     
-    els.bulbIcon.style.backgroundColor = 'rgba(255,255,255,0.2)';
-    setTimeout(() => { els.bulbIcon.style.backgroundColor = 'transparent'; }, 300);
+    // 核心：直接将灯泡替换为金色的音标，保持输入焦点
+    els.hintContainer.innerHTML = `<span style="color: #EBB04D; font-size: 1.1rem; letter-spacing: 1px; font-weight: 500;">${currentSpellWord.phonetic}</span>`;
     
-    els.hiddenInput.value = currentSpellWord.pt;
-    syncInputToSlots(currentSpellWord.pt);
-    checkSpelling(); 
+    els.hiddenInput.focus();
 });
-
 
 
 // ================= 序列 9：数据仪表盘路由与动态统计 =================
