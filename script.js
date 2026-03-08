@@ -117,12 +117,21 @@ window.updateHomeCounts = function() {
     const toLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
     const toReview = globalVocabularyData.filter(w => progressData[w.id]?.isLearned && progressData[w.id].nextReviewDate <= now);
     
+    // 更新学习数字
     const learnCountEl = document.getElementById('learn-count');
     if (learnCountEl) learnCountEl.innerText = toLearn.length;
     
-    const reviewSubtitle = document.querySelector('.nav-card:nth-child(2) .nav-subtitle');
-    if (reviewSubtitle) reviewSubtitle.innerText = `需复习 ${toReview.length} 词`;
+    // 核心修复：更新复习数字（增加多种常见 HTML 结构的兼容）
+    const reviewSubtitle = document.getElementById('review-count') || 
+                           document.querySelector('#btn-review .nav-subtitle') || 
+                           document.querySelectorAll('.nav-subtitle')[1] || 
+                           document.querySelector('.nav-card:nth-child(2) p');
+                           
+    if (reviewSubtitle) {
+        reviewSubtitle.innerText = `需复习 ${toReview.length} 词`;
+    }
 };
+
 
 async function initApp() {
     try {
