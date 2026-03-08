@@ -731,6 +731,29 @@ function updateSpellUI() {
     els.spellProgress.innerText = `${spellCurrentIndex}/${spellTotalInRound}`;
     els.spellMeaning.innerText = `${currentSpellWord.pos} ${currentSpellWord.zh}`;
     
+    // 动态注入点点容器
+    let dotsContainer = document.getElementById('spell-dots-container');
+    if (!dotsContainer) {
+        dotsContainer = document.createElement('div');
+        dotsContainer.id = 'spell-dots-container';
+        els.spellProgress.parentNode.appendChild(dotsContainer);
+    }
+    
+    // 每轮开始时重置点点数量
+    if (spellCurrentIndex === 1) {
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < spellTotalInRound; i++) {
+            dotsContainer.innerHTML += `<span class="spell-dot"></span>`;
+        }
+    }
+    
+    // 激活当前进度点的呼吸放大效果
+    Array.from(dotsContainer.children).forEach((dot, idx) => {
+        if (idx === spellCurrentIndex - 1 && !dot.classList.contains('correct') && !dot.classList.contains('wrong')) {
+            dot.className = 'spell-dot active-dot';
+        }
+    });
+
     els.hiddenInput.value = '';
     els.hiddenInput.removeAttribute('maxLength');
     
@@ -744,64 +767,11 @@ function updateSpellUI() {
         els.letterBoxes.children[0].style.display = 'flex';
     }
     
-    // 动态保存灯泡的原始 HTML，并在切词时恢复
     if (!window.originalHintHTML) window.originalHintHTML = els.hintContainer.innerHTML;
     els.hintContainer.innerHTML = window.originalHintHTML;
     
     setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
-
-els.hiddenInput.addEventListener('compositionstart', () => { isComposing = true; });
-els.hiddenInput.addEventListener('compositionend', (e) => { 
-    isComposing = false; 
-    syncInputToSlots(e.target.value); 
-});
-
-els.hiddenInput.addEventListener('input', (e) => {
-    if (isSpellChecking) return; 
-    syncInputToSlots(e.target.value);
-});
-
-els.hiddenInput.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter' && !isSpellChecking && els.hiddenInput.value.length > 0) {
-        checkSpelling();
-    }
-});
-
-document.getElementById('btn-submit-spell').addEventListener('click', () => {
-    if (!isSpellChecking && els.hiddenInput.value.length > 0) checkSpelling();
-    else if (els.hiddenInput.value.length === 0) els.hiddenInput.focus();
-});
-
-function syncInputToSlots(val) {
-    while (els.letterBoxes.children.length <= val.length) {
-        els.letterBoxes.insertAdjacentHTML('beforeend', `<div class="letter-box" style="display: none;"></div>`);
-    }
-
-    const boxes = els.letterBoxes.children;
-    for (let i = 0; i < boxes.length; i++) {
-        boxes[i].innerText = '';
-        boxes[i].classList.remove('filled', 'has-cursor');
-        boxes[i].style.display = 'none'; 
-    }
-    
-    for (let i = 0; i < val.length; i++) {
-        boxes[i].innerText = val[i];
-        boxes[i].classList.add('filled');
-        boxes[i].style.display = 'flex';
-    }
-    
-    if (val.length < boxes.length) {
-        boxes[val.length].classList.add('has-cursor');
-        boxes[val.length].style.display = 'flex';
-    } else {
-        boxes[val.length - 1].insertAdjacentHTML('afterend', `<div class="letter-box has-cursor" style="display: flex;"></div>`);
-    }
-}
-
-document.querySelector('.spell-main-content').addEventListener('click', () => {
-    if(!isSpellChecking) els.hiddenInput.focus();
-});
 
 function checkSpelling() {
     if (isSpellChecking) return;
@@ -817,8 +787,15 @@ function checkSpelling() {
     }
     
     let isCorrect = (userInput === targetWord);
+    
+    // 定位当前的进度点
+    let dotsContainer = document.getElementById('spell-dots-container');
+    let currentDot = dotsContainer ? dotsContainer.children[spellCurrentIndex - 1] : null;
 
     if (isCorrect && !spellHasErroredThisTurn) {
+        // 全对：指定位置的点变绿
+        if (currentDot) currentDot.className = 'spell-dot correct';
+        
         for (let i = 0; i < boxes.length; i++) { boxes[i].classList.add('correct'); }
         playAudio(currentSpellWord.pt);
         setTimeout(loadNextSpellWord, 800); 
@@ -827,6 +804,8 @@ function checkSpelling() {
             spellHasErroredThisTurn = true;
             wrongWordsQueue.push(currentSpellWord);
             recordError(currentSpellWord); 
+            // 犯错：指定位置的点变红
+            if (currentDot) currentDot.className = 'spell-dot wrong';
         }
         
         const maxLen = Math.max(targetWord.length, userInput.length);
@@ -853,12 +832,17 @@ els.hintContainer.addEventListener('click', () => {
         spellHasErroredThisTurn = true;
         wrongWordsQueue.push(currentSpellWord);
         recordError(currentSpellWord);
+        
+        // 使用提示直接标红当前进度点
+        let dotsContainer = document.getElementById('spell-dots-container');
+        if (dotsContainer && dotsContainer.children[spellCurrentIndex - 1]) {
+            dotsContainer.children[spellCurrentIndex - 1].className = 'spell-dot wrong';
+        }
     }
     
     els.hintContainer.innerHTML = `<span style="color: #EBB04D; font-size: 1.1rem; letter-spacing: 1px; font-weight: 500;">${currentSpellWord.phonetic}</span>`;
     els.hiddenInput.focus();
 
-    // 核心：1.5秒后自动变回原有的灯泡图标
     clearTimeout(window.hintTimeout);
     window.hintTimeout = setTimeout(() => {
         if (!isSpellChecking && window.originalHintHTML) {
@@ -866,7 +850,6 @@ els.hintContainer.addEventListener('click', () => {
         }
     }, 1500);
 });
-
 
 
 // ================= 序列 9：数据仪表盘路由与动态统计 =================
