@@ -480,5 +480,23 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     border-radius: 2px;
 }
 
+/* ================= 魔法补丁：拼写字距消除与无衬线字体 ================= */
+
+/* 1. 彻底清除字母容器之间的物理缝隙 */
+.letter-boxes {
+    gap: 0 !important; 
+}
+
+/* 2. 重塑字母盒子的宽度与字体 */
+.letter-box {
+    width: auto !important;         /* 取消原先死板的 32px 固定宽度，让字母自然贴合 */
+    min-width: 16px !important;     /* 给还没打字的“光标空盒子”留出基础占位，防止光标被挤没 */
+    padding: 0 1px !important;      /* 仅保留极其微小的 1px 呼吸距，模拟真实字距 */
+    
+    /* 强制使用高级无衬线体 (苹果 SF Pro / 微软雅黑 / Arial) */
+    font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    font-weight: 500 !important;
+    letter-spacing: 1px !important; /* 微微拉开字母本身的字间距，显得更高级 */
+}
 
 
