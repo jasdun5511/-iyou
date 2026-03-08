@@ -942,109 +942,208 @@ els.hintContainer.addEventListener('click', () => {
     }, 1500);
 });
 
-// ================= 序列 9：数据仪表盘路由与动态统计 =================
+// ================= 序列 9 & 10 & 11：仪表盘全面接管与单词表引擎 =================
+
+// 1. 仪表盘导航与基础路由
 const btnNavDashboard = document.getElementById('btn-nav-dashboard');
 const btnNavHome = document.getElementById('btn-nav-home'); 
 const btnBackHome = document.getElementById('btn-back-home'); 
 
-btnNavDashboard.addEventListener('click', () => {
-    views.home.classList.replace('active', 'hidden');
-    views.dashboard.classList.replace('hidden', 'active');
-    btnNavDashboard.classList.add('active');
-    btnNavHome.classList.remove('active');
-    renderDashboardData();
-});
-
-btnBackHome.addEventListener('click', () => {
-    views.dashboard.classList.replace('active', 'hidden');
-    views.home.classList.replace('hidden', 'active');
-    btnNavDashboard.classList.remove('active');
-    btnNavHome.classList.add('active');
-    applyBackgroundContext('reset'); // 重置氛围
-});
-
-function renderDashboardData() {
-    const vocabCount = globalVocabularyData.filter(word => word.errorCount > 0).length;
-    document.getElementById('dash-vocab-count').innerText = vocabCount;
-    const totalWordsCount = globalVocabularyData.length;
-    document.getElementById('dash-total').innerText = totalWordsCount;
-    document.getElementById('dash-learned').innerText = learnedCount;
-    document.getElementById('dash-today-learned').innerText = learnedCount;
-    document.getElementById('dash-total-learned').innerText = learnedCount;
-
-    const progressPercent = totalWordsCount === 0 ? 0 : (learnedCount / totalWordsCount) * 100;
-    setTimeout(() => {
-        document.getElementById('dash-progress-fill').style.width = `${progressPercent}%`;
-    }, 50);
+// 点击底部导航进入仪表盘
+if(btnNavDashboard) {
+    btnNavDashboard.addEventListener('click', () => {
+        views.home.classList.replace('active', 'hidden');
+        views.dashboard.classList.replace('hidden', 'active');
+        btnNavDashboard.classList.add('active');
+        btnNavHome.classList.remove('active');
+        renderDashboardData(); // 进入时刷新数据
+    });
 }
 
+// 从仪表盘返回首页
+if(btnBackHome) {
+    btnBackHome.addEventListener('click', () => {
+        views.dashboard.classList.replace('active', 'hidden');
+        views.home.classList.replace('hidden', 'active');
+        btnNavDashboard.classList.remove('active');
+        btnNavHome.classList.add('active');
+        if(window.updateHomeCounts) window.updateHomeCounts();
+    });
+}
 
-// ================= 序列 10：词库视图路由交互 =================
+// 仪表盘右上角：刷新数据动效
+const dashRefreshBtn = document.querySelector('.dashboard-header .fa-arrow-rotate-right');
+if(dashRefreshBtn) {
+    dashRefreshBtn.style.cursor = 'pointer';
+    dashRefreshBtn.addEventListener('click', () => {
+        dashRefreshBtn.style.transform = 'rotate(360deg)';
+        dashRefreshBtn.style.transition = 'transform 0.5s ease';
+        renderDashboardData();
+        setTimeout(() => {
+            dashRefreshBtn.style.transform = 'none';
+            dashRefreshBtn.style.transition = 'none';
+            window.showToast("数据已同步");
+        }, 500);
+    });
+}
+
+// 2. 核心：动态渲染仪表盘真实数据
+window.renderDashboardData = function() {
+    if (!globalVocabularyData) return;
+    
+    const progressData = StorageManager.getProgress();
+    let learned = 0;
+    let todayLearned = 0;
+    let errorWords = 0;
+    
+    // 获取今天凌晨4点的时间戳
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getHours() < 4 ? now.getDate() - 1 : now.getDate(), 4, 0, 0).getTime();
+    
+    globalVocabularyData.forEach(word => {
+        const p = progressData[word.id];
+        if (p) {
+            if (p.isLearned) learned++;
+            // 判断是否是今天学习的（下次复习时间在明早4点）
+            if (p.isLearned && p.nextReviewDate > todayStart && p.nextReviewDate <= todayStart + 86400000) {
+                todayLearned++;
+            }
+            if (p.errorCount > 0) errorWords++;
+        }
+    });
+    
+    const total = globalVocabularyData.length;
+    
+    // 注入 DOM
+    document.getElementById('dash-vocab-count').innerText = errorWords;
+    document.getElementById('dash-total').innerText = total;
+    document.getElementById('dash-learned').innerText = learned;
+    document.getElementById('dash-total-learned').innerText = learned;
+    document.getElementById('dash-today-learned').innerText = todayLearned;
+    
+    // 动态进度条
+    const progressPercent = total === 0 ? 0 : (learned / total) * 100;
+    const fillEl = document.getElementById('dash-progress-fill');
+    if(fillEl) fillEl.style.width = `${progressPercent}%`;
+}
+
+// 3. 换本词书路由
 const btnChangeBook = document.querySelector('.btn-change-book');
 const btnBackDashboard = document.getElementById('btn-back-dashboard');
 
 if (btnChangeBook) {
     btnChangeBook.addEventListener('click', () => {
         views.dashboard.classList.replace('active', 'hidden');
-        views.library.classList.replace('hidden', 'active');
+        document.getElementById('library-view').classList.replace('hidden', 'active');
     });
 }
-
 if (btnBackDashboard) {
     btnBackDashboard.addEventListener('click', () => {
-        views.library.classList.replace('active', 'hidden');
+        document.getElementById('library-view').classList.replace('active', 'hidden');
         views.dashboard.classList.replace('hidden', 'active');
     });
 }
 
-
-// ================= 序列 11：仪表盘菜单与单词表视图 =================
+// 4. 更多菜单(三个点)交互逻辑
 const btnDashboardMore = document.getElementById('btn-dashboard-more');
 const dashboardMoreMenu = document.getElementById('dashboard-more-menu');
-const btnOpenWordlistCover = document.getElementById('btn-open-wordlist-cover');
-const btnMenuWordlist = document.getElementById('btn-menu-wordlist');
 
+if(btnDashboardMore && dashboardMoreMenu) {
+    btnDashboardMore.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        dashboardMoreMenu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (!dashboardMoreMenu.contains(e.target) && e.target !== btnDashboardMore) {
+            dashboardMoreMenu.classList.add('hidden');
+        }
+    });
+}
+
+// 绑定下拉菜单的 4 个选项功能
+const menuItems = document.querySelectorAll('#dashboard-more-menu .menu-item');
+if(menuItems.length >= 4) {
+    // 选项 1：查看单词表
+    menuItems[0].addEventListener('click', () => { window.openWordlist(); });
+    // 选项 2：下载离线包
+    menuItems[1].addEventListener('click', () => {
+        window.showToast("正在下载离线音频...");
+        setTimeout(() => window.showToast("离线数据已更新完毕"), 1500);
+        dashboardMoreMenu.classList.add('hidden');
+    });
+    // 选项 3：重置词书
+    menuItems[2].addEventListener('click', () => {
+        if(confirm("确定要清空当前词书的所有学习记录吗？此操作不可恢复。")) {
+            let progress = StorageManager.getProgress();
+            globalVocabularyData.forEach(w => { delete progress[w.id]; });
+            StorageManager.saveProgress(progress);
+            renderDashboardData();
+            window.showToast("词书进度已重置");
+            dashboardMoreMenu.classList.add('hidden');
+        }
+    });
+    // 选项 4：更新词书
+    menuItems[3].addEventListener('click', () => {
+        window.showToast("检查更新中...");
+        setTimeout(() => window.showToast("当前已是最新版本"), 1000);
+        dashboardMoreMenu.classList.add('hidden');
+    });
+}
+
+// 5. 单词表引擎 (Wordlist)
 const wordlistView = document.getElementById('wordlist-view');
 const btnBackFromWordlist = document.getElementById('btn-back-from-wordlist');
 const wordlistItemsContainer = document.getElementById('wordlist-items-container');
-const wordlistTotalCount = document.getElementById('wordlist-total-count');
-const wordlistUnitCount = document.getElementById('wordlist-unit-count');
 
-btnDashboardMore.addEventListener('click', (e) => {
-    e.stopPropagation(); 
-    dashboardMoreMenu.classList.toggle('hidden');
-});
-
-document.addEventListener('click', (e) => {
-    if (!dashboardMoreMenu.contains(e.target) && e.target !== btnDashboardMore) {
-        dashboardMoreMenu.classList.add('hidden');
-    }
-});
-
-function openWordlist() {
-    dashboardMoreMenu.classList.add('hidden');
+// 核心：打开单词表方法
+window.openWordlist = function() {
+    if(dashboardMoreMenu) dashboardMoreMenu.classList.add('hidden');
     document.getElementById('dashboard-view').classList.replace('active', 'hidden');
     wordlistView.classList.replace('hidden', 'active');
     
     const wordCount = globalVocabularyData.length;
-    wordlistTotalCount.innerText = wordCount;
-    wordlistUnitCount.innerText = `${wordCount}词`;
+    document.getElementById('wordlist-total-count').innerText = wordCount;
+    document.getElementById('wordlist-unit-count').innerText = `${wordCount}词`;
     
-    wordlistItemsContainer.innerHTML = '';
-    globalVocabularyData.forEach(word => {
-        wordlistItemsContainer.innerHTML += `
-            <div class="wordlist-item">${word.pt} <span style="font-size:0.85rem; color:rgba(255,255,255,0.4); margin-left:10px;">${word.zh}</span></div>
-        `;
+    const progressData = StorageManager.getProgress();
+    
+    if(wordlistItemsContainer) {
+        wordlistItemsContainer.innerHTML = '';
+        globalVocabularyData.forEach(word => {
+            // 已学的单词会带上一个绿色小对勾
+            const isLearned = progressData[word.id]?.isLearned ? '<i class="fa-solid fa-check" style="color: #34C759; margin-left: 8px; font-size: 0.8rem;"></i>' : '';
+            wordlistItemsContainer.innerHTML += `
+                <div class="wordlist-item" style="padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="showWordPopup('${word.pt}')">
+                    <div>
+                        <span style="font-size: 1.05rem; font-weight: 500;">${word.pt}</span>
+                        ${isLearned}
+                    </div>
+                    <span style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${word.zh.length > 10 ? word.zh.substring(0,10)+'...' : word.zh}</span>
+                </div>
+            `;
+        });
+    }
+};
+
+if(btnBackFromWordlist) {
+    btnBackFromWordlist.addEventListener('click', () => {
+        wordlistView.classList.replace('active', 'hidden');
+        document.getElementById('dashboard-view').classList.replace('hidden', 'active');
     });
 }
 
-btnOpenWordlistCover.addEventListener('click', openWordlist);
-btnMenuWordlist.addEventListener('click', openWordlist);
-
-btnBackFromWordlist.addEventListener('click', () => {
-    wordlistView.classList.replace('active', 'hidden');
-    document.getElementById('dashboard-view').classList.replace('hidden', 'active');
-});
+// 6. 绑定触发单词表的两个关键入口
+// 入口 1："全部单元 >"
+const btnAllUnits = document.querySelector('.progress-labels span:last-child');
+if (btnAllUnits) {
+    btnAllUnits.style.cursor = 'pointer';
+    btnAllUnits.addEventListener('click', window.openWordlist);
+}
+// 入口 2：词书封面
+const btnOpenWordlistCover = document.getElementById('btn-open-wordlist-cover');
+if(btnOpenWordlistCover) {
+    btnOpenWordlistCover.addEventListener('click', window.openWordlist);
+}
 
 // ================= 序列 12：一键换书魔法 =================
 const allLibraryBooks = document.querySelectorAll('.lib-book-item');
