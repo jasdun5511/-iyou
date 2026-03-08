@@ -454,5 +454,31 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     transform: scale(0.95) !important;
 }
 
+/* ================= 魔法补丁：拼写闪烁黄线光标 ================= */
+
+/* 定义光标的锐利闪烁动画 */
+@keyframes blinkCaret {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.letter-box {
+    position: relative; /* 确保光标能完美悬浮在盒子中心 */
+}
+
+/* 当盒子被 JS 打上 has-cursor 标签时，召唤居中的闪烁黄线 */
+.letter-box.has-cursor::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 65%; /* 光标的高度比例 */
+    background-color: #EBB04D; /* 完美的橘金色 */
+    animation: blinkCaret 1s step-end infinite; /* step-end 制造出真实的机械闪烁感 */
+    border-radius: 2px;
+}
+
 
 
