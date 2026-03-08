@@ -1073,13 +1073,15 @@ document.getElementById('word-popup-overlay').addEventListener('click', () => {
 
 // ================= 序列 14：艾宾浩斯 Review 核心逻辑 =================
 
-// 1. 进入复习模式
+// 1. 进入复习模式 (带有真实的时间过滤器)
 document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () => {
     if (globalVocabularyData.length === 0) { alert("请先到词库选择一本词书哦！"); return; }
+    
     const progressData = StorageManager.getProgress();
+    const now = Date.now();
     const toReview = globalVocabularyData.filter(word => {
         const p = progressData[word.id];
-        return p && p.isLearned; // 实际使用时需加上时间判断 p.nextReviewDate <= Date.now()
+        return p && p.isLearned && p.nextReviewDate <= now; // 到了复习时间才拿出来
     });
     
     if (toReview.length === 0) { alert("🎉 恭喜！今天没有需要复习的单词，去学点新词吧！"); return; }
@@ -1096,7 +1098,7 @@ document.querySelector('.nav-card:nth-child(2)').addEventListener('click', () =>
     loadNextState();
 });
 
-// 2. 认识按钮 (阶段 -1 进入 -2)
+// 2. 认识按钮
 document.getElementById('btn-rev-know').addEventListener('click', () => {
     currentWordObj.stage = -2; 
     learningQueue.unshift(currentWordObj); 
@@ -1117,7 +1119,6 @@ window.handleReviewFail = function(reason) {
         
         showDetails();
         
-        // 动态单按钮居中
         const fDetail = document.getElementById('footer-detail');
         fDetail.classList.remove('dual-btns');
         const btnForgot = document.getElementById('btn-forgot');
@@ -1131,7 +1132,7 @@ document.getElementById('btn-rev-blur').addEventListener('click', () => window.h
 document.getElementById('btn-rev-forget').addEventListener('click', () => window.handleReviewFail('forget'));
 document.getElementById('btn-rev-wrong').addEventListener('click', () => window.handleReviewFail('wrong'));
 
-// 4. 核对成功 (完成复习晋级)
+// 4. 核对成功
 document.getElementById('btn-rev-next').addEventListener('click', () => {
     StorageManager.updateReviewResult(currentWordObj.id, true);
     learnedCount++;
