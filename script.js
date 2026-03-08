@@ -986,21 +986,19 @@ const btnNavDashboard = document.getElementById('btn-nav-dashboard');
 const btnNavHome = document.getElementById('btn-nav-home'); 
 const btnBackHome = document.getElementById('btn-back-home'); 
 
-// 点击底部导航进入仪表盘
 if(btnNavDashboard) {
     btnNavDashboard.addEventListener('click', () => {
         views.home.classList.replace('active', 'hidden');
-        views.dashboard.classList.replace('hidden', 'active');
+        document.getElementById('dashboard-view').classList.replace('hidden', 'active');
         btnNavDashboard.classList.add('active');
         btnNavHome.classList.remove('active');
-        renderDashboardData(); // 进入时刷新数据
+        renderDashboardData(); 
     });
 }
 
-// 从仪表盘返回首页
 if(btnBackHome) {
     btnBackHome.addEventListener('click', () => {
-        views.dashboard.classList.replace('active', 'hidden');
+        document.getElementById('dashboard-view').classList.replace('active', 'hidden');
         views.home.classList.replace('hidden', 'active');
         btnNavDashboard.classList.remove('active');
         btnNavHome.classList.add('active');
@@ -1008,7 +1006,7 @@ if(btnBackHome) {
     });
 }
 
-// 仪表盘右上角：刷新数据动效
+// 仪表盘刷新交互
 const dashRefreshBtn = document.querySelector('.dashboard-header .fa-arrow-rotate-right');
 if(dashRefreshBtn) {
     dashRefreshBtn.style.cursor = 'pointer';
@@ -1024,16 +1022,13 @@ if(dashRefreshBtn) {
     });
 }
 
-// 2. 核心：动态渲染仪表盘真实数据
+// 2. 核心：动态渲染仪表盘真实数据（包含时长与日历）
 window.renderDashboardData = function() {
     if (!globalVocabularyData) return;
     
+    // --- 单词数据处理 ---
     const progressData = StorageManager.getProgress();
-    let learned = 0;
-    let todayLearned = 0;
-    let errorWords = 0;
-    
-    // 获取今天凌晨4点的时间戳
+    let learned = 0, todayLearned = 0, errorWords = 0;
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getHours() < 4 ? now.getDate() - 1 : now.getDate(), 4, 0, 0).getTime();
     
@@ -1041,27 +1036,93 @@ window.renderDashboardData = function() {
         const p = progressData[word.id];
         if (p) {
             if (p.isLearned) learned++;
-            // 判断是否是今天学习的（下次复习时间在明早4点）
-            if (p.isLearned && p.nextReviewDate > todayStart && p.nextReviewDate <= todayStart + 86400000) {
-                todayLearned++;
-            }
+            if (p.isLearned && p.nextReviewDate > todayStart && p.nextReviewDate <= todayStart + 86400000) todayLearned++;
             if (p.errorCount > 0) errorWords++;
         }
     });
     
     const total = globalVocabularyData.length;
-    
-    // 注入 DOM
     document.getElementById('dash-vocab-count').innerText = errorWords;
     document.getElementById('dash-total').innerText = total;
     document.getElementById('dash-learned').innerText = learned;
     document.getElementById('dash-total-learned').innerText = learned;
     document.getElementById('dash-today-learned').innerText = todayLearned;
     
-    // 动态进度条
-    const progressPercent = total === 0 ? 0 : (learned / total) * 100;
     const fillEl = document.getElementById('dash-progress-fill');
-    if(fillEl) fillEl.style.width = `${progressPercent}%`;
+    if(fillEl) fillEl.style.width = `${total === 0 ? 0 : (learned / total) * 100}%`;
+
+    // --- 时长处理 ---
+    const stats = StorageManager.getStats();
+    const todayKey = getTodayDateKey();
+    const todayMins = Math.floor((stats.timeByDate[todayKey] || 0) / 60);
+    const totalMins = Math.floor((stats.totalTime || 0) / 60);
+
+    const dataValueSpans = document.querySelectorAll('.data-item .data-value span:first-child');
+    if(dataValueSpans.length >= 4) {
+        dataValueSpans[2].innerText = todayMins; // 今日总时长
+        dataValueSpans[3].innerText = totalMins; // 累计总时长
+    }
+
+    // --- 签到与日历处理 ---
+    let streak = 0;
+    let checkDate = new Date();
+    if (checkDate.getHours() < 4) checkDate.setDate(checkDate.getDate() - 1);
+    
+    // 计算连签 (回溯法)
+    if (stats.dates.includes(formatDateKey(checkDate))) {
+        streak++;
+        while(true) {
+            checkDate.setDate(checkDate.getDate() - 1);
+            if (stats.dates.includes(formatDateKey(checkDate))) streak++; else break;
+        }
+    } else {
+        checkDate.setDate(checkDate.getDate() - 1);
+        if (stats.dates.includes(formatDateKey(checkDate))) {
+            streak++;
+            while(true) {
+                checkDate.setDate(checkDate.getDate() - 1);
+                if (stats.dates.includes(formatDateKey(checkDate))) streak++; else break;
+            }
+        }
+    }
+
+    const streakTag = document.querySelector('.streak-tag');
+    if (streakTag) streakTag.innerHTML = `连续签到 ${streak} 天 <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>`;
+
+    // 渲染本周动态日历
+    const calContainer = document.querySelector('.calendar-days');
+    if (calContainer) {
+        calContainer.innerHTML = '';
+        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        
+        let curr = new Date();
+        if (curr.getHours() < 4) curr.setDate(curr.getDate() - 1);
+        let dayOfWeek = curr.getDay(); 
+        let diffToMonday = curr.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        let startOfWeek = new Date(curr.setDate(diffToMonday));
+
+        for (let i = 0; i < 7; i++) {
+            let d = new Date(startOfWeek);
+            d.setDate(d.getDate() + i);
+            let dKey = formatDateKey(d);
+            
+            let isToday = (dKey === todayKey);
+            let isStudied = stats.dates.includes(dKey);
+            
+            let cls = isToday ? 'cal-day active' : 'cal-day';
+            let dayText = isToday ? '今' : d.getDate();
+            let studiedStyle = (isStudied && !isToday) ? 'color: #EBB04D; font-weight: 600;' : '';
+            let dotHtml = isStudied ? `<div style="width: 4px; height: 4px; background: #EBB04D; border-radius: 50%; margin: 2px auto 0;"></div>` : `<div style="height: 6px;"></div>`;
+            
+            calContainer.innerHTML += `
+                <div class="${cls}">
+                    <span class="w">${dayNames[d.getDay()]}</span>
+                    <span class="d" style="${studiedStyle}">${dayText}</span>
+                    ${dotHtml}
+                </div>
+            `;
+        }
+    }
 }
 
 // 3. 换本词书路由
@@ -1070,14 +1131,14 @@ const btnBackDashboard = document.getElementById('btn-back-dashboard');
 
 if (btnChangeBook) {
     btnChangeBook.addEventListener('click', () => {
-        views.dashboard.classList.replace('active', 'hidden');
+        document.getElementById('dashboard-view').classList.replace('active', 'hidden');
         document.getElementById('library-view').classList.replace('hidden', 'active');
     });
 }
 if (btnBackDashboard) {
     btnBackDashboard.addEventListener('click', () => {
         document.getElementById('library-view').classList.replace('active', 'hidden');
-        views.dashboard.classList.replace('hidden', 'active');
+        document.getElementById('dashboard-view').classList.replace('hidden', 'active');
     });
 }
 
@@ -1097,18 +1158,14 @@ if(btnDashboardMore && dashboardMoreMenu) {
     });
 }
 
-// 绑定下拉菜单的 4 个选项功能
 const menuItems = document.querySelectorAll('#dashboard-more-menu .menu-item');
 if(menuItems.length >= 4) {
-    // 选项 1：查看单词表
     menuItems[0].addEventListener('click', () => { window.openWordlist(); });
-    // 选项 2：下载离线包
     menuItems[1].addEventListener('click', () => {
         window.showToast("正在下载离线音频...");
         setTimeout(() => window.showToast("离线数据已更新完毕"), 1500);
         dashboardMoreMenu.classList.add('hidden');
     });
-    // 选项 3：重置词书
     menuItems[2].addEventListener('click', () => {
         if(confirm("确定要清空当前词书的所有学习记录吗？此操作不可恢复。")) {
             let progress = StorageManager.getProgress();
@@ -1119,7 +1176,6 @@ if(menuItems.length >= 4) {
             dashboardMoreMenu.classList.add('hidden');
         }
     });
-    // 选项 4：更新词书
     menuItems[3].addEventListener('click', () => {
         window.showToast("检查更新中...");
         setTimeout(() => window.showToast("当前已是最新版本"), 1000);
@@ -1132,7 +1188,6 @@ const wordlistView = document.getElementById('wordlist-view');
 const btnBackFromWordlist = document.getElementById('btn-back-from-wordlist');
 const wordlistItemsContainer = document.getElementById('wordlist-items-container');
 
-// 核心：打开单词表方法
 window.openWordlist = function() {
     if(dashboardMoreMenu) dashboardMoreMenu.classList.add('hidden');
     document.getElementById('dashboard-view').classList.replace('active', 'hidden');
@@ -1147,7 +1202,6 @@ window.openWordlist = function() {
     if(wordlistItemsContainer) {
         wordlistItemsContainer.innerHTML = '';
         globalVocabularyData.forEach(word => {
-            // 已学的单词会带上一个绿色小对勾
             const isLearned = progressData[word.id]?.isLearned ? '<i class="fa-solid fa-check" style="color: #34C759; margin-left: 8px; font-size: 0.8rem;"></i>' : '';
             wordlistItemsContainer.innerHTML += `
                 <div class="wordlist-item" style="padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="showWordPopup('${word.pt}')">
@@ -1169,18 +1223,16 @@ if(btnBackFromWordlist) {
     });
 }
 
-// 6. 绑定触发单词表的两个关键入口
-// 入口 1："全部单元 >"
 const btnAllUnits = document.querySelector('.progress-labels span:last-child');
 if (btnAllUnits) {
     btnAllUnits.style.cursor = 'pointer';
     btnAllUnits.addEventListener('click', window.openWordlist);
 }
-// 入口 2：词书封面
 const btnOpenWordlistCover = document.getElementById('btn-open-wordlist-cover');
 if(btnOpenWordlistCover) {
     btnOpenWordlistCover.addEventListener('click', window.openWordlist);
 }
+
 
 // ================= 序列 12：一键换书魔法 =================
 const allLibraryBooks = document.querySelectorAll('.lib-book-item');
