@@ -547,3 +547,17 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     background-color: #FF3B30; /* 提示或拼错：变红 */
     transform: scale(1);
 }
+
+/* ================= 魔法补丁：修复音标提示导致布局下沉 ================= */
+#hint-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 44px !important;        /* 锁死高度，防止变形 */
+    min-width: 44px !important;     /* 给音标留出基础宽度 */
+    white-space: nowrap !important; /* 防止音标过长导致换行撑开容器 */
+}
+
+#hint-container span {
+    line-height: 1 !important;      /* 消除文字自带的上下行高间距 */
+}
