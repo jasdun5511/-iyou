@@ -728,7 +728,6 @@ function loadNextSpellWord() {
     updateSpellUI();
 }
 
-
 function updateSpellUI() {
     els.spellProgress.innerText = `${spellCurrentIndex}/${spellTotalInRound}`;
     els.spellMeaning.innerText = `${currentSpellWord.pos} ${currentSpellWord.zh}`;
@@ -738,11 +737,11 @@ function updateSpellUI() {
     
     els.letterBoxes.innerHTML = '';
     for (let i = 0; i < currentSpellWord.pt.length; i++) {
-        // 【魔法修改 1】：默认把所有的空盒子强行隐藏 (display: none)，不让它们占空间
+        // 默认把所有的空盒子强行隐藏 (display: none)，不让它们占空间
         els.letterBoxes.innerHTML += `<div class="letter-box" style="display: none;"></div>`;
     }
     
-    // 【魔法修改 2】：只显示第 1 个带有光标的盒子。因为只有一个盒子，它会被 flex 容器完美钉在屏幕正中心！
+    // 只显示第 1 个带有光标的盒子。因为只有一个盒子，它会被 flex 容器完美钉在屏幕正中心！
     if (els.letterBoxes.children.length > 0) {
         els.letterBoxes.children[0].classList.add('has-cursor');
         els.letterBoxes.children[0].style.display = 'flex';
@@ -751,12 +750,34 @@ function updateSpellUI() {
     setTimeout(() => { els.hiddenInput.focus(); }, 50);
 }
 
+els.hiddenInput.addEventListener('compositionstart', () => { isComposing = true; });
+els.hiddenInput.addEventListener('compositionend', (e) => { 
+    isComposing = false; 
+    syncInputToSlots(e.target.value); 
+});
+
+els.hiddenInput.addEventListener('input', (e) => {
+    if (isSpellChecking) return; 
+    syncInputToSlots(e.target.value);
+});
+
+els.hiddenInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter' && !isSpellChecking && els.hiddenInput.value.length > 0) {
+        checkSpelling();
+    }
+});
+
+document.getElementById('btn-submit-spell').addEventListener('click', () => {
+    if (!isSpellChecking && els.hiddenInput.value.length > 0) checkSpelling();
+    else if (els.hiddenInput.value.length === 0) els.hiddenInput.focus();
+});
+
 function syncInputToSlots(val) {
     const boxes = els.letterBoxes.children;
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].innerText = '';
         boxes[i].classList.remove('filled', 'has-cursor');
-        // 【魔法修改 3】：每次敲击键盘同步前，先把所有盒子隐藏
+        // 每次敲击键盘同步前，先把所有盒子隐藏
         boxes[i].style.display = 'none'; 
     }
     
@@ -764,18 +785,22 @@ function syncInputToSlots(val) {
         if (boxes[i]) {
             boxes[i].innerText = val[i];
             boxes[i].classList.add('filled');
-            // 【魔法修改 4】：显示已经打出字母的盒子
+            // 显示已经打出字母的盒子
             boxes[i].style.display = 'flex';
         }
     }
     
-    // 【魔法修改 5】：显示下一个待输入的光标盒子。
-    // 由于只显示了已打的字母 + 1个光标，Flexbox 会自动把它们作为一个整体居中，实现“从中间向两边展开”的打字机特效！
+    // 显示下一个待输入的光标盒子。
+    // 由于只显示了已打的字母 + 1个光标，Flexbox 会自动把它们作为一个整体居中
     if (val.length < boxes.length) {
         boxes[val.length].classList.add('has-cursor');
         boxes[val.length].style.display = 'flex';
     }
 }
+
+document.querySelector('.spell-main-content').addEventListener('click', () => {
+    if(!isSpellChecking) els.hiddenInput.focus();
+});
 
 function checkSpelling() {
     if (isSpellChecking) return;
@@ -785,7 +810,7 @@ function checkSpelling() {
     const targetWord = currentSpellWord.pt.toLowerCase();
     const boxes = els.letterBoxes.children;
     
-    // 【核心新增】：在核对答案（按下回车或点击确认）的瞬间，把所有盒子都强行显示出来，用来展示正确的完整单词。
+    // 在核对答案瞬间，把所有盒子都强行显示出来，展示完整的单词
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].classList.remove('has-cursor');
         boxes[i].style.display = 'flex'; 
@@ -833,6 +858,7 @@ els.hintContainer.addEventListener('click', () => {
     syncInputToSlots(currentSpellWord.pt);
     checkSpelling(); 
 });
+
 
 
 // ================= 序列 9：数据仪表盘路由与动态统计 =================
