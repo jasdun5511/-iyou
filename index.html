@@ -1,295 +1,433 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Splendid Vocabulary</title>
+    <title>Meu Vocabulário</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div id="app">
+        
         <div id="home-view" class="view active">
-            <header class="home-header">
-                <h1>Splendid</h1>
-                <div class="user-avatar"></div>
-            </header>
-            <main class="home-main">
-                <div class="daily-card" id="btn-learn">
-                    <div class="card-left">
-                        <div class="book-cover core" id="btn-open-wordlist-cover">
-                            <span class="cover-text" id="dash-cover-text">CORE<br>VOCAB</span>
-                        </div>
-                        <div class="book-info">
-                            <h2 id="dash-book-title-text">核心葡语词汇</h2>
-                            <p>今日待学：<span id="learn-count" class="highlight">0</span> 词</p>
-                        </div>
-                    </div>
-                    <div class="card-right">
-                        <button class="btn-primary-small">开始</button>
-                    </div>
+            <h1 class="home-title">Splendid</h1>
+            <div class="home-bottom">
+                <div class="cards-container">
+                    <div class="nav-card" id="btn-learn"><h3>Learn</h3><span class="nav-count" id="learn-count">0</span></div>
+                    <div class="nav-card" id="btn-review"><h3>Review</h3><span class="nav-count" id="review-count">0</span></div>
                 </div>
-                
-                <div class="nav-grid">
-                    <div class="nav-card">
-                        <div class="nav-icon">📖</div>
-                        <div class="nav-text">
-                            <h3>词书库</h3>
-                            <p class="nav-subtitle">更换学习内容</p>
-                        </div>
-                    </div>
-                    <div class="nav-card" id="btn-review">
-                        <div class="nav-icon">🔄</div>
-                        <div class="nav-text">
-                            <h3>智能复习</h3>
-                            <p class="nav-subtitle" id="review-count">需复习 0 词</p>
-                        </div>
-                    </div>
-                </div>
-            </main>
-            <footer class="bottom-nav">
-                <div class="nav-item active" id="btn-nav-home">
-                    <div class="nav-icon-sm">🏠</div><span>学习</span>
-                </div>
-                <div class="nav-item" id="btn-nav-dashboard">
-                    <div class="nav-icon-sm">📊</div><span>统计</span>
-                </div>
-            </footer>
+                <nav class="bottom-nav">
+                    <i class="fa-solid fa-layer-group active" id="btn-nav-home"></i>
+                    <i class="fa-solid fa-box-archive"></i>
+                    <i class="fa-solid fa-chart-line" id="btn-nav-dashboard"></i>
+                </nav>
+            </div>
         </div>
 
         <div id="learning-view" class="view hidden">
-            <header class="learn-header">
-                <button id="btn-back" class="btn-icon">←</button>
-                <div class="progress-bar">
-                    <span id="progress-text">1/20</span>
-                </div>
-                <div style="width: 24px;"></div>
+            <header class="top-bar">
+                <div class="left" id="btn-back"><i class="fa-solid fa-chevron-left"></i> <span id="progress-text">1/3</span></div>
+                <div class="right"><i class="fa-solid fa-rotate-left"></i><i class="fa-regular fa-star"></i><i class="fa-solid fa-fire-flame-curved"></i><i class="fa-solid fa-ellipsis"></i></div>
             </header>
-            
-            <main class="learn-main">
-                <div class="word-display">
-                    <h1 id="word-pt">Word</h1>
-                    <div class="word-meta">
-                        <span id="phonetic-container" class="phonetic"><span class="speaker-icon">🔊</span> <span id="word-phonetic-text"></span></span>
-                        <span id="word-pos" class="pos-tag"></span>
+
+            <main class="content-area">
+                <div class="word-section">
+                    <div class="word-row">
+                        <h1 id="word-pt">mesmo</h1>
+                        <span id="word-success-badge" class="success-badge hidden"><i class="fa-solid fa-circle-check"></i></span>
+                        <div class="progress-dots" id="progress-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
                     </div>
-                    <h2 id="word-zh-title" class="zh-title"></h2>
+                    <div class="phonetic-row" id="phonetic-container">
+                        <span class="accent-tag">葡 <i class="fa-solid fa-volume-low"></i></span><span id="word-phonetic-text">/'mez.mu/</span>
+                    </div>
+                    <div id="skeleton-bars" class="skeleton-bars hidden">
+                        <div class="skeleton-line short"></div><div class="skeleton-line long"></div>
+                    </div>
+                    <div id="definition-area" class="hidden">
+                        <div class="def-line"><span id="word-pos" class="pos-grey"></span> <span id="word-zh-title" class="zh-white"></span></div>
+                    </div>
+                </div>
+
+                <div id="quiz-area">
+                    <p class="hint-text">先回想词义再选择，想不起来「看答案」</p>
+                    <div class="options-list">
+                        <div class="option" onclick="checkAnswer(0)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(1)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(2)"><div class="opt-content"></div></div>
+                        <div class="option" onclick="checkAnswer(3)"><div class="opt-content"></div></div>
+                    </div>
+                </div>
+
+                <div id="recognize-area" class="hidden">
+                    <div id="recognize-sentence-card" class="card sentence-card hidden"><p id="recognize-example-pt" class="en-text">...</p></div>
+                    <div id="recognize-blind-text" class="hidden"><p class="hint-text" style="text-align: center; margin-top: 100px;">本词最后一关😉：请在无提示的情况下判断</p></div>
+                    <div class="hint-btn-container" id="btn-hint"><div class="bulb-icon"><i class="fa-regular fa-lightbulb"></i></div><span>提示一下</span></div>
+                </div>
+
+                <div id="detail-area" class="hidden">
+                    <div class="card sentence-card" style="position: relative;">
+                        <p id="word-example-pt" class="en-text">...</p>
+                        <p id="word-example-zh" class="zh-text">...</p>
+                        <div class="expand-card-btn" id="btn-open-immersive">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="3" ry="3"></rect>
+                                <line x1="4" y1="16" x2="20" y2="16"></line>
+                            </svg>
+                        </div>
+                    </div>
                     
-                    <div id="progress-dots" class="dots-container">
-                        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    <div class="card phrases-card">
+                        <div id="tab-content-container"></div>
+                        <div class="card-footer-tabs">
+                            <div class="tabs-left">
+                                <span class="tab active" data-target="phrases">词组搭配</span>
+                                <span class="tab" data-target="derivatives">派生</span>
+                                <span class="tab" data-target="roots">词根</span>
+                                <span class="tab" data-target="synonyms">近义</span>
+                                <span class="tab" data-target="antonyms">反义</span>
+                            </div>
+                            <div class="tabs-right"><i class="fa-solid fa-pen"></i><i class="fa-solid fa-bars-staggered"></i></div>
+                        </div>
                     </div>
-                    <div id="word-success-badge" class="success-badge hidden">✓ 熟悉</div>
-                </div>
-
-                <div id="skeleton-bars" class="skeleton-container hidden">
-                    <div class="skeleton-bar" style="width: 80%;"></div>
-                    <div class="skeleton-bar" style="width: 60%;"></div>
-                    <div class="skeleton-bar" style="width: 90%;"></div>
-                </div>
-
-                <div id="quiz-area" class="interaction-area hidden">
-                    <div class="options-container">
-                        <button class="option"><div class="opt-content"></div></button>
-                        <button class="option"><div class="opt-content"></div></button>
-                        <button class="option"><div class="opt-content"></div></button>
-                        <button class="option"><div class="opt-content"></div></button>
-                    </div>
-                </div>
-
-                <div id="recognize-area" class="interaction-area hidden">
-                    <div id="recognize-sentence-card" class="sentence-card">
-                        <p id="recognize-example-pt" class="en-sentence"></p>
-                    </div>
-                    <div id="recognize-blind-text" class="blind-text hidden">努力回想一下释义...</div>
-                </div>
-
-                <div id="definition-area" class="definition-area hidden">
-                    <button id="btn-open-immersive" class="btn-immersive">
-                        <span class="im-icon">✨</span> 沉浸解析
-                    </button>
-                    <div class="example-box">
-                        <p id="word-example-pt" class="en-sentence"></p>
-                        <p id="word-example-zh" class="zh-sentence"></p>
-                    </div>
-                </div>
-
-                <div id="detail-area" class="detail-area hidden">
-                    <div class="tabs">
-                        <button class="tab active" data-target="phrases">词组</button>
-                        <button class="tab" data-target="synonyms">近义</button>
-                        <button class="tab" data-target="roots">词根</button>
-                    </div>
-                    <div id="tab-content-container" class="tab-content"></div>
                 </div>
             </main>
 
-            <footer id="footer-quiz" class="learn-footer hidden"></footer>
+            <footer class="bottom-action">
+                <div id="footer-quiz" class="action-group hidden">
+                    <div class="action-item" onclick="showAnswerDirectly()"><span>看答案</span><div class="line red"></div></div>
+                </div>
+                <div id="footer-recognize" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-recognize"><span>认识</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-not-recognize"><span>不认识</span><div class="line red"></div></div>
+                </div>
+                <div id="footer-detail" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-next"><span>下一词</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-forgot"><span>记错了</span><div class="line red"></div></div>
+                </div>
+
+                <div id="footer-review-assess" class="action-group hidden" style="display: flex; gap: 8px;">
+                    <div class="action-item" id="btn-rev-know"><span>认识</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-rev-blur"><span>模糊</span><div class="line" style="background: #EBB04D;"></div></div>
+                    <div class="action-item" id="btn-rev-forget"><span>忘记了</span><div class="line red"></div></div>
+                </div>
+                <div id="footer-review-verify" class="action-group dual-btns hidden">
+                    <div class="action-item" id="btn-rev-next"><span>下一词</span><div class="line green"></div></div>
+                    <div class="action-item" id="btn-rev-wrong"><span>记错了</span><div class="line red"></div></div>
+                </div>
+            </footer>
+        </div>
+
+        <div id="immersive-modal" class="view hidden" style="z-index: 50;">
+            <div class="immersive-bg" id="immersive-bg"></div>
+            <div class="immersive-content-wrapper">
+                <div class="immersive-upper">
+                    <div class="upper-header">
+                        <span class="source-tag" id="upper-source-tag">词典例句</span>
+                        <i class="fa-solid fa-ellipsis" style="color: rgba(255,255,255,0.6);"></i>
+                    </div>
+                    <div class="slider-window" id="upper-window">
+                        <div class="slider-track" id="upper-track"></div>
+                    </div>
+                    <div class="upper-pagination" id="upper-dots"></div>
+                </div>
+                <div class="immersive-lower">
+                    <div class="slider-window" id="lower-window" style="height: 100%;">
+                        <div class="slider-track" id="lower-track"></div>
+                    </div>
+                    <div class="global-pagination" id="global-dots"></div>
+                </div>
+                <div class="immersive-footer">
+                    <div class="im-footer-btn im-btn-next-word" id="im-btn-next-word">
+                        <i class="fa-solid fa-forward-step" style="font-size: 0.9rem;"></i> 下一词
+                    </div>
+                    <div class="im-footer-btn im-btn-close" id="im-btn-close">
+                        收起卡片 <i class="fa-solid fa-angle-down" style="font-size: 0.9rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="transition-view" class="view hidden" style="z-index: 55;">
+            <div class="completion-container">
+                <h1 class="completion-title">首组单词辨识完成</h1>
+                <p class="completion-reward">+20 酷币</p>
+                <div class="completion-emoji">😀</div>
+                <p class="completion-hint">辨识后拼写，更能加强记忆哦</p>
+                <div class="completion-actions">
+                    <button id="btn-start-spell" class="btn-primary">开始拼写</button>
+                    <button id="btn-skip-spell" class="btn-outline">小结</button>
+                </div>
+                <div class="bottom-setting">
+                    <span class="circle-icon"></span> 学习时不再拼写
+                </div>
+            </div>
+        </div>
+
+        <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
             
-            <footer id="footer-recognize" class="learn-footer dual-btns hidden">
-                <button id="btn-not-recognize" class="btn-secondary">不认识</button>
-                <button id="btn-hint" class="btn-secondary">提示</button>
-                <button id="btn-recognize" class="btn-primary">认识</button>
-            </footer>
+            <header class="spell-header">
+                <i class="fa-solid fa-xmark" id="btn-close-spell"></i>
+                <span id="spell-progress-text" class="spell-progress-simple">1/2</span>
+            </header>
 
-            <footer id="footer-detail" class="learn-footer dual-btns hidden">
-                <button id="btn-forgot" class="btn-secondary" style="flex: 0.5;">忘了</button>
-                <button id="btn-next" class="btn-primary" style="flex: 1.5;">下一个</button>
-            </footer>
-
-            <footer id="footer-review-assess" class="learn-footer dual-btns hidden">
-                <button id="btn-rev-blur" class="btn-secondary">模糊</button>
-                <button id="btn-rev-forget" class="btn-secondary">忘了</button>
-                <button id="btn-rev-know" class="btn-primary">认识</button>
-            </footer>
-
-            <footer id="footer-review-verify" class="learn-footer dual-btns hidden">
-                <button id="btn-rev-wrong" class="btn-secondary">记错了</button>
-                <button id="btn-rev-next" class="btn-primary">下一个</button>
-            </footer>
-        </div>
-
-        <div id="immersive-modal" class="view hidden immersive-view">
-            <button id="im-btn-close" class="im-close-btn">×</button>
-            <div id="upper-window" class="im-upper-half">
-                <div class="im-upper-tag" id="upper-source-tag">来源</div>
-                <div id="upper-track" class="slider-track"></div>
-                <div id="upper-dots" class="im-dots"></div>
-            </div>
-            <div id="lower-window" class="im-lower-half">
-                <div id="global-dots" class="im-global-dots"></div>
-                <div id="lower-track" class="slider-track"></div>
-                <div class="im-footer">
-                    <button id="im-btn-next-word" class="im-btn-primary">继续学习</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="transition-view" class="view hidden">
-            <div class="transition-content">
-                <div class="success-icon-large">🎉</div>
-                <h2>本组认知完成</h2>
-                <p>接下来进行拼写强化，彻底掌握它们！</p>
-                <div class="transition-actions">
-                    <button id="btn-start-spell" class="btn-primary-large">开始拼写</button>
-                    <button id="btn-skip-spell" class="btn-text">跳过，直接看小结</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="spelling-view" class="view hidden">
-            <div class="spell-header">
-                <span id="spell-progress-text">1/10</span>
-                <button id="btn-close-spell">×</button>
-            </div>
-            <div class="spell-main-content">
+            <main class="spell-main-content">
                 <div class="meaning-area">
-                    <p id="spell-word-meaning"></p>
+                    <p id="spell-word-meaning">adv. 甚至，即使</p>
                 </div>
+
                 <div class="input-container">
-                    <div id="letter-boxes" class="letter-boxes"></div>
-                    <input type="text" id="hidden-input" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <div id="letter-boxes" class="letter-boxes">
+                        </div>
+                    <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 </div>
-            </div>
-            <div class="spell-footer">
+
+                
+            </main>
+
+            <footer class="spell-footer">
                 <div id="hint-container" class="hint-container">
-                    <span id="bulb-icon">💡</span>
+                    <div id="bulb-icon" class="bulb-icon">
+                        <i class="fa-regular fa-lightbulb"></i>
+                    </div>
                 </div>
-                <button id="btn-submit-spell" class="btn-submit-spell">✓</button>
-            </div>
+                <div id="btn-submit-spell" class="submit-icon">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+            </footer>
         </div>
 
-        <div id="summary-view" class="view hidden">
-            <div class="summary-header">
+        <div id="summary-view" class="view hidden" style="z-index: 70; background-color: #121212;">
+            <header class="summary-header">
                 <h2>学习小结</h2>
-                <p>本次共学习 <span id="total-words-count" class="highlight">0</span> 词</p>
-            </div>
-            <div class="summary-content">
-                <div id="summary-list" class="summary-list"></div>
-            </div>
+                <p>本次共学习 <span id="total-words-count">10</span> 个单词</p>
+            </header>
+            <div class="summary-list" id="summary-list"></div>
             <div class="summary-footer">
-                <button id="btn-finish" class="btn-primary-large">完成</button>
+                <button id="btn-finish" class="primary-btn-summary">完成学习</button>
             </div>
         </div>
 
-        <div id="dashboard-view" class="view hidden">
-            <header class="home-header">
-                <button id="btn-back-home" class="btn-icon">←</button>
-                <h1>数据统计</h1>
-                <button id="btn-dashboard-more" class="btn-icon">⋮</button>
-                <div id="dashboard-more-menu" class="more-menu hidden">
-                    <div class="menu-item" id="btn-menu-wordlist">查看单词表</div>
-                </div>
+        <div id="dashboard-view" class="view hidden" style="z-index: 80; background-color: #1A1D27; overflow-y: auto; padding-bottom: 50px;">
+            <header class="dashboard-header">
+                <i class="fa-solid fa-chevron-left" id="btn-back-home" style="cursor: pointer;"></i>
+                <span class="dash-title">仪表盘</span>
+                <i class="fa-solid fa-arrow-rotate-right" style="color: rgba(255,255,255,0.6);"></i>
             </header>
+
             <main class="dashboard-main">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-val" id="dash-today-learned">0</div>
-                        <div class="stat-label">今日已学</div>
+                <section class="dash-section">
+                    <div class="dash-section-header">
+                        <h2>正在学习</h2>
+                        <span class="btn-change-book">换本词书</span>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-val" id="dash-vocab-count">0</div>
-                        <div class="stat-label">生词本</div>
+                    
+                    <div class="dash-card learning-card">
+                        <div class="book-row">
+                            <div class="book-cover cover-orange" id="btn-open-wordlist-cover" style="cursor: pointer;">
+                                <span id="dash-cover-text">PORTUGUÊS</span>
+                            </div>
+                            <div class="book-info" style="position: relative;">
+                                <h3><span id="dash-book-title-text">核心葡语词汇</span> <i class="fa-solid fa-ellipsis-vertical" id="btn-dashboard-more" style="float: right; color: rgba(255,255,255,0.4); cursor: pointer; padding: 0 10px;"></i></h3>
+                                <div class="vocab-tag">
+                                    <i class="fa-regular fa-circle-check" style="color: #EBB04D;"></i> 生词本 <span id="dash-vocab-count">0</span>
+                                </div>
+                                
+                                <div id="dashboard-more-menu" class="hidden" style="position: absolute; right: 0; top: 25px; background: #2A2E42; border-radius: 12px; padding: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 10; width: 160px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="menu-item" id="btn-menu-wordlist"><i class="fa-solid fa-file-lines"></i> 查看词书单词表</div>
+                                    <div class="menu-item"><i class="fa-solid fa-cloud-arrow-down"></i> 下载离线单词包</div>
+                                    <div class="menu-item"><i class="fa-solid fa-rotate-left"></i> 重学词书</div>
+                                    <div class="menu-item"><i class="fa-solid fa-rotate"></i> 更新词书</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="progress-area">
+                            <div class="progress-labels">
+                                <span style="color: rgba(255,255,255,0.6);">学习范围</span>
+                                <span>全部单元 <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem;"></i></span>
+                            </div>
+                            <div class="dash-progress-bg">
+                                <div class="dash-progress-fill" id="dash-progress-fill" style="width: 0%;"></div>
+                            </div>
+                            <div class="progress-stats">
+                                <span style="color: rgba(255,255,255,0.6);">已学习 <span id="dash-learned" style="color: #fff;">0</span></span>
+                                <span style="color: rgba(255,255,255,0.6);">总词数 <span id="dash-total" style="color: #fff;">0</span></span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="progress-section">
-                    <h3>学习进度</h3>
-                    <div class="progress-bar-large">
-                        <div id="dash-progress-fill" class="progress-fill" style="width: 0%;"></div>
+                </section>
+
+                <section class="dash-section">
+                    <div class="dash-section-header">
+                        <h2>我的数据</h2>
                     </div>
-                    <div class="progress-labels">
-                        <span>已学 <span id="dash-learned">0</span></span>
-                        <span>总词数 <span id="dash-total">0</span></span>
+                    
+                    <div class="dash-card data-card">
+                        <div class="data-overview-title">
+                            <span>概览</span>
+                            <i class="fa-solid fa-chevron-right" style="color: rgba(255,255,255,0.3); font-size: 0.9rem;"></i>
+                        </div>
+                        
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-solid fa-bars-staggered" style="color: #EBB04D;"></i> 今日学习&复习</div>
+                                <div class="data-value"><span id="dash-today-learned">0</span> <span class="unit">词</span></div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-solid fa-arrow-trend-up" style="color: #E74C3C;"></i> 累计学习</div>
+                                <div class="data-value"><span id="dash-total-learned">0</span> <span class="unit">词</span></div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-regular fa-clock" style="color: #EBB04D;"></i> 今日总时长</div>
+                                <div class="data-value"><span>0</span> <span class="unit">分钟</span></div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label"><i class="fa-solid fa-clock-rotate-left" style="color: #E74C3C;"></i> 累计时长</div>
+                                <div class="data-value"><span>12</span> <span class="unit">分钟</span></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
+
+                <section class="dash-section">
+                    <div class="dash-card calendar-card">
+                        <div class="calendar-header">
+                            <span>日历</span>
+                            <span class="streak-tag">连续签到 1 天 <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i></span>
+                        </div>
+                        <div class="calendar-days">
+                            <div class="cal-day"><span class="w">MON</span><span class="d">2</span></div>
+                            <div class="cal-day"><span class="w">TUE</span><span class="d">3</span></div>
+                            <div class="cal-day"><span class="w">WED</span><span class="d">4</span></div>
+                            <div class="cal-day active"><span class="w">THU</span><span class="d">今</span></div>
+                            <div class="cal-day"><span class="w">FRI</span><span class="d">6</span></div>
+                            <div class="cal-day"><span class="w">SAT</span><span class="d">7</span></div>
+                            <div class="cal-day"><span class="w">SUN</span><span class="d">8</span></div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
 
-        <div id="library-view" class="view hidden">
-            <header class="home-header">
-                <button id="btn-back-dashboard" class="btn-icon">←</button>
-                <h1>词书库</h1>
+        <div id="library-view" class="view hidden" style="z-index: 90; background-color: #1A1D27; display: flex; flex-direction: column;">
+            
+            <header class="library-header">
+                <i class="fa-solid fa-chevron-left" id="btn-back-dashboard" style="cursor: pointer; padding: 10px 10px 10px 0;"></i>
+                <span class="library-title">词库</span>
                 <div style="width: 24px;"></div>
             </header>
-            <main class="library-main">
-                <div class="lib-book-item" data-file="book_core" data-title="核心葡语词汇" data-cover="core" data-cover-text="CORE\nVOCAB">
-                    <div class="book-cover core">
-                        <span class="cover-text">CORE<br>VOCAB</span>
-                    </div>
-                    <div class="lib-book-info">
-                        <h3>核心葡语词汇</h3>
-                        <p class="lib-book-meta"><span>100词</span></p>
-                    </div>
-                </div>
-                <div class="lib-book-item" data-file="book_travel" data-title="旅游实用短语" data-cover="travel" data-cover-text="TRAVEL\nPHRASES">
-                    <div class="book-cover travel">
-                        <span class="cover-text">TRAVEL<br>PHRASES</span>
-                    </div>
-                    <div class="lib-book-info">
-                        <h3>旅游实用短语</h3>
-                        <p class="lib-book-meta"><span>50词</span></p>
-                    </div>
-                </div>
-            </main>
-        </div>
 
-        <div id="wordlist-view" class="view hidden">
-            <header class="home-header" style="background: #1a1a1a; z-index: 10;">
-                <button id="btn-back-from-wordlist" class="btn-icon">←</button>
-                <h1 style="font-size: 1.1rem;">单词表</h1>
-                <div style="width: 24px;"></div>
-            </header>
-            <div class="wordlist-stats-bar">
-                <span>共 <span id="wordlist-total-count">0</span> 词</span>
-                <span id="wordlist-unit-count">0词</span>
+            <div class="library-search-container">
+                <div class="library-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="输入词书名称搜索">
+                </div>
             </div>
-            <main class="wordlist-main" id="wordlist-items-container"></main>
+
+            <div class="library-tabs-container">
+                <div class="library-primary-tabs">
+                    <span class="active">我的</span>
+                    <span>大学</span>
+                    <span>高中</span>
+                    <span>初中</span>
+                    <span>小学</span>
+                    <span>词组<span class="hot-badge">HOT</span></span>
+                    <span>留学</span>
+                    <span>其他</span>
+                </div>
+                <div class="library-secondary-tabs">
+                    <span class="active">全部</span>
+                    <span>单词本</span>
+                    <span>学过</span>
+                    <span>自制</span>
+                    <span>已购</span>
+                </div>
+            </div>
+
+            <div class="library-content-wrapper">
+                
+                <div class="lib-book-item" data-file="book_core" data-title="核心葡语词汇" data-cover="cover-orange" data-cover-text="PORTUGUÊS">
+                    <div class="lib-book-cover cover-orange">
+                        <div class="cover-text" style="font-size: 0.6rem; transform: rotate(-90deg); letter-spacing: 2px;">PORTUGUÊS</div>
+                    </div>
+                    <div class="lib-book-info">
+                        <h4>核心葡语词汇</h4>
+                        <p>基础高频词</p>
+                        <div class="lib-book-meta">
+                            <span>2 词</span>
+                            <span class="tag-learning">正在学习</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lib-book-item" data-file="book_hujiao" data-title="沪教版六年级下册" data-cover="cover-blue" data-cover-text="沪教版\n英语">
+                    <div class="lib-book-cover cover-blue">
+                        <div class="cover-text">沪教版<br>英语</div>
+                    </div>
+                    <div class="lib-book-info">
+                        <h4>沪教版六年级下册（新版）</h4>
+                        <p>课改新版</p>
+                        <div class="lib-book-meta">
+                            <span>274 词</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lib-book-item" data-file="book_ielts" data-title="雅思词汇 乱序版" data-cover="cover-purple" data-cover-text="IELTS">
+                    <div class="lib-book-cover cover-purple">
+                        <div class="cover-text">IELTS<br><span style="font-size: 0.5rem; font-weight: normal;">雅思词汇</span></div>
+                    </div>
+                    <div class="lib-book-info">
+                        <h4>雅思词汇 词根联想记忆法</h4>
+                        <p>2018.11 旧版 乱序版</p>
+                        <div class="lib-book-meta">
+                            <span>3835 词</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="wordlist-view" class="view hidden" style="z-index: 95; background-color: #1A1D27; display: flex; flex-direction: column;">
+            
+            <header class="wordlist-header">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fa-solid fa-chevron-left" id="btn-back-from-wordlist" style="cursor: pointer; padding: 10px 10px 10px 0;"></i>
+                    <span class="wordlist-title">核心葡语词汇</span>
+                </div>
+                <div class="wordlist-actions">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-regular fa-eye"></i>
+                </div>
+            </header>
+
+            <div class="wordlist-meta">
+                <span class="bar"></span> <span id="wordlist-total-count">0</span>词
+            </div>
+
+            <div class="wordlist-content">
+                <div class="wordlist-group">
+                    <div class="wordlist-group-title">Unit 1 <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-left: 8px;" id="wordlist-unit-count">0词</span></div>
+                    <div id="wordlist-items-container">
+                        </div>
+                </div>
+            </div>
+            
         </div>
 
         <div id="word-popup-modal" class="hidden">
-            <div id="word-popup-overlay" class="popup-overlay"></div>
-            <div class="popup-content">
-                <h3 id="wp-word"></h3>
-                <p id="wp-phonetic" style="color:rgba(255,255,255,0.6); font-size:0.9rem; margin-bottom:15px;"></p>
-                <div id="wp-meanings"></div>
+            <div class="word-popup-overlay" id="word-popup-overlay"></div>
+            <div class="word-popup-content">
+                <div class="wp-header">
+                    <h2 id="wp-word">express</h2>
+                    <i class="fa-regular fa-star"></i>
+                </div>
+                <div class="wp-phonetic" id="wp-phonetic">/ɪkˈspres/</div>
+                <div class="wp-meanings" id="wp-meanings">
+                    </div>
+                <div class="wp-footer">查看详细释义 <i class="fa-solid fa-chevron-right"></i></div>
             </div>
         </div>
 
