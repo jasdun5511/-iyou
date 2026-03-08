@@ -1072,3 +1072,28 @@ if (btnSpellClear) {
         }
     });
 }
+
+/* ================= 魔法补丁：拼写页布局顺序对调 ================= */
+.spell-main-content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 1. 把输入框提上去，作为第一视觉焦点 */
+.input-container {
+    order: 1 !important;
+    margin-bottom: 40px !important; /* 给下方的释义留出呼吸感 */
+}
+
+/* 2. 把中文释义降下来，作为辅助提示 */
+.meaning-area {
+    order: 2 !important;
+    margin-bottom: 30px !important; /* 清除原本巨大的 80px 底部边距 */
+}
+
+/* 3. 提交提示文字依然乖乖呆在最底部 */
+.submit-hint {
+    order: 3 !important;
+    margin-top: 0 !important; 
+}
+
