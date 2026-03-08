@@ -22,11 +22,9 @@ let isComposing = false;
 
 let currentBookName = '核心葡语词汇';
 
-// 复习专用全局状态
 let isReviewMode = false;
 let currentReviewWords = [];
 
-// --- 核心：全局进度管理器 (融入艾宾浩斯遗忘曲线) ---
 const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30, 60]; 
 
 const StorageManager = {
@@ -52,7 +50,7 @@ const StorageManager = {
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
         progress[wordId].isLearned = true;
         progress[wordId].ebStage = 0; 
-        progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000; 
+        progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000; // 明天复习
         this.saveProgress(progress);
     },
     updateReviewResult: function(wordId, isSuccess) {
@@ -88,31 +86,42 @@ function recordError(wordObj) {
     }
 }
 
+// 核心：动态计算首页的待学/待复习数字
+window.updateHomeCounts = function() {
+    if (!globalVocabularyData) return;
+    const progressData = StorageManager.getProgress();
+    const now = Date.now();
+    
+    const toLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
+    const toReview = globalVocabularyData.filter(w => progressData[w.id]?.isLearned && progressData[w.id].nextReviewDate <= now);
+    
+    const learnCountEl = document.getElementById('learn-count');
+    if (learnCountEl) learnCountEl.innerText = toLearn.length;
+    
+    const reviewSubtitle = document.querySelector('.nav-card:nth-child(2) .nav-subtitle');
+    if (reviewSubtitle) reviewSubtitle.innerText = `需复习 ${toReview.length} 词`;
+};
+
 async function initApp() {
     try {
-        console.log("正在加载全局总词典 global_dict.json ...");
         const dictRes = await fetch('./global_dict.json');
         if (!dictRes.ok) throw new Error('找不到总词典');
         globalDict = await dictRes.json();
-        console.log(`总词典加载成功！共包含 ${Object.keys(globalDict).length} 个词条。`);
 
         const savedBook = StorageManager.getCurrentBook();
         if (savedBook) {
             await loadVocabularyBook(savedBook.fileName, savedBook.title);
             updateDashboardBookUI(savedBook); 
         } else {
-            console.log("用户还未选择词书，等待选择...");
             document.getElementById('learn-count').innerText = 0;
         }
     } catch (error) {
-        console.error('初始化失败:', error);
         alert('系统初始化失败，请检查是否在同级目录下创建了 global_dict.json！');
     }
 }
 
 async function loadVocabularyBook(bookFileName, bookTitle) {
     try {
-        console.log(`正在加载词书目录: ${bookFileName}.json ...`);
         currentBookName = bookTitle;
         const response = await fetch(`./${bookFileName}.json`);
         if (!response.ok) throw new Error('词书文件不存在');
@@ -128,9 +137,8 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
             };
         }).filter(item => item !== null);
 
-        document.getElementById('learn-count').innerText = globalVocabularyData.length;
+        updateHomeCounts(); // 加载完词库后计算真实剩余单词
     } catch (error) {
-        console.error('加载词书出错:', error);
         alert(`无法加载词书 ${bookFileName}.json，请检查文件是否存在！`);
     }
 }
@@ -268,16 +276,25 @@ function playAudio(text) {
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
-// 正常学习流程入口
+// 正常学习流程入口：过滤掉已学过的词
 document.getElementById('btn-learn').addEventListener('click', () => {
     if (globalVocabularyData.length === 0) {
         views.home.classList.replace('active', 'hidden');
         views.library.classList.replace('hidden', 'active');
         return;
     }
+
+    const progressData = StorageManager.getProgress();
+    const toLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
+    
+    if (toLearn.length === 0) {
+        alert("🎉 太棒了！这本书的新词已全部学完！");
+        return;
+    }
+
     isReviewMode = false;
     applyBackgroundContext('learning-blur');
-    learningQueue = globalVocabularyData.map(word => ({ ...word, stage: 0 }));
+    learningQueue = toLearn.map(word => ({ ...word, stage: 0 }));
     totalWords = learningQueue.length;
     learnedCount = 0;
     views.home.classList.replace('active', 'hidden');
@@ -343,14 +360,12 @@ window.loadNextState = function() {
     updateDots(currentWordObj.stage >= 0 ? currentWordObj.stage : 3);
 
     if (currentWordObj.stage === -1) {
-        // 复习：自我评估阶段
         applyBackgroundContext('learning-blur');
         els.skeletonBars.classList.remove('hidden'); 
         document.getElementById('footer-review-assess').classList.remove('hidden'); 
         playAudio(currentWordObj.pt);
     } 
     else if (currentWordObj.stage === -2) {
-        // 复习：释义核对阶段
         applyBackgroundContext('learning-blur');
         els.defArea.classList.remove('hidden');
         els.detailArea.classList.remove('hidden');
@@ -360,7 +375,6 @@ window.loadNextState = function() {
         document.getElementById('footer-review-verify').classList.remove('hidden'); 
     }
     else {
-        // 学习流程
         if (currentWordObj.stage === 0) renderStage0();
         else if (currentWordObj.stage === 1) renderStage1();
         else if (currentWordObj.stage === 2) renderStage2();
@@ -677,13 +691,14 @@ window.showSummaryPhase = function() {
             </div>
         `;
     });
-    isReviewMode = false; // 重置复习状态，防止串台
+    isReviewMode = false; 
 };
 
 els.btnFinish.addEventListener('click', () => {
     views.summary.classList.replace('active', 'hidden');
     views.home.classList.replace('hidden', 'active');
-    applyBackgroundContext('reset'); // 返回首页，恢复清晰
+    applyBackgroundContext('reset'); 
+    updateHomeCounts(); // 回到首页立刻刷新真实数字
 });
 
 
