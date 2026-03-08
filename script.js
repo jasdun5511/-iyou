@@ -27,6 +27,23 @@ let currentReviewWords = [];
 
 const EBBINGHAUS_INTERVALS = [1, 2, 4, 7, 15, 30, 60]; 
 
+// 推算基于“凌晨 4 点”为跨天界限的下一次复习时间戳
+function getNextReviewTime(days) {
+    let now = new Date();
+    let targetDate = new Date(now);
+    
+    // 如果当前时间是凌晨 4 点前，依然算作“昨天”的学习
+    if (now.getHours() < 4) {
+        targetDate.setDate(targetDate.getDate() - 1);
+    }
+    
+    // 加上指定的复习间隔天数，并将时间严格锁定在当天的凌晨 4:00:00
+    targetDate.setDate(targetDate.getDate() + days);
+    targetDate.setHours(4, 0, 0, 0);
+    
+    return targetDate.getTime();
+}
+
 const StorageManager = {
     getProgress: function() {
         const data = localStorage.getItem('splendid_global_progress');
@@ -50,21 +67,26 @@ const StorageManager = {
         if (!progress[wordId]) progress[wordId] = { errorCount: 0 };
         progress[wordId].isLearned = true;
         progress[wordId].ebStage = 0; 
-        progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000; // 明天复习
+        
+        // 第一次学完，固定为明天的凌晨 4 点进入复习
+        progress[wordId].nextReviewDate = getNextReviewTime(1); 
         this.saveProgress(progress);
     },
     updateReviewResult: function(wordId, isSuccess) {
         let progress = this.getProgress();
         if (!progress[wordId]) return;
+        
         if (isSuccess) {
+            // 复习成功：晋级下一阶段，从今天开始往后推算新的天数
             let nextStage = (progress[wordId].ebStage || 0) + 1;
             if (nextStage >= EBBINGHAUS_INTERVALS.length) nextStage = EBBINGHAUS_INTERVALS.length - 1;
             progress[wordId].ebStage = nextStage;
             const daysToWait = EBBINGHAUS_INTERVALS[nextStage];
-            progress[wordId].nextReviewDate = Date.now() + daysToWait * 24 * 60 * 60 * 1000;
+            progress[wordId].nextReviewDate = getNextReviewTime(daysToWait);
         } else {
+            // 复习失败（忘记/拼错）：阶段清零，明早 4 点重新复习
             progress[wordId].ebStage = 0;
-            progress[wordId].nextReviewDate = Date.now() + 24 * 60 * 60 * 1000;
+            progress[wordId].nextReviewDate = getNextReviewTime(1);
         }
         this.saveProgress(progress);
     },
@@ -86,7 +108,7 @@ function recordError(wordObj) {
     }
 }
 
-// 核心：动态计算首页的待学/待复习数字
+// 动态计算首页的待学/待复习数字
 window.updateHomeCounts = function() {
     if (!globalVocabularyData) return;
     const progressData = StorageManager.getProgress();
@@ -137,7 +159,7 @@ async function loadVocabularyBook(bookFileName, bookTitle) {
             };
         }).filter(item => item !== null);
 
-        updateHomeCounts(); // 加载完词库后计算真实剩余单词
+        updateHomeCounts(); 
     } catch (error) {
         alert(`无法加载词书 ${bookFileName}.json，请检查文件是否存在！`);
     }
