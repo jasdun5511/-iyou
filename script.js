@@ -691,9 +691,8 @@ els.btnFinish.addEventListener('click', () => {
 
 window.startSpellingPhase = function() {
     views.spelling.classList.replace('hidden', 'active');
-    applyBackgroundContext('learning-blur'); // 激活沉浸模糊
+    applyBackgroundContext('learning-blur');
     
-    // 智能拦截：复习模式下只拼写复习词汇
     spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
@@ -733,15 +732,13 @@ function updateSpellUI() {
     els.spellMeaning.innerText = `${currentSpellWord.pos} ${currentSpellWord.zh}`;
     
     els.hiddenInput.value = '';
-    els.hiddenInput.maxLength = currentSpellWord.pt.length;
+    els.hiddenInput.removeAttribute('maxLength');
     
     els.letterBoxes.innerHTML = '';
     for (let i = 0; i < currentSpellWord.pt.length; i++) {
-        // 默认把所有的空盒子强行隐藏 (display: none)，不让它们占空间
         els.letterBoxes.innerHTML += `<div class="letter-box" style="display: none;"></div>`;
     }
     
-    // 只显示第 1 个带有光标的盒子。因为只有一个盒子，它会被 flex 容器完美钉在屏幕正中心！
     if (els.letterBoxes.children.length > 0) {
         els.letterBoxes.children[0].classList.add('has-cursor');
         els.letterBoxes.children[0].style.display = 'flex';
@@ -773,28 +770,28 @@ document.getElementById('btn-submit-spell').addEventListener('click', () => {
 });
 
 function syncInputToSlots(val) {
+    while (els.letterBoxes.children.length <= val.length) {
+        els.letterBoxes.insertAdjacentHTML('beforeend', `<div class="letter-box" style="display: none;"></div>`);
+    }
+
     const boxes = els.letterBoxes.children;
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].innerText = '';
         boxes[i].classList.remove('filled', 'has-cursor');
-        // 每次敲击键盘同步前，先把所有盒子隐藏
         boxes[i].style.display = 'none'; 
     }
     
     for (let i = 0; i < val.length; i++) {
-        if (boxes[i]) {
-            boxes[i].innerText = val[i];
-            boxes[i].classList.add('filled');
-            // 显示已经打出字母的盒子
-            boxes[i].style.display = 'flex';
-        }
+        boxes[i].innerText = val[i];
+        boxes[i].classList.add('filled');
+        boxes[i].style.display = 'flex';
     }
     
-    // 显示下一个待输入的光标盒子。
-    // 由于只显示了已打的字母 + 1个光标，Flexbox 会自动把它们作为一个整体居中
     if (val.length < boxes.length) {
         boxes[val.length].classList.add('has-cursor');
         boxes[val.length].style.display = 'flex';
+    } else {
+        boxes[val.length - 1].insertAdjacentHTML('afterend', `<div class="letter-box has-cursor" style="display: flex;"></div>`);
     }
 }
 
@@ -810,7 +807,6 @@ function checkSpelling() {
     const targetWord = currentSpellWord.pt.toLowerCase();
     const boxes = els.letterBoxes.children;
     
-    // 在核对答案瞬间，把所有盒子都强行显示出来，展示完整的单词
     for (let i = 0; i < boxes.length; i++) {
         boxes[i].classList.remove('has-cursor');
         boxes[i].style.display = 'flex'; 
@@ -828,14 +824,17 @@ function checkSpelling() {
             wrongWordsQueue.push(currentSpellWord);
             recordError(currentSpellWord); 
         }
-        for (let i = 0; i < targetWord.length; i++) {
-            boxes[i].classList.remove('filled', 'correct', 'wrong');
+        
+        const maxLen = Math.max(targetWord.length, userInput.length);
+        for (let i = 0; i < maxLen; i++) {
+            if (boxes[i]) boxes[i].classList.remove('filled', 'correct', 'wrong');
+            
+            let charToShow = userInput[i] !== undefined ? userInput[i] : targetWord[i];
+            
             if (userInput[i] === targetWord[i]) {
-                boxes[i].innerText = targetWord[i];
-                boxes[i].classList.add('correct');
+                if(boxes[i]) { boxes[i].innerText = charToShow; boxes[i].classList.add('correct'); }
             } else {
-                boxes[i].innerText = targetWord[i];
-                boxes[i].classList.add('wrong'); 
+                if(boxes[i]) { boxes[i].innerText = targetWord[i] || charToShow; boxes[i].classList.add('wrong'); }
             }
         }
         playAudio(currentSpellWord.pt);
