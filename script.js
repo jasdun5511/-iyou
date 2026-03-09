@@ -817,53 +817,70 @@ els.btnImNext.addEventListener('click', () => { views.immersive.classList.replac
 
 
 // ================= 序列 7：过渡阶段与小结视图 =================
+
 function showTransitionPhase() {
-    views.learning.classList.replace('active', 'hidden');
-    views.transition.classList.replace('hidden', 'active');
+    document.getElementById('learning-view').classList.replace('active', 'hidden');
+    document.getElementById('transition-view').classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
 }
 
-els.btnStartSpell.addEventListener('click', () => {
-    views.transition.classList.replace('active', 'hidden');
-    startSpellingPhase();
+document.getElementById('btn-start-spell').addEventListener('click', () => {
+    document.getElementById('transition-view').classList.replace('active', 'hidden');
+    if (window.startSpellingPhase) {
+        window.startSpellingPhase();
+    }
 });
 
-els.btnSkipSpell.addEventListener('click', () => {
+document.getElementById('btn-skip-spell').addEventListener('click', () => {
     showSummaryPhase();
 });
 
 window.showSummaryPhase = function() {
-    views.transition.classList.replace('active', 'hidden'); 
-    views.spelling.classList.replace('active', 'hidden');
-    views.summary.classList.replace('hidden', 'active');
+    document.getElementById('transition-view').classList.replace('active', 'hidden'); 
+    document.getElementById('spelling-view').classList.replace('active', 'hidden');
+    document.getElementById('summary-view').classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
     
-    els.summaryList.innerHTML = '';
-    const dataSource = isReviewMode ? window.currentReviewWords : globalVocabularyData;
-    document.getElementById('total-words-count').innerText = dataSource.length;
+    let summaryList = document.getElementById('summary-list');
+    if (summaryList) summaryList.innerHTML = '';
     
-    dataSource.forEach(item => {
-        StorageManager.markAsLearned(item.id); 
-        const errCount = item.errorCount || 0;
-        const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
-        const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
-        
-        els.summaryList.innerHTML += `
-            <div class="summary-item">
-                <span class="summary-word">${item.pt}</span>
-                <span class="${errorClass}">${errorText}</span>
-            </div>
-        `;
-    });
+    // 核心：不再展示全书，只展示刚才学的这一批（或复习的这一批）
+    const dataSource = isReviewMode ? window.currentReviewWords : window.currentLearningWords;
+    
+    const countEl = document.getElementById('total-words-count');
+    if (countEl && dataSource) countEl.innerText = dataSource.length;
+    
+    if (dataSource && summaryList) {
+        dataSource.forEach(item => {
+            const errCount = item.errorCount || 0;
+            const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
+            const errorColor = errCount === 0 ? '#34C759' : '#E74C3C'; // 0错变绿，有错变红
+            
+            summaryList.innerHTML += `
+                <div class="summary-item" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <span class="summary-word" style="font-size: 1.1rem; font-weight: 500;">${item.pt}</span>
+                    <span class="summary-error" style="color: ${errorColor}; font-size: 0.9rem; font-weight: 600;">${errorText}</span>
+                </div>
+            `;
+        });
+    }
     isReviewMode = false; 
 };
 
-els.btnFinish.addEventListener('click', () => {
-    views.summary.classList.replace('active', 'hidden');
-    views.home.classList.replace('hidden', 'active');
+document.getElementById('btn-finish').addEventListener('click', () => {
+    // 核心：点击完成，清空本地记录的批次，下次再点 Learn 将抓取新的 10 个词！
+    if (StorageManager && StorageManager.saveLearningSession) {
+        StorageManager.saveLearningSession(null); 
+    }
+    
+    document.getElementById('summary-view').classList.replace('active', 'hidden');
+    document.getElementById('home-view').classList.replace('hidden', 'active');
     applyBackgroundContext('reset'); 
-    updateHomeCounts(); // 回到首页立刻刷新真实数字
+    
+    // 回到主页后立刻刷新数字
+    if(window.updateHomeCounts) window.updateHomeCounts();
 });
+
 
 
 // ================= 序列 8：重构版拼写逻辑引擎 =================
@@ -872,13 +889,18 @@ window.startSpellingPhase = function() {
     views.spelling.classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
     
-    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
+    // 核心：只拼写当前批次的 10 个词，彻底告别全书拼写！
+    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...window.currentLearningWords];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
     spellTotalInRound = spellingQueue.length;
-    els.totalCount.innerText = spellTotalInRound;
+    
+    let spellProgressEl = document.getElementById('spell-progress-text');
+    if(spellProgressEl) spellProgressEl.innerText = `1/${spellTotalInRound}`;
+    
     loadNextSpellWord();
 }
+
 
 els.btnCloseSpell.addEventListener('click', () => {
     if (confirm('确定要退出拼写直接看小结吗？')) {
