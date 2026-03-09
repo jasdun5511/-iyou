@@ -1284,16 +1284,25 @@ if(menuItems.length >= 4) {
         setTimeout(() => window.showToast("离线数据已更新完毕"), 1500);
         dashboardMoreMenu.classList.add('hidden');
     });
+    
+    // 选项 3：重置词书（核心修复点）
     menuItems[2].addEventListener('click', () => {
         if(confirm("确定要清空当前词书的所有学习记录吗？此操作不可恢复。")) {
             let progress = StorageManager.getProgress();
             globalVocabularyData.forEach(w => { delete progress[w.id]; });
             StorageManager.saveProgress(progress);
+            
+            // 【绝杀修复】：重置进度的同时，立刻摧毁当前的“10词批次记忆”
+            if (StorageManager.saveLearningSession) {
+                StorageManager.saveLearningSession(null);
+            }
+            
             renderDashboardData();
-            window.showToast("词书进度已重置");
+            window.showToast("词书进度已彻底重置");
             dashboardMoreMenu.classList.add('hidden');
         }
     });
+    
     menuItems[3].addEventListener('click', () => {
         window.showToast("检查更新中...");
         setTimeout(() => window.showToast("当前已是最新版本"), 1000);
