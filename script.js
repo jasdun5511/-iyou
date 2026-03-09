@@ -338,19 +338,28 @@ function playAudio(text) {
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
+// 【新增】批次引擎：专门用来记住“这一组”有哪些词
+StorageManager.getLearningSession = function() {
+    const data = localStorage.getItem('splendid_learning_session');
+    return data ? JSON.parse(data) : null;
+};
+StorageManager.saveLearningSession = function(session) {
+    if (!session) localStorage.removeItem('splendid_learning_session');
+    else localStorage.setItem('splendid_learning_session', JSON.stringify(session));
+};
+
 window.saveCurrentSessionProgress = function() {
     if (isReviewMode || !globalVocabularyData || globalVocabularyData.length === 0) return;
     
     let progress = StorageManager.getProgress();
     let hasChanges = false;
     
-    // 只保存还没学满的单词的绿点进度
+    // 只保存本批次中还没学满的词的绿点状态
     if (currentWordObj && currentWordObj.id && currentWordObj.stage < 3) {
         if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
         progress[currentWordObj.id].currentStage = currentWordObj.stage;
         hasChanges = true;
     }
-    
     learningQueue.forEach(w => {
         if (!progress[w.id]) progress[w.id] = { errorCount: 0 };
         progress[w.id].currentStage = w.stage;
@@ -361,9 +370,7 @@ window.saveCurrentSessionProgress = function() {
 };
 
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        saveCurrentSessionProgress();
-    }
+    if (document.visibilityState === 'hidden') saveCurrentSessionProgress();
 });
 
 document.getElementById('btn-learn').addEventListener('click', () => {
@@ -374,25 +381,55 @@ document.getElementById('btn-learn').addEventListener('click', () => {
     }
 
     const progressData = StorageManager.getProgress();
-    const toLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
+    const allToLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
     
-    if (toLearn.length === 0) {
-        alert("🎉 太棒了！这本书的新词已全部学完！");
-        return;
+    let session = StorageManager.getLearningSession();
+    
+    // 如果没有正在进行的批次，或者批次为空，则新建一组（上限 10 个词）
+    if (!session || session.type !== 'learn' || session.totalIds.length === 0) {
+        if (allToLearn.length === 0) {
+            alert("🎉 太棒了！这本书的新词已全部学完！");
+            return;
+        }
+        const newBatch = allToLearn.slice(0, 10); // 每次提取 10 个
+        session = {
+            type: 'learn',
+            totalIds: newBatch.map(w => w.id),
+            finishedIds: []
+        };
+        StorageManager.saveLearningSession(session);
     }
-
+    
     isReviewMode = false;
     applyBackgroundContext('learning-blur');
     
-    // 生成队列，并兼容清理极其罕见的异常进度
-    learningQueue = toLearn.map(word => {
-        let savedStage = progressData[word.id]?.currentStage || 0;
+    // 锁定本批次的完整单词，供拼写和小结使用
+    window.currentLearningWords = session.totalIds.map(id => globalVocabularyData.find(w => w.id === id)).filter(Boolean);
+    
+    // 防止词书切换导致数据丢失
+    if (window.currentLearningWords.length === 0) {
+        StorageManager.saveLearningSession(null);
+        document.getElementById('btn-learn').click();
+        return;
+    }
+    
+    // 剔除这 10 个词中已经学完的，剩下的放入队列
+    const remainingIds = session.totalIds.filter(id => !session.finishedIds.includes(id));
+    if (remainingIds.length === 0) {
+        showTransitionPhase(); 
+        return;
+    }
+
+    learningQueue = remainingIds.map(id => {
+        const word = window.currentLearningWords.find(w => w.id === id);
+        let savedStage = progressData[id]?.currentStage || 0;
         if (savedStage >= 3) savedStage = 2; // 安全兜底
         return { ...word, stage: savedStage };
     });
     
-    totalWords = learningQueue.length;
-    learnedCount = 0;
+    totalWords = session.totalIds.length;        // 分母永远是 10（或这一组的总数）
+    learnedCount = session.finishedIds.length;   // 分子是本组已完成的个数
+    
     views.home.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
     loadNextState();
@@ -435,15 +472,14 @@ function updateDots(stage) {
 }
 
 window.loadNextState = function() {
-    // 【绝杀修复】：一旦某个单词学满 3 个绿点，不等到最后小结，原地立刻判定为学会并安排复习！
+    // 进度全满：打上完成烙印，并记入本批次已完成列表
     if (!isReviewMode && currentWordObj && currentWordObj.id && currentWordObj.stage >= 3) {
         let progress = StorageManager.getProgress();
         if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
         
-        progress[currentWordObj.id].isLearned = true; // 正式毕业
+        progress[currentWordObj.id].isLearned = true; 
         progress[currentWordObj.id].ebStage = 0;
         
-        // 推算明早4点进入复习池
         let now = new Date();
         let targetDate = new Date(now);
         if (now.getHours() < 4) targetDate.setDate(targetDate.getDate() - 1);
@@ -451,8 +487,18 @@ window.loadNextState = function() {
         targetDate.setHours(4, 0, 0, 0);
         
         progress[currentWordObj.id].nextReviewDate = targetDate.getTime();
-        delete progress[currentWordObj.id].currentStage; // 抹除临时进度点
+        delete progress[currentWordObj.id].currentStage; 
         StorageManager.saveProgress(progress);
+
+        // 更新本批次分母
+        let session = StorageManager.getLearningSession();
+        if (session && session.type === 'learn') {
+            if (!session.finishedIds.includes(currentWordObj.id)) {
+                session.finishedIds.push(currentWordObj.id);
+                StorageManager.saveLearningSession(session);
+                learnedCount = session.finishedIds.length; // 动态更新顶部进度！
+            }
+        }
     }
 
     if (learningQueue.length === 0) {
@@ -499,7 +545,6 @@ window.loadNextState = function() {
         playAudio(currentWordObj.pt);
     }
 }
-
 
 
 // ================= 序列 4：测验出题与交互反馈 (Stage 0) =================
