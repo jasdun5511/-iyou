@@ -1498,3 +1498,94 @@ if (btnSpellClear) {
         }
     });
 }
+
+// ================= JS 序列 16：全局路由与状态重置修复 (防重叠、自动保存) =================
+
+// 核心功能 1：安全退出并自动保存进度
+window.exitLearningSession = function() {
+    // 1. 自动保存：把已经辨识完（stage === 3）但没拼写的词，直接打上“已学”标签，激活艾宾浩斯
+    if (typeof globalVocabularyData !== 'undefined') {
+        globalVocabularyData.forEach(w => {
+            if (w.stage >= 3) {
+                if (window.StorageManager) StorageManager.markAsLearned(w.id);
+                w.stage = 0; // 状态归零，防止污染下次学习
+            }
+        });
+    }
+
+    // 2. 彻底清空所有排队缓存，切断残留
+    learningQueue = [];
+    spellingQueue = [];
+    learnedCount = 0;
+    if (typeof isReviewMode !== 'undefined') isReviewMode = false;
+
+    // 3. 暴力清除所有视图的 active 状态，只显示 home-view，彻底解决页面重叠 Bug！
+    document.querySelectorAll('.view').forEach(v => {
+        v.classList.remove('active');
+        v.classList.add('hidden');
+    });
+    document.getElementById('home-view').classList.remove('hidden');
+    document.getElementById('home-view').classList.add('active');
+    
+    // 4. 清除可能残留的模糊背景滤镜
+    const appEl = document.getElementById('app');
+    if(appEl) appEl.className = ''; 
+};
+
+// 核心功能 2：重新绑定所有“退出/返回”按钮 (使用 cloneNode 抹除旧的错误事件)
+const btnBackLearn = document.getElementById('btn-back'); // 学习页左上角返回
+if (btnBackLearn) {
+    const newBtnBack = btnBackLearn.cloneNode(true);
+    btnBackLearn.parentNode.replaceChild(newBtnBack, btnBackLearn);
+    newBtnBack.addEventListener('click', exitLearningSession);
+}
+
+const btnCloseSpell = document.getElementById('btn-close-spell'); // 拼写页左上角叉号
+if (btnCloseSpell) {
+    const newBtnClose = btnCloseSpell.cloneNode(true);
+    btnCloseSpell.parentNode.replaceChild(newBtnClose, btnCloseSpell);
+    newBtnClose.addEventListener('click', exitLearningSession);
+}
+
+// 核心功能 3：重写 Learn 按钮，每次点击强制开始干净的新循环
+const btnLearn = document.getElementById('btn-learn');
+if (btnLearn) {
+    const newBtnLearn = btnLearn.cloneNode(true);
+    btnLearn.parentNode.replaceChild(newBtnLearn, btnLearn);
+    
+    newBtnLearn.addEventListener('click', () => {
+        if (globalVocabularyData.length === 0) {
+            alert("请先到词库选择一本词书哦！");
+            return;
+        }
+        
+        // 每次点击学习，先强制清理 UI 残留，防止重叠
+        document.querySelectorAll('.view').forEach(v => {
+            v.classList.remove('active');
+            v.classList.add('hidden');
+        });
+        
+        // 过滤出还没学过的词 (依靠艾宾浩斯引擎标记)
+        const progressData = StorageManager.getProgress();
+        const unlearnedWords = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
+        
+        if (unlearnedWords.length === 0) {
+            alert("🎉 太棒了！这本书你已经全部学完啦！");
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('home-view').classList.add('active');
+            return;
+        }
+
+        // 开始全新的 10 词循环
+        learningQueue = unlearnedWords.slice(0, 10).map(w => ({ ...w, stage: 0 }));
+        totalWords = learningQueue.length;
+        learnedCount = 0;
+        if (typeof isReviewMode !== 'undefined') isReviewMode = false;
+        
+        // 干净地进入学习界面
+        document.getElementById('learning-view').classList.remove('hidden');
+        document.getElementById('learning-view').classList.add('active');
+        
+        if(typeof loadNextState === 'function') loadNextState();
+    });
+}
