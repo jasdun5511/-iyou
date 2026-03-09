@@ -338,14 +338,14 @@ function playAudio(text) {
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
-
 window.saveCurrentSessionProgress = function() {
     if (isReviewMode || !globalVocabularyData || globalVocabularyData.length === 0) return;
     
     let progress = StorageManager.getProgress();
     let hasChanges = false;
     
-    if (currentWordObj && currentWordObj.id) {
+    // 只保存还没学满的单词的绿点进度
+    if (currentWordObj && currentWordObj.id && currentWordObj.stage < 3) {
         if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
         progress[currentWordObj.id].currentStage = currentWordObj.stage;
         hasChanges = true;
@@ -366,7 +366,6 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-
 document.getElementById('btn-learn').addEventListener('click', () => {
     if (globalVocabularyData.length === 0) {
         views.home.classList.replace('active', 'hidden');
@@ -385,10 +384,10 @@ document.getElementById('btn-learn').addEventListener('click', () => {
     isReviewMode = false;
     applyBackgroundContext('learning-blur');
     
-    // 【核心修复点 1】：读取进度时，如果发现有等于大于3的异常卡死进度，强制降回阶段2
+    // 生成队列，并兼容清理极其罕见的异常进度
     learningQueue = toLearn.map(word => {
         let savedStage = progressData[word.id]?.currentStage || 0;
-        if (savedStage >= 3) savedStage = 2; 
+        if (savedStage >= 3) savedStage = 2; // 安全兜底
         return { ...word, stage: savedStage };
     });
     
@@ -436,7 +435,28 @@ function updateDots(stage) {
 }
 
 window.loadNextState = function() {
+    // 【绝杀修复】：一旦某个单词学满 3 个绿点，不等到最后小结，原地立刻判定为学会并安排复习！
+    if (!isReviewMode && currentWordObj && currentWordObj.id && currentWordObj.stage >= 3) {
+        let progress = StorageManager.getProgress();
+        if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
+        
+        progress[currentWordObj.id].isLearned = true; // 正式毕业
+        progress[currentWordObj.id].ebStage = 0;
+        
+        // 推算明早4点进入复习池
+        let now = new Date();
+        let targetDate = new Date(now);
+        if (now.getHours() < 4) targetDate.setDate(targetDate.getDate() - 1);
+        targetDate.setDate(targetDate.getDate() + 1);
+        targetDate.setHours(4, 0, 0, 0);
+        
+        progress[currentWordObj.id].nextReviewDate = targetDate.getTime();
+        delete progress[currentWordObj.id].currentStage; // 抹除临时进度点
+        StorageManager.saveProgress(progress);
+    }
+
     if (learningQueue.length === 0) {
+        currentWordObj = null; 
         showTransitionPhase();
         return;
     }
@@ -473,16 +493,13 @@ window.loadNextState = function() {
         document.getElementById('footer-review-verify').classList.remove('hidden'); 
     }
     else {
-        // 【核心修复点 2】：渲染引擎的终极兜底，哪怕传入了越界数字，也强行渲染最后一关，永不卡死
         if (currentWordObj.stage === 0) renderStage0();
         else if (currentWordObj.stage === 1) renderStage1();
-        else if (currentWordObj.stage >= 2) {
-            currentWordObj.stage = 2; 
-            renderStage2();
-        }
+        else if (currentWordObj.stage === 2) renderStage2();
         playAudio(currentWordObj.pt);
     }
 }
+
 
 
 // ================= 序列 4：测验出题与交互反馈 (Stage 0) =================
