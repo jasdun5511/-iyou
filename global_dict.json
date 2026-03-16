@@ -41,5 +41,146 @@
         "meanings": [
             { "pos": "vt.", "enDef": "encourage", "zhDef": "鼓励，怂恿", "examples": [{ "source": "TED 演讲", "pt": "Eu <strong>encorajo</strong> você a ser completamente honesto.", "zh": "我鼓励你们说实话。" }] }
         ]
+    },
+    "enem_001": {
+        "pt": "Ademais",
+        "pos": "adv.",
+        "zh": "此外 / 而且",
+        "phonetic": "/a.de'majs/",
+        "example": { "pt": "___111___Ademais___222___, é imperativo destacar a omissão governamental.", "zh": "此外，必须强调政府的不作为。" }
+    },
+    "enem_002": {
+        "pt": "Outrossim",
+        "pos": "adv.",
+        "zh": "同样地 / 此外",
+        "phonetic": "/ow.tɾo'sĩ/",
+        "example": { "pt": "___111___Outrossim___222___, a mídia exerce forte influência no viés social.", "zh": "同样地，媒体对社会偏见施加了强大的影响。" }
+    },
+    "enem_003": {
+        "pt": "Concomitantemente",
+        "pos": "adv.",
+        "zh": "与此同时",
+        "phonetic": "/kõ.ko.mi.tɐ̃.te'mẽ.tʃi/",
+        "example": { "pt": "___111___Concomitantemente___222___, a revolução digital transformou o mercado.", "zh": "与此同时，数字革命改变了市场。" }
+    },
+    "enem_004": {
+        "pt": "Mitigar",
+        "pos": "v.",
+        "zh": "缓解 / 减轻",
+        "phonetic": "/mi.tʃi'gaɾ/",
+        "example": { "pt": "Políticas públicas são essenciais para ___111___mitigar___222___ a desigualdade.", "zh": "公共政策对于缓解不平等至关重要。" }
+    },
+    "enem_005": {
+        "pt": "Fomentar",
+        "pos": "v.",
+        "zh": "促进 / 推动",
+        "phonetic": "/fo.mẽ'taɾ/",
+        "example": { "pt": "A escola deve ___111___fomentar___222___ o pensamento crítico dos jovens.", "zh": "学校应当促进年轻人的批判性思维。" }
+    },
+    "enem_006": {
+        "pt": "Negligenciar",
+        "pos": "v.",
+        "zh": "忽视 / 忽略",
+        "phonetic": "/ne.gli.ʒẽ.si'aɾ/",
+        "example": { "pt": "O Estado não pode ___111___negligenciar___222___ os direitos básicos do cidadão.", "zh": "国家不能忽视公民的基本权利。" }
+    },
+    "enem_007": {
+        "pt": "Corroborar",
+        "pos": "v.",
+        "zh": "证实 / 支持",
+        "phonetic": "/ko.ʁo.bo'ɾaɾ/",
+        "example": { "pt": "Os dados estatísticos ajudam a ___111___corroborar___222___ essa tese.", "zh": "统计数据有助于证实这一论点。" }
+    },
+    "enem_008": {
+        "pt": "Inércia",
+        "pos": "n.",
+        "zh": "惯性 / 不作为",
+        "phonetic": "/i'nɛɾ.sjɐ/",
+        "example": { "pt": "A ___111___inércia___222___ estatal agrava o problema da segurança pública.", "zh": "国家的不作为加剧了公共安全问题。" }
+    },
+    "enem_009": {
+        "pt": "Paradigma",
+        "pos": "n.",
+        "zh": "范式 / 模式",
+        "phonetic": "/pa.ɾa'dʒig.mɐ/",
+        "example": { "pt": "É urgente quebrar o ___111___paradigma___222___ do machismo estrutural.", "zh": "打破结构性大男子主义的范式迫在眉睫。" }
+    },
+    "enem_010": {
+        "pt": "Estigma",
+        "pos": "n.",
+        "zh": "污点 / 社会偏见",
+        "phonetic": "/is'tʃig.mɐ/",
+        "example": { "pt": "O ___111___estigma___222___ associado às doenças mentais precisa acabar.", "zh": "与精神疾病相关的社会偏见需要被消除。" }
+    },
+    "enem_011": {
+        "pt": "Nocivo",
+        "pos": "adj.",
+        "zh": "有害的",
+        "phonetic": "/no'si.vu/",
+        "example": { "pt": "O uso excessivo de redes sociais tem um efeito ___111___nocivo___222___.", "zh": "过度使用社交网络具有有害的影响。" }
+    },
+    "enem_012": {
+        "pt": "Intrínseco",
+        "pos": "adj.",
+        "zh": "内在的 / 本质的",
+        "phonetic": "/ĩ'tɾĩ.se.ku/",
+        "example": { "pt": "O direito à vida é ___111___intrínseco___222___ a qualquer ser humano.", "zh": "生命权是任何人类所固有的。" }
+    },
+    "enem_013": {
+        "pt": "Obsoleto",
+        "pos": "adj.",
+        "zh": "过时的",
+        "phonetic": "/ob.so'le.tu/",
+        "example": { "pt": "Esse modelo educacional já se tornou ___111___obsoleto___222___.", "zh": "这种教育模式已经变得过时了。" }
+    },
+    "enem_014": {
+        "pt": "No cerne da questão",
+        "pos": "phrase",
+        "zh": "在问题的核心",
+        "phonetic": "/nu 'sɛɾ.ni da kes'tɐ̃w/",
+        "example": { "pt": "___111___No cerne da questão___222___, encontra-se a desigualdade de renda.", "zh": "在问题的核心，是收入的不平等。" }
+    },
+    "enem_015": {
+        "pt": "Status quo",
+        "pos": "phrase",
+        "zh": "现状 (拉丁语)",
+        "phonetic": "/'sta.tus kwo/",
+        "example": { "pt": "A elite muitas vezes age para manter o ___111___status quo___222___.", "zh": "精英阶层往往采取行动以维持现状。" }
+    },
+    "enem_016": {
+        "pt": "Hodiernamente",
+        "pos": "adv.",
+        "zh": "现今 / 当代",
+        "phonetic": "/o.dʒi.ɛɾ.na'mẽ.tʃi/",
+        "example": { "pt": "___111___Hodiernamente___222___, a tecnologia dita o ritmo das relações sociais.", "zh": "在当代，科技主导着社会关系的节奏。" }
+    },
+    "enem_017": {
+        "pt": "Constituição Federal",
+        "pos": "n.",
+        "zh": "联邦宪法",
+        "phonetic": "/kõs.tʃi.twi'sɐ̃w fe.de'ɾaw/",
+        "example": { "pt": "A ___111___Constituição Federal___222___ garante o direito à saúde para todos.", "zh": "联邦宪法保障所有人的健康权。" }
+    },
+    "enem_018": {
+        "pt": "Contrato Social",
+        "pos": "n.",
+        "zh": "社会契约论 (哲学)",
+        "phonetic": "/kõ'tɾa.tu so.si'aw/",
+        "example": { "pt": "Segundo o ___111___Contrato Social___222___ de Rousseau, o Estado deve proteger o povo.", "zh": "根据卢梭的社会契约论，国家应当保护人民。" }
+    },
+    "enem_019": {
+        "pt": "Banalidade do Mal",
+        "pos": "n.",
+        "zh": "平庸之恶 (哲学)",
+        "phonetic": "/ba.na.li'da.dʒi du maw/",
+        "example": { "pt": "O conceito de ___111___Banalidade do Mal___222___ de Hannah Arendt explica a aceitação da violência.", "zh": "汉娜·阿伦特的平庸之恶概念解释了对暴力的接受。" }
+    },
+    "enem_020": {
+        "pt": "Modernidade Líquida",
+        "pos": "n.",
+        "zh": "流动的现代性 (哲学)",
+        "phonetic": "/mo.dɛɾ.ni'da.dʒi 'li.kwi.dɐ/",
+        "example": { "pt": "Bauman cunhou o termo ___111___Modernidade Líquida___222___ para descrever as relações frágeis.", "zh": "鲍曼创造了“流动的现代性”一词来描述脆弱的关系。" }
     }
+
 }
