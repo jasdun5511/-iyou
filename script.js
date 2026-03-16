@@ -338,28 +338,19 @@ function playAudio(text) {
 }
 document.getElementById('phonetic-container').addEventListener('click', () => playAudio(currentWordObj.pt));
 
-// 【新增】批次引擎：专门用来记住“这一组”有哪些词
-StorageManager.getLearningSession = function() {
-    const data = localStorage.getItem('splendid_learning_session');
-    return data ? JSON.parse(data) : null;
-};
-StorageManager.saveLearningSession = function(session) {
-    if (!session) localStorage.removeItem('splendid_learning_session');
-    else localStorage.setItem('splendid_learning_session', JSON.stringify(session));
-};
-
 window.saveCurrentSessionProgress = function() {
     if (isReviewMode || !globalVocabularyData || globalVocabularyData.length === 0) return;
     
     let progress = StorageManager.getProgress();
     let hasChanges = false;
     
-    // 只保存本批次中还没学满的词的绿点状态
+    // 只保存还没学满的单词的绿点进度
     if (currentWordObj && currentWordObj.id && currentWordObj.stage < 3) {
         if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
         progress[currentWordObj.id].currentStage = currentWordObj.stage;
         hasChanges = true;
     }
+    
     learningQueue.forEach(w => {
         if (!progress[w.id]) progress[w.id] = { errorCount: 0 };
         progress[w.id].currentStage = w.stage;
@@ -370,7 +361,9 @@ window.saveCurrentSessionProgress = function() {
 };
 
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') saveCurrentSessionProgress();
+    if (document.visibilityState === 'hidden') {
+        saveCurrentSessionProgress();
+    }
 });
 
 document.getElementById('btn-learn').addEventListener('click', () => {
@@ -381,55 +374,25 @@ document.getElementById('btn-learn').addEventListener('click', () => {
     }
 
     const progressData = StorageManager.getProgress();
-    const allToLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
+    const toLearn = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
     
-    let session = StorageManager.getLearningSession();
-    
-    // 如果没有正在进行的批次，或者批次为空，则新建一组（上限 10 个词）
-    if (!session || session.type !== 'learn' || session.totalIds.length === 0) {
-        if (allToLearn.length === 0) {
-            alert("🎉 太棒了！这本书的新词已全部学完！");
-            return;
-        }
-        const newBatch = allToLearn.slice(0, 10); // 每次提取 10 个
-        session = {
-            type: 'learn',
-            totalIds: newBatch.map(w => w.id),
-            finishedIds: []
-        };
-        StorageManager.saveLearningSession(session);
-    }
-    
-    isReviewMode = false;
-    applyBackgroundContext('learning-blur');
-    
-    // 锁定本批次的完整单词，供拼写和小结使用
-    window.currentLearningWords = session.totalIds.map(id => globalVocabularyData.find(w => w.id === id)).filter(Boolean);
-    
-    // 防止词书切换导致数据丢失
-    if (window.currentLearningWords.length === 0) {
-        StorageManager.saveLearningSession(null);
-        document.getElementById('btn-learn').click();
-        return;
-    }
-    
-    // 剔除这 10 个词中已经学完的，剩下的放入队列
-    const remainingIds = session.totalIds.filter(id => !session.finishedIds.includes(id));
-    if (remainingIds.length === 0) {
-        showTransitionPhase(); 
+    if (toLearn.length === 0) {
+        alert("🎉 太棒了！这本书的新词已全部学完！");
         return;
     }
 
-    learningQueue = remainingIds.map(id => {
-        const word = window.currentLearningWords.find(w => w.id === id);
-        let savedStage = progressData[id]?.currentStage || 0;
+    isReviewMode = false;
+    applyBackgroundContext('learning-blur');
+    
+    // 生成队列，并兼容清理极其罕见的异常进度
+    learningQueue = toLearn.map(word => {
+        let savedStage = progressData[word.id]?.currentStage || 0;
         if (savedStage >= 3) savedStage = 2; // 安全兜底
         return { ...word, stage: savedStage };
     });
     
-    totalWords = session.totalIds.length;        // 分母永远是 10（或这一组的总数）
-    learnedCount = session.finishedIds.length;   // 分子是本组已完成的个数
-    
+    totalWords = learningQueue.length;
+    learnedCount = 0;
     views.home.classList.replace('active', 'hidden');
     views.learning.classList.replace('hidden', 'active');
     loadNextState();
@@ -472,14 +435,15 @@ function updateDots(stage) {
 }
 
 window.loadNextState = function() {
-    // 进度全满：打上完成烙印，并记入本批次已完成列表
+    // 【绝杀修复】：一旦某个单词学满 3 个绿点，不等到最后小结，原地立刻判定为学会并安排复习！
     if (!isReviewMode && currentWordObj && currentWordObj.id && currentWordObj.stage >= 3) {
         let progress = StorageManager.getProgress();
         if (!progress[currentWordObj.id]) progress[currentWordObj.id] = { errorCount: 0 };
         
-        progress[currentWordObj.id].isLearned = true; 
+        progress[currentWordObj.id].isLearned = true; // 正式毕业
         progress[currentWordObj.id].ebStage = 0;
         
+        // 推算明早4点进入复习池
         let now = new Date();
         let targetDate = new Date(now);
         if (now.getHours() < 4) targetDate.setDate(targetDate.getDate() - 1);
@@ -487,18 +451,8 @@ window.loadNextState = function() {
         targetDate.setHours(4, 0, 0, 0);
         
         progress[currentWordObj.id].nextReviewDate = targetDate.getTime();
-        delete progress[currentWordObj.id].currentStage; 
+        delete progress[currentWordObj.id].currentStage; // 抹除临时进度点
         StorageManager.saveProgress(progress);
-
-        // 更新本批次分母
-        let session = StorageManager.getLearningSession();
-        if (session && session.type === 'learn') {
-            if (!session.finishedIds.includes(currentWordObj.id)) {
-                session.finishedIds.push(currentWordObj.id);
-                StorageManager.saveLearningSession(session);
-                learnedCount = session.finishedIds.length; // 动态更新顶部进度！
-            }
-        }
     }
 
     if (learningQueue.length === 0) {
@@ -545,6 +499,7 @@ window.loadNextState = function() {
         playAudio(currentWordObj.pt);
     }
 }
+
 
 
 // ================= 序列 4：测验出题与交互反馈 (Stage 0) =================
@@ -817,70 +772,53 @@ els.btnImNext.addEventListener('click', () => { views.immersive.classList.replac
 
 
 // ================= 序列 7：过渡阶段与小结视图 =================
-
 function showTransitionPhase() {
-    document.getElementById('learning-view').classList.replace('active', 'hidden');
-    document.getElementById('transition-view').classList.replace('hidden', 'active');
+    views.learning.classList.replace('active', 'hidden');
+    views.transition.classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
 }
 
-document.getElementById('btn-start-spell').addEventListener('click', () => {
-    document.getElementById('transition-view').classList.replace('active', 'hidden');
-    if (window.startSpellingPhase) {
-        window.startSpellingPhase();
-    }
+els.btnStartSpell.addEventListener('click', () => {
+    views.transition.classList.replace('active', 'hidden');
+    startSpellingPhase();
 });
 
-document.getElementById('btn-skip-spell').addEventListener('click', () => {
+els.btnSkipSpell.addEventListener('click', () => {
     showSummaryPhase();
 });
 
 window.showSummaryPhase = function() {
-    document.getElementById('transition-view').classList.replace('active', 'hidden'); 
-    document.getElementById('spelling-view').classList.replace('active', 'hidden');
-    document.getElementById('summary-view').classList.replace('hidden', 'active');
+    views.transition.classList.replace('active', 'hidden'); 
+    views.spelling.classList.replace('active', 'hidden');
+    views.summary.classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
     
-    let summaryList = document.getElementById('summary-list');
-    if (summaryList) summaryList.innerHTML = '';
+    els.summaryList.innerHTML = '';
+    const dataSource = isReviewMode ? window.currentReviewWords : globalVocabularyData;
+    document.getElementById('total-words-count').innerText = dataSource.length;
     
-    // 核心：不再展示全书，只展示刚才学的这一批（或复习的这一批）
-    const dataSource = isReviewMode ? window.currentReviewWords : window.currentLearningWords;
-    
-    const countEl = document.getElementById('total-words-count');
-    if (countEl && dataSource) countEl.innerText = dataSource.length;
-    
-    if (dataSource && summaryList) {
-        dataSource.forEach(item => {
-            const errCount = item.errorCount || 0;
-            const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
-            const errorColor = errCount === 0 ? '#34C759' : '#E74C3C'; // 0错变绿，有错变红
-            
-            summaryList.innerHTML += `
-                <div class="summary-item" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <span class="summary-word" style="font-size: 1.1rem; font-weight: 500;">${item.pt}</span>
-                    <span class="summary-error" style="color: ${errorColor}; font-size: 0.9rem; font-weight: 600;">${errorText}</span>
-                </div>
-            `;
-        });
-    }
+    dataSource.forEach(item => {
+        StorageManager.markAsLearned(item.id); 
+        const errCount = item.errorCount || 0;
+        const errorClass = errCount === 0 ? 'summary-error zero' : 'summary-error';
+        const errorText = errCount === 0 ? '完美' : `错 ${errCount} 次`;
+        
+        els.summaryList.innerHTML += `
+            <div class="summary-item">
+                <span class="summary-word">${item.pt}</span>
+                <span class="${errorClass}">${errorText}</span>
+            </div>
+        `;
+    });
     isReviewMode = false; 
 };
 
-document.getElementById('btn-finish').addEventListener('click', () => {
-    // 核心：点击完成，清空本地记录的批次，下次再点 Learn 将抓取新的 10 个词！
-    if (StorageManager && StorageManager.saveLearningSession) {
-        StorageManager.saveLearningSession(null); 
-    }
-    
-    document.getElementById('summary-view').classList.replace('active', 'hidden');
-    document.getElementById('home-view').classList.replace('hidden', 'active');
+els.btnFinish.addEventListener('click', () => {
+    views.summary.classList.replace('active', 'hidden');
+    views.home.classList.replace('hidden', 'active');
     applyBackgroundContext('reset'); 
-    
-    // 回到主页后立刻刷新数字
-    if(window.updateHomeCounts) window.updateHomeCounts();
+    updateHomeCounts(); // 回到首页立刻刷新真实数字
 });
-
 
 
 // ================= 序列 8：重构版拼写逻辑引擎 =================
@@ -889,18 +827,13 @@ window.startSpellingPhase = function() {
     views.spelling.classList.replace('hidden', 'active');
     applyBackgroundContext('learning-blur');
     
-    // 核心：只拼写当前批次的 10 个词，彻底告别全书拼写！
-    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...window.currentLearningWords];
+    spellingQueue = isReviewMode ? [...window.currentReviewWords] : [...globalVocabularyData];
     wrongWordsQueue = [];
     spellCurrentIndex = 0;
     spellTotalInRound = spellingQueue.length;
-    
-    let spellProgressEl = document.getElementById('spell-progress-text');
-    if(spellProgressEl) spellProgressEl.innerText = `1/${spellTotalInRound}`;
-    
+    els.totalCount.innerText = spellTotalInRound;
     loadNextSpellWord();
 }
-
 
 els.btnCloseSpell.addEventListener('click', () => {
     if (confirm('确定要退出拼写直接看小结吗？')) {
@@ -1284,25 +1217,16 @@ if(menuItems.length >= 4) {
         setTimeout(() => window.showToast("离线数据已更新完毕"), 1500);
         dashboardMoreMenu.classList.add('hidden');
     });
-    
-    // 选项 3：重置词书（核心修复点）
     menuItems[2].addEventListener('click', () => {
         if(confirm("确定要清空当前词书的所有学习记录吗？此操作不可恢复。")) {
             let progress = StorageManager.getProgress();
             globalVocabularyData.forEach(w => { delete progress[w.id]; });
             StorageManager.saveProgress(progress);
-            
-            // 【绝杀修复】：重置进度的同时，立刻摧毁当前的“10词批次记忆”
-            if (StorageManager.saveLearningSession) {
-                StorageManager.saveLearningSession(null);
-            }
-            
             renderDashboardData();
-            window.showToast("词书进度已彻底重置");
+            window.showToast("词书进度已重置");
             dashboardMoreMenu.classList.add('hidden');
         }
     });
-    
     menuItems[3].addEventListener('click', () => {
         window.showToast("检查更新中...");
         setTimeout(() => window.showToast("当前已是最新版本"), 1000);
@@ -1496,120 +1420,5 @@ if (btnSpellClear) {
             hiddenInput.dispatchEvent(new Event('input')); 
             hiddenInput.focus(); 
         }
-    });
-}
-
-// ================= JS 序列 16：终极修复（自动保存、防卡死、彻底重置） =================
-
-// 1. 修复：无痕退出 & 自动保存拼写进度
-window.exitLearningSession = function() {
-    try {
-        // 【核心修复 1】：如果你没做拼写直接退出，系统会自动把已进入拼写队列的词打上“已学”标签，完美白嫖进度！
-        if (typeof StorageManager !== 'undefined' && typeof spellingQueue !== 'undefined' && spellingQueue.length > 0) {
-            spellingQueue.forEach(w => {
-                StorageManager.markAsLearned(w.id);
-            });
-        }
-
-        // 彻底清空内存队列
-        learningQueue = [];
-        spellingQueue = [];
-        learnedCount = 0;
-        if (typeof isReviewMode !== 'undefined') isReviewMode = false;
-
-        // 暴力重置所有视图状态（防重叠/窜台）
-        document.querySelectorAll('.view').forEach(v => {
-            v.classList.remove('active');
-            v.classList.add('hidden');
-        });
-        
-        // 返回主页
-        const homeView = document.getElementById('home-view');
-        if (homeView) {
-            homeView.classList.remove('hidden');
-            homeView.classList.add('active');
-        }
-        
-        // 清理滤镜
-        const appEl = document.getElementById('app');
-        if (appEl) appEl.className = ''; 
-        
-    } catch (err) {
-        console.error("退出清理时发生错误：", err);
-        window.location.reload(); 
-    }
-};
-
-// 2. 修复：拼写页面点击空白处“键盘消失”导致的假死 (确认不了也删不了)
-const spellViewEl = document.getElementById('spelling-view');
-if (spellViewEl) {
-    spellViewEl.addEventListener('click', (e) => {
-        // 【核心修复 2】：只要点击的不是底部按钮，就强制把焦点拉回输入框，弹出键盘，绝不卡死！
-        if (!e.target.closest('.spell-footer') && !e.target.closest('.spell-header')) {
-            const hiddenInput = document.getElementById('hidden-input');
-            if (hiddenInput) {
-                hiddenInput.focus();
-            }
-        }
-    });
-}
-
-// 3. 重新绑定顶部返回按钮和X号按钮，抹除旧的错误事件
-function rebindExitButton(btnId) {
-    const btn = document.getElementById(btnId);
-    if (btn) {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            exitLearningSession();
-        });
-    }
-}
-rebindExitButton('btn-back'); // 学习页返回
-rebindExitButton('btn-close-spell'); // 拼写页叉号
-
-// 4. 彻底重写 Learn 按钮：每次点击保证是绝对干净的新环境
-const btnLearnHome = document.getElementById('btn-learn');
-if (btnLearnHome) {
-    const newBtnLearn = btnLearnHome.cloneNode(true);
-    btnLearnHome.parentNode.replaceChild(newBtnLearn, btnLearnHome);
-    
-    newBtnLearn.addEventListener('click', () => {
-        if (!globalVocabularyData || globalVocabularyData.length === 0) {
-            alert("请先到词库选择一本词书哦！");
-            return;
-        }
-        
-        // 【核心修复 3】：点击瞬间强制清空残留排队和UI，绝对不会再直接弹出拼写界面！
-        learningQueue = [];
-        spellingQueue = [];
-        document.querySelectorAll('.view').forEach(v => {
-            v.classList.remove('active');
-            v.classList.add('hidden');
-        });
-        
-        // 筛选未学过的词
-        const progressData = StorageManager.getProgress() || {};
-        const unlearnedWords = globalVocabularyData.filter(w => !progressData[w.id]?.isLearned);
-        
-        if (unlearnedWords.length === 0) {
-            alert("🎉 太棒了！这本书你已经全部学完啦！");
-            document.getElementById('home-view').classList.remove('hidden');
-            document.getElementById('home-view').classList.add('active');
-            return;
-        }
-
-        // 注入干净的队列
-        learningQueue = unlearnedWords.slice(0, 10).map(w => ({ ...w, stage: 0 }));
-        totalWords = learningQueue.length;
-        learnedCount = 0;
-        if (typeof isReviewMode !== 'undefined') isReviewMode = false;
-        
-        // 安全进入学习视图
-        document.getElementById('learning-view').classList.remove('hidden');
-        document.getElementById('learning-view').classList.add('active');
-        
-        if(typeof loadNextState === 'function') loadNextState();
     });
 }
