@@ -562,7 +562,34 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     line-height: 1 !important;      /* 消除文字自带的上下行高间距 */
 }
 
-/* ================= CSS 序列 12：文件夹视图 (Folders View) ================= */
+/* ================= CSS 序列 12：重置版专属文件夹视图 (1:1 原图级质感) ================= */
+.folders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 60px 24px 20px;
+}
+
+.folders-header h2 {
+    font-size: 2.2rem; /* 原图的超大标题 */
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.folders-header i {
+    font-size: 1.4rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+.folders-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 20px 100px;
+}
+
 .folders-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -570,18 +597,17 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 }
 
 .folder-card {
-    aspect-ratio: 1 / 1;
-    border-radius: 20px;
-    padding: 20px;
+    aspect-ratio: 1 / 1.05; /* 微调比例，略微偏长的圆角矩形 */
+    border-radius: 22px;
+    padding: 22px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    position: relative;
-    overflow: hidden;
+    align-items: flex-start; /* 图标和文字严格靠左 */
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    border: 1px solid rgba(255,255,255,0.05);
+    transition: transform 0.2s;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    border: none;
 }
 
 .folder-card:active {
@@ -589,48 +615,54 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
 }
 
 .folder-card i {
-    font-size: 2rem;
-    color: rgba(255,255,255,0.9);
+    font-size: 2.2rem; /* 原图里图标很大 */
+    color: #fff;
+    opacity: 0.95;
 }
 
 .folder-card span {
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-size: 1.15rem; /* 原图里粗体大字 */
+    font-weight: 700;
     color: #fff;
-    line-height: 1.3;
-    letter-spacing: 0.5px;
+    line-height: 1.25;
 }
 
-/* 一比一复刻图中的神仙渐变色 */
-.folder-blue { background: linear-gradient(135deg, #4A90E2 0%, #003399 100%); }
-.folder-purple { background: linear-gradient(135deg, #B27CEE 0%, #6E48AA 100%); }
+/* 完美复刻原图的六种高级渐变色 */
+.folder-blue { background: linear-gradient(135deg, #53A0FD 0%, #1C58D8 100%); }
+.folder-purple { background: linear-gradient(135deg, #C678FB 0%, #6A22C5 100%); }
 .folder-orange { background: linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%); }
-.folder-red { background: linear-gradient(135deg, #FF6B6B 0%, #C0392B 100%); }
+.folder-red { background: linear-gradient(135deg, #FF7675 0%, #D63031 100%); }
 .folder-green { background: linear-gradient(135deg, #55EFC4 0%, #00B894 100%); }
-.folder-grey { background: linear-gradient(135deg, #7F8C8D 0%, #2C3E50 100%); }
+.folder-grey { background: linear-gradient(135deg, #95A5A6 0%, #34495E 100%); }
 
-/* 悬浮加号按钮 */
-.folder-fab {
+/* 完美的中央悬浮加号按钮 (FAB) */
+.folder-fab-wrapper {
     position: absolute;
-    bottom: 100px;
+    bottom: 90px;
     left: 50%;
     transform: translateX(-50%);
-    width: 56px;
-    height: 56px;
+    z-index: 50;
+}
+
+.folder-fab {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: #EBB04D;
-    color: #1a1a1a;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5rem;
-    box-shadow: 0 10px 25px rgba(235, 176, 77, 0.4);
+    box-shadow: 0 8px 25px rgba(235, 176, 77, 0.4);
     cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-    z-index: 10;
+    transition: transform 0.2s;
     -webkit-tap-highlight-color: transparent;
 }
 
 .folder-fab:active {
-    transform: translate(-50%, 0) scale(0.9);
+    transform: scale(0.9);
+}
+
+.folder-fab i {
+    font-size: 1.8rem;
+    color: #1a1a1a;
 }
