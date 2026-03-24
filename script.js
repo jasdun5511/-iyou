@@ -1285,7 +1285,7 @@ if(btnOpenWordlistCover) {
 }
 
 
-// ================= 序列 12：一键换书魔法 =================
+// ================= JS 序列 12：一键换书魔法 =================
 const allLibraryBooks = document.querySelectorAll('.lib-book-item');
 
 allLibraryBooks.forEach(bookItem => {
@@ -1295,8 +1295,11 @@ allLibraryBooks.forEach(bookItem => {
         const coverClass = bookItem.getAttribute('data-cover');
         const coverText = bookItem.getAttribute('data-cover-text');
 
-        if (fileName !== 'book_core') {
-            alert(`《${bookTitle}》的数据文件 (${fileName}.json) 还没创建哦，先试试"核心葡语词汇"吧！`);
+        // 【核心修复】：把 book_enem 加入允许加载的白名单！
+        const allowedBooks = ['book_core', 'book_enem']; 
+        
+        if (!allowedBooks.includes(fileName)) {
+            alert(`《${bookTitle}》的数据文件 (${fileName}.json) 还没创建哦，先背其他的吧！`);
             return;
         }
 
@@ -1310,7 +1313,6 @@ allLibraryBooks.forEach(bookItem => {
         document.getElementById('dashboard-view').classList.replace('hidden', 'active');
     });
 });
-
 
 // ================= 序列 13：跨库点击查词逻辑 =================
 window.showWordPopup = function(wordStr) {
