@@ -1424,3 +1424,40 @@ if (btnSpellClear) {
         }
     });
 }
+
+// ================= JS 序列 17：文件夹视图路由与导航 =================
+const btnNavFoldersHome = document.getElementById('btn-nav-folders-home');
+const foldersView = document.getElementById('folders-view');
+const btnFoldersToHome = document.getElementById('btn-folders-to-home');
+const btnFoldersToDash = document.getElementById('btn-folders-to-dashboard');
+const homeViewEl = document.getElementById('home-view');
+
+// 1. 主页 -> 文件夹视图
+if (btnNavFoldersHome && foldersView) {
+    btnNavFoldersHome.addEventListener('click', () => {
+        homeViewEl.classList.replace('active', 'hidden');
+        foldersView.classList.replace('hidden', 'active');
+    });
+}
+
+// 2. 文件夹视图 -> 主页
+if (btnFoldersToHome && foldersView) {
+    btnFoldersToHome.addEventListener('click', () => {
+        foldersView.classList.replace('active', 'hidden');
+        homeViewEl.classList.replace('hidden', 'active');
+        
+        // 恢复首页的底部高亮状态
+        document.getElementById('btn-nav-home').classList.add('active');
+        document.getElementById('btn-nav-folders-home').classList.remove('active');
+    });
+}
+
+// 3. 文件夹视图 -> 仪表盘
+if (btnFoldersToDash && foldersView) {
+    btnFoldersToDash.addEventListener('click', () => {
+        foldersView.classList.replace('active', 'hidden');
+        document.getElementById('dashboard-view').classList.replace('hidden', 'active');
+        
+        if (typeof renderDashboardData === 'function') renderDashboardData();
+    });
+}
