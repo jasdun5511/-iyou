@@ -27,45 +27,90 @@
 
         <div id="folders-view" class="view hidden" style="z-index: 40; background-color: #1A1D27; display: flex; flex-direction: column;">
             
-            <header class="folders-header">
-                <h2>Meu Vocabulário</h2>
-                <i class="fa-solid fa-magnifying-glass"></i>
+            <header class="content-header">
+                <div class="header-left" id="btn-content-back">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <span>我的内容</span>
+                </div>
+                <div class="header-right">
+                    <i class="fa-regular fa-lightbulb"></i>
+                </div>
             </header>
 
-            <main class="folders-content">
-                <div class="folders-grid">
-                    <div class="folder-card folder-blue">
-                        <i class="fa-solid fa-folder-open"></i>
-                        <span>Todas as<br>Pastas</span>
+            <main class="content-body">
+                
+                <div class="top-feature-cards">
+                    <div class="feature-card bg-gradient-orange">
+                        <div class="feature-card-title">随身听</div>
+                        <div class="feature-sub-grid">
+                            <div class="feature-sub-btn"><i class="fa-solid fa-play"></i> 词汇</div>
+                            <div class="feature-sub-btn"><i class="fa-solid fa-play"></i> 句子</div>
+                        </div>
                     </div>
-                    <div class="folder-card folder-purple">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        <span>Aprender</span>
-                    </div>
-                    <div class="folder-card folder-orange">
-                        <i class="fa-solid fa-building-columns"></i>
-                        <span>Vestibular</span>
-                    </div>
-                    <div class="folder-card folder-red">
-                        <i class="fa-solid fa-book-bookmark"></i>
-                        <span>Livros</span>
-                    </div>
-                    <div class="folder-card folder-green">
-                        <i class="fa-solid fa-gamepad"></i>
-                        <span>Jogos</span>
-                    </div>
-                    <div class="folder-card folder-grey">
-                        <i class="fa-solid fa-file-lines"></i>
-                        <span>Meus<br>Arquivos</span>
+                    <div class="feature-card bg-gradient-cyan">
+                        <div class="feature-card-title">听写</div>
+                        <div class="feature-sub-grid">
+                            <div class="feature-sub-btn"><i class="fa-solid fa-play"></i> 词汇</div>
+                            <div class="feature-sub-btn"><i class="fa-solid fa-play"></i> 句子</div>
+                        </div>
                     </div>
                 </div>
-            </main>
 
-            <div class="folder-fab-wrapper">
-                <div class="folder-fab">
-                    <i class="fa-solid fa-plus"></i>
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="li-left">
+                            <i class="fa-solid fa-book-open" style="color: #4A90E2;"></i>
+                            <span>在学词书</span>
+                        </div>
+                        <div class="li-right">
+                            <span class="li-count">2</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="li-left">
+                            <i class="fa-regular fa-calendar-check" style="color: #EBB04D;"></i>
+                            <span>近日已学</span>
+                        </div>
+                        <div class="li-right"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="li-left">
+                            <i class="fa-solid fa-check-double" style="color: #55EFC4;"></i>
+                            <span>全部已学</span>
+                        </div>
+                        <div class="li-right"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="li-left">
+                            <i class="fa-solid fa-book-bookmark" style="color: #FF6B6B;"></i>
+                            <span>单词本</span>
+                        </div>
+                        <div class="li-right"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="li-left">
+                            <i class="fa-solid fa-quote-left" style="color: #B27CEE;"></i>
+                            <span>句库</span>
+                        </div>
+                        <div class="li-right"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="li-left">
+                            <i class="fa-solid fa-pen-to-square" style="color: #FFB75E;"></i>
+                            <span>笔记</span>
+                        </div>
+                        <div class="li-right"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+            </main>
 
             <div style="position: absolute; bottom: 0; width: 100%; padding: 0 20px 20px; background: linear-gradient(to top, #1A1D27 80%, transparent);">
                 <nav class="bottom-nav">
