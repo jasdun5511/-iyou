@@ -1425,14 +1425,15 @@ if (btnSpellClear) {
     });
 }
 
-// ================= JS 序列 17：文件夹视图路由与导航 =================
+// ================= JS 序列 17：文件夹/内容视图路由与导航 =================
 const btnNavFoldersHome = document.getElementById('btn-nav-folders-home');
 const foldersView = document.getElementById('folders-view');
 const btnFoldersToHome = document.getElementById('btn-folders-to-home');
 const btnFoldersToDash = document.getElementById('btn-folders-to-dashboard');
 const homeViewEl = document.getElementById('home-view');
+const btnContentBack = document.getElementById('btn-content-back'); // 左上角返回箭头
 
-// 1. 主页 -> 文件夹视图
+// 1. 主页底部中间按钮 -> 呼出"我的内容"
 if (btnNavFoldersHome && foldersView) {
     btnNavFoldersHome.addEventListener('click', () => {
         homeViewEl.classList.replace('active', 'hidden');
@@ -1440,7 +1441,7 @@ if (btnNavFoldersHome && foldersView) {
     });
 }
 
-// 2. 文件夹视图 -> 主页
+// 2. "我的内容"底部左侧按钮 -> 回到主页
 if (btnFoldersToHome && foldersView) {
     btnFoldersToHome.addEventListener('click', () => {
         foldersView.classList.replace('active', 'hidden');
@@ -1452,12 +1453,25 @@ if (btnFoldersToHome && foldersView) {
     });
 }
 
-// 3. 文件夹视图 -> 仪表盘
+// 3. "我的内容"底部右侧按钮 -> 去仪表盘
 if (btnFoldersToDash && foldersView) {
     btnFoldersToDash.addEventListener('click', () => {
         foldersView.classList.replace('active', 'hidden');
         document.getElementById('dashboard-view').classList.replace('hidden', 'active');
         
+        // 触发仪表盘刷新
         if (typeof renderDashboardData === 'function') renderDashboardData();
+    });
+}
+
+// 4. "我的内容"左上角返回按钮 -> 回到主页
+if (btnContentBack && foldersView) {
+    btnContentBack.addEventListener('click', () => {
+        foldersView.classList.replace('active', 'hidden');
+        homeViewEl.classList.replace('hidden', 'active');
+        
+        // 同步恢复底部状态
+        document.getElementById('btn-nav-home').classList.add('active');
+        document.getElementById('btn-nav-folders-home').classList.remove('active');
     });
 }
