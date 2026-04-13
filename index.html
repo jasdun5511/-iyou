@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="list-group">
-                    <div class="list-item">
+                    <div class="list-item" id="btn-open-active-book">
                         <div class="li-left">
                             <i class="fa-solid fa-book-open" style="color: #4A90E2;"></i>
                             <span>在学词书</span>
@@ -201,7 +201,6 @@
                     <div class="action-item" id="btn-next"><span>下一词</span><div class="line green"></div></div>
                     <div class="action-item" id="btn-forgot"><span>记错了</span><div class="line red"></div></div>
                 </div>
-
                 <div id="footer-review-assess" class="action-group hidden" style="display: flex; gap: 8px;">
                     <div class="action-item" id="btn-rev-know"><span>认识</span><div class="line green"></div></div>
                     <div class="action-item" id="btn-rev-blur"><span>模糊</span><div class="line" style="background: #EBB04D;"></div></div>
@@ -261,35 +260,24 @@
         </div>
 
         <div id="spelling-view" class="view hidden" style="z-index: 60; background-color: #121212;">
-            
             <header class="spell-header">
                 <i class="fa-solid fa-xmark" id="btn-close-spell"></i>
                 <span id="spell-progress-text" class="spell-progress-simple">1/2</span>
             </header>
-
             <main class="spell-main-content">
                 <div class="meaning-area">
                     <p id="spell-word-meaning">adv. 甚至，即使</p>
                 </div>
-
                 <div class="input-container">
-                    <div id="letter-boxes" class="letter-boxes">
-                        </div>
+                    <div id="letter-boxes" class="letter-boxes"></div>
                     <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 </div>
-
-                
             </main>
-
             <footer class="spell-footer">
                 <div id="hint-container" class="hint-container">
-                    <div id="bulb-icon" class="bulb-icon">
-                        <i class="fa-regular fa-lightbulb"></i>
-                    </div>
+                    <div id="bulb-icon" class="bulb-icon"><i class="fa-regular fa-lightbulb"></i></div>
                 </div>
-                <div id="btn-submit-spell" class="submit-icon">
-                    <i class="fa-solid fa-check"></i>
-                </div>
+                <div id="btn-submit-spell" class="submit-icon"><i class="fa-solid fa-check"></i></div>
             </footer>
         </div>
 
@@ -310,14 +298,12 @@
                 <span class="dash-title">仪表盘</span>
                 <i class="fa-solid fa-arrow-rotate-right" style="color: rgba(255,255,255,0.6);"></i>
             </header>
-
             <main class="dashboard-main">
                 <section class="dash-section">
                     <div class="dash-section-header">
                         <h2>正在学习</h2>
                         <span class="btn-change-book">换本词书</span>
                     </div>
-                    
                     <div class="dash-card learning-card">
                         <div class="book-row">
                             <div class="book-cover cover-orange" id="btn-open-wordlist-cover" style="cursor: pointer;">
@@ -328,7 +314,6 @@
                                 <div class="vocab-tag">
                                     <i class="fa-regular fa-circle-check" style="color: #EBB04D;"></i> 生词本 <span id="dash-vocab-count">0</span>
                                 </div>
-                                
                                 <div id="dashboard-more-menu" class="hidden" style="position: absolute; right: 0; top: 25px; background: #2A2E42; border-radius: 12px; padding: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 10; width: 160px; border: 1px solid rgba(255,255,255,0.05);">
                                     <div class="menu-item" id="btn-menu-wordlist"><i class="fa-solid fa-file-lines"></i> 查看词书单词表</div>
                                     <div class="menu-item"><i class="fa-solid fa-cloud-arrow-down"></i> 下载离线单词包</div>
@@ -337,7 +322,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="progress-area">
                             <div class="progress-labels">
                                 <span style="color: rgba(255,255,255,0.6);">学习范围</span>
@@ -353,18 +337,15 @@
                         </div>
                     </div>
                 </section>
-
                 <section class="dash-section">
                     <div class="dash-section-header">
                         <h2>我的数据</h2>
                     </div>
-                    
                     <div class="dash-card data-card">
                         <div class="data-overview-title">
                             <span>概览</span>
                             <i class="fa-solid fa-chevron-right" style="color: rgba(255,255,255,0.3); font-size: 0.9rem;"></i>
                         </div>
-                        
                         <div class="data-grid">
                             <div class="data-item">
                                 <div class="data-label"><i class="fa-solid fa-bars-staggered" style="color: #EBB04D;"></i> 今日学习&复习</div>
@@ -385,7 +366,6 @@
                         </div>
                     </div>
                 </section>
-
                 <section class="dash-section">
                     <div class="dash-card calendar-card">
                         <div class="calendar-header">
@@ -407,42 +387,32 @@
         </div>
 
         <div id="library-view" class="view hidden" style="z-index: 90; background-color: #1A1D27; display: flex; flex-direction: column;">
-            
             <header class="library-header">
                 <i class="fa-solid fa-chevron-left" id="btn-back-dashboard" style="cursor: pointer; padding: 10px 10px 10px 0;"></i>
                 <span class="library-title">词库</span>
                 <div style="width: 24px;"></div>
             </header>
-
             <div class="library-search-container">
                 <div class="library-search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" placeholder="输入词书名称搜索">
                 </div>
             </div>
-
             <div class="library-tabs-container">
                 <div class="library-primary-tabs">
                     <span class="active">我的</span>
                     <span>大学</span>
                     <span>高中</span>
-                    <span>初中</span>
-                    <span>小学</span>
                     <span>词组<span class="hot-badge">HOT</span></span>
-                    <span>留学</span>
                     <span>其他</span>
                 </div>
                 <div class="library-secondary-tabs">
                     <span class="active">全部</span>
                     <span>单词本</span>
-                    <span>学过</span>
-                    <span>自制</span>
                     <span>已购</span>
                 </div>
             </div>
-
             <div class="library-content-wrapper">
-                
                 <div class="lib-book-item" data-file="book_enem" data-title="Enem 满分作文词汇" data-cover="cover-red" data-cover-text="ENEM\n900+">
                     <div class="lib-book-cover cover-red">
                         <div class="cover-text">ENEM<br><span style="font-size: 0.6rem; color: #FFD700;">900+</span></div>
@@ -450,13 +420,9 @@
                     <div class="lib-book-info">
                         <h4>Enem 满分作文词汇</h4>
                         <p>高级衔接词与社会问题分析</p>
-                        <div class="lib-book-meta">
-                            <span>20 词</span>
-                            <span class="hot-badge" style="position: relative; top: 0; right: 0; margin-left: 8px;">必背</span>
-                        </div>
+                        <div class="lib-book-meta"><span>20 词</span><span class="hot-badge" style="position: relative; top: 0; right: 0; margin-left: 8px;">必背</span></div>
                     </div>
                 </div>
-
                 <div class="lib-book-item" data-file="book_core" data-title="核心葡语词汇" data-cover="cover-orange" data-cover-text="PORTUGUÊS">
                     <div class="lib-book-cover cover-orange">
                         <div class="cover-text" style="font-size: 0.6rem; transform: rotate(-90deg); letter-spacing: 2px;">PORTUGUÊS</div>
@@ -464,44 +430,13 @@
                     <div class="lib-book-info">
                         <h4>核心葡语词汇</h4>
                         <p>基础高频词</p>
-                        <div class="lib-book-meta">
-                            <span>2 词</span>
-                            <span class="tag-learning">正在学习</span>
-                        </div>
+                        <div class="lib-book-meta"><span>2 词</span><span class="tag-learning">正在学习</span></div>
                     </div>
                 </div>
-
-                <div class="lib-book-item" data-file="book_hujiao" data-title="沪教版六年级下册" data-cover="cover-blue" data-cover-text="沪教版\n英语">
-                    <div class="lib-book-cover cover-blue">
-                        <div class="cover-text">沪教版<br>英语</div>
-                    </div>
-                    <div class="lib-book-info">
-                        <h4>沪教版六年级下册（新版）</h4>
-                        <p>课改新版</p>
-                        <div class="lib-book-meta">
-                            <span>274 词</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lib-book-item" data-file="book_ielts" data-title="雅思词汇 乱序版" data-cover="cover-purple" data-cover-text="IELTS">
-                    <div class="lib-book-cover cover-purple">
-                        <div class="cover-text">IELTS<br><span style="font-size: 0.5rem; font-weight: normal;">雅思词汇</span></div>
-                    </div>
-                    <div class="lib-book-info">
-                        <h4>雅思词汇 词根联想记忆法</h4>
-                        <p>2018.11 旧版 乱序版</p>
-                        <div class="lib-book-meta">
-                            <span>3835 词</span>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
 
         <div id="wordlist-view" class="view hidden" style="z-index: 95; background-color: #1A1D27; display: flex; flex-direction: column;">
-            
             <header class="wordlist-header">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <i class="fa-solid fa-chevron-left" id="btn-back-from-wordlist" style="cursor: pointer; padding: 10px 10px 10px 0;"></i>
@@ -512,19 +447,15 @@
                     <i class="fa-regular fa-eye"></i>
                 </div>
             </header>
-
             <div class="wordlist-meta">
                 <span class="bar"></span> <span id="wordlist-total-count">0</span>词
             </div>
-
             <div class="wordlist-content">
                 <div class="wordlist-group">
                     <div class="wordlist-group-title">Unit 1 <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-left: 8px;" id="wordlist-unit-count">0词</span></div>
-                    <div id="wordlist-items-container">
-                        </div>
+                    <div id="wordlist-items-container"></div>
                 </div>
             </div>
-            
         </div>
 
         <div id="word-popup-modal" class="hidden">
@@ -535,10 +466,164 @@
                     <i class="fa-regular fa-star"></i>
                 </div>
                 <div class="wp-phonetic" id="wp-phonetic">/ɪkˈspres/</div>
-                <div class="wp-meanings" id="wp-meanings">
-                    </div>
+                <div class="wp-meanings" id="wp-meanings"></div>
                 <div class="wp-footer">查看详细释义 <i class="fa-solid fa-chevron-right"></i></div>
             </div>
+        </div>
+
+        <div id="active-book-list-view" class="view hidden" style="z-index: 45; background-color: #1A1D27; display: flex; flex-direction: column;">
+            
+            <header class="content-header" style="padding-bottom: 10px;">
+                <div class="header-left" id="btn-back-from-active-book">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <span style="font-size: 1.2rem;">高考大纲词汇350...</span>
+                </div>
+                <div class="header-right" style="display: flex; gap: 20px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-regular fa-eye"></i>
+                    <i class="fa-solid fa-ellipsis"></i>
+                </div>
+            </header>
+
+            <div class="abl-tabs">
+                <span class="active">全部</span>
+                <span>未学习</span>
+                <span>复习中</span>
+                <span>复习完成</span>
+                <span>已标熟</span>
+            </div>
+
+            <div class="abl-meta">
+                <div class="abl-count"><div class="bar"></div> <span>3521词</span></div>
+                <div class="abl-filter">按单元筛选</div>
+            </div>
+
+            <main class="abl-content">
+                <div class="abl-group-title"><span style="color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-right: 6px;">B</span> 188词</div>
+                
+                <div class="abl-list">
+                    <div class="abl-item">bridegroom</div>
+                    <div class="abl-item">bridge</div>
+                    <div class="abl-item">brief</div>
+                    
+                    <div class="abl-item expandable" id="demo-expand-word">
+                        <div class="abl-collapsed-text">British</div>
+                        <div class="abl-expanded-content hidden">
+                            <div class="abl-exp-header">
+                                <span class="word">British</span>
+                                <span class="phonetic">/'brɪtɪʃ/</span>
+                            </div>
+                            <div class="abl-exp-meanings">
+                                <div><span class="pos">adj.</span>英国的，英国人的</div>
+                                <div><span class="pos">n.</span>英国人</div>
+                            </div>
+                            <div class="abl-exp-actions">
+                                <i class="fa-regular fa-star"></i>
+                                <i class="fa-solid fa-list-ul"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="abl-item">broad</div>
+                    <div class="abl-item">broadcast</div>
+                    <div class="abl-item">brochure</div>
+                </div>
+            </main>
+
+            <div class="abl-bottom-float-bar">
+                <div class="float-btn active" id="btn-enter-immersive-brush">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>沉浸刷词</span>
+                </div>
+                <div class="float-btn">
+                    <i class="fa-solid fa-headphones"></i>
+                    <span>随身听</span>
+                </div>
+                <div class="float-btn">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <span>听写</span>
+                </div>
+                <div class="float-btn">
+                    <i class="fa-solid fa-spell-check"></i>
+                    <span>随手拼</span>
+                </div>
+                <div class="float-btn">
+                    <i class="fa-regular fa-file-pdf"></i>
+                    <span>导出</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="immersive-brush-view" class="view hidden" style="z-index: 46; background-color: #1A1D27; display: flex; flex-direction: column;">
+            
+            <header class="ibv-header">
+                <div class="ibv-left" id="btn-back-from-brush">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <span class="count">449/3521</span>
+                </div>
+                <div class="ibv-right">
+                    <i class="fa-regular fa-star"></i>
+                    <span class="tag-fam">熟</span>
+                    <i class="fa-solid fa-ellipsis"></i>
+                </div>
+            </header>
+
+            <main class="ibv-content" id="ibv-click-area">
+                
+                <div class="ibv-word-section">
+                    <h1 class="word">British</h1>
+                    <div class="phonetic">
+                        <span class="accent-tag">美 <i class="fa-solid fa-volume-low"></i></span>
+                        <span>/'brɪtɪʃ/</span>
+                    </div>
+                </div>
+
+                <div class="ibv-meaning-section">
+                    <div id="ibv-skeleton" class="skeleton-wrapper">
+                        <div class="skeleton-line" style="width: 200px;"></div>
+                        <div class="skeleton-line" style="width: 140px;"></div>
+                    </div>
+                    <div id="ibv-real-meaning" class="real-meaning hidden">
+                        <div><span class="pos">adj.</span>英国的，英国人的</div>
+                        <div><span class="pos">n.</span>英国人</div>
+                    </div>
+                </div>
+
+                <div class="ibv-card sentence-card">
+                    <p class="en">We are in Buckingham Palace, the very heart of the <strong style="color: #fff;">British</strong> nation.</p>
+                    <p id="ibv-sentence-zh" class="zh hidden">我们身处白金汉宫，大英帝国的中心。</p>
+                    <div id="ibv-sentence-btn" class="corner-btn hidden"><i class="fa-solid fa-book-open-reader"></i></div>
+                </div>
+
+                <div id="ibv-phrase-card" class="ibv-card phrase-card hidden" style="margin-top: 15px;">
+                    <div class="phrase-list">
+                        <div class="p-item"><span class="en">a British accent</span><span class="zh">英式口音</span></div>
+                        <div class="p-item"><span class="en">the British Museum</span><span class="zh">大英博物馆</span></div>
+                    </div>
+                    <div class="more-link">学习所有高考真题词组 <i class="fa-solid fa-chevron-right"></i></div>
+                    
+                    <div class="card-tabs">
+                        <div class="tabs-left">
+                            <span class="active">词组搭配</span>
+                            <span>派生</span>
+                        </div>
+                        <div class="tabs-right">
+                            <i class="fa-solid fa-pen"></i>
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <div class="ibv-footer">
+                <p id="ibv-click-hint" class="hint-text">点击空白处查看释义</p>
+                <div class="nav-buttons">
+                    <button class="nav-btn"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button class="nav-btn"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+
         </div>
 
     </div>
