@@ -1475,3 +1475,103 @@ if (btnContentBack && foldersView) {
         document.getElementById('btn-nav-folders-home').classList.remove('active');
     });
 }
+
+/* ================= 附加逻辑：在学词书列表页 & 沉浸刷题交互 ================= */
+
+// DOM 节点绑定
+const btnOpenActiveBook = document.getElementById('btn-open-active-book');
+const viewActiveBookList = document.getElementById('active-book-list-view');
+const btnBackFromActiveBook = document.getElementById('btn-back-from-active-book');
+
+const btnEnterImmersiveBrush = document.getElementById('btn-enter-immersive-brush');
+const viewImmersiveBrush = document.getElementById('immersive-brush-view');
+const btnBackFromBrush = document.getElementById('btn-back-from-brush');
+
+// 路由 1：从“我的内容(folders-view)” 进入 “在学词书列表页”
+if (btnOpenActiveBook) {
+    btnOpenActiveBook.addEventListener('click', () => {
+        document.getElementById('folders-view').classList.replace('active', 'hidden');
+        viewActiveBookList.classList.replace('hidden', 'active');
+    });
+}
+
+if (btnBackFromActiveBook) {
+    btnBackFromActiveBook.addEventListener('click', () => {
+        viewActiveBookList.classList.replace('active', 'hidden');
+        document.getElementById('folders-view').classList.replace('hidden', 'active');
+    });
+}
+
+// 交互 1：在学词书列表中，点击单词进行折叠/展开
+const expandWordDemo = document.getElementById('demo-expand-word');
+if (expandWordDemo) {
+    expandWordDemo.addEventListener('click', function() {
+        const collapsedText = this.querySelector('.abl-collapsed-text');
+        const expandedContent = this.querySelector('.abl-expanded-content');
+        
+        if (this.classList.contains('expanded')) {
+            // 收起
+            this.classList.remove('expanded');
+            collapsedText.classList.remove('hidden');
+            expandedContent.classList.add('hidden');
+        } else {
+            // 展开
+            this.classList.add('expanded');
+            collapsedText.classList.add('hidden');
+            expandedContent.classList.remove('hidden');
+        }
+    });
+}
+
+// 路由 2：从列表页底部操作栏 进入 “沉浸刷题页”
+if (btnEnterImmersiveBrush) {
+    btnEnterImmersiveBrush.addEventListener('click', () => {
+        resetImmersiveBrushState(); // 每次进去前先重置为图3骨架屏状态
+        viewActiveBookList.classList.replace('active', 'hidden');
+        viewImmersiveBrush.classList.replace('hidden', 'active');
+    });
+}
+
+if (btnBackFromBrush) {
+    btnBackFromBrush.addEventListener('click', (e) => {
+        e.stopPropagation(); // 阻止点击事件透传触发释义显现
+        viewImmersiveBrush.classList.replace('active', 'hidden');
+        viewActiveBookList.classList.replace('hidden', 'active');
+    });
+}
+
+// 交互 2：沉浸刷题页 - 点击空白处揭晓释义 (从图3 到 图4)
+let isBrushRevealed = false;
+const ibvClickArea = document.getElementById('ibv-click-area');
+
+function resetImmersiveBrushState() {
+    isBrushRevealed = false;
+    document.getElementById('ibv-skeleton').classList.remove('hidden');
+    document.getElementById('ibv-real-meaning').classList.add('hidden');
+    document.getElementById('ibv-sentence-zh').classList.add('hidden');
+    document.getElementById('ibv-sentence-btn').classList.add('hidden');
+    document.getElementById('ibv-phrase-card').classList.add('hidden');
+    document.getElementById('ibv-click-hint').style.opacity = '1';
+}
+
+if (ibvClickArea) {
+    ibvClickArea.addEventListener('click', () => {
+        if (!isBrushRevealed) {
+            // 隐藏骨架，显示真实释义
+            document.getElementById('ibv-skeleton').classList.add('hidden');
+            document.getElementById('ibv-real-meaning').classList.remove('hidden');
+            
+            // 例句中文及图标浮现
+            document.getElementById('ibv-sentence-zh').classList.remove('hidden');
+            document.getElementById('ibv-sentence-btn').classList.remove('hidden');
+            
+            // 弹出词组延伸卡片
+            document.getElementById('ibv-phrase-card').classList.remove('hidden');
+            
+            // 隐藏底部点击提示语
+            document.getElementById('ibv-click-hint').style.opacity = '0';
+            
+            isBrushRevealed = true;
+        }
+    });
+}
