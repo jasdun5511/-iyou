@@ -702,3 +702,75 @@ body, html { height: 100%; width: 100%; background-color: #1a1a1a; overflow: hid
     font-weight: 500;
     font-size: 1rem;
 }
+
+/* ================= 新增视图：在学词书列表页 (Active Book List) ================= */
+.abl-tabs { display: flex; gap: 15px; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); overflow-x: auto; white-space: nowrap; }
+.abl-tabs::-webkit-scrollbar { display: none; }
+.abl-tabs span { padding: 6px 12px; font-size: 0.9rem; color: rgba(255,255,255,0.5); border-radius: 8px; }
+.abl-tabs span.active { background: #2A2E42; color: #fff; font-weight: 500; }
+
+.abl-meta { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+.abl-count { display: flex; align-items: center; gap: 8px; }
+.abl-count .bar { width: 4px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 2px; }
+.abl-filter { border: 1px solid rgba(235, 176, 77, 0.4); color: #EBB04D; padding: 4px 12px; border-radius: 20px; }
+
+.abl-content { flex: 1; overflow-y: auto; padding-bottom: 100px; }
+.abl-group-title { background: rgba(255,255,255,0.02); padding: 8px 20px; font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+
+.abl-list { display: flex; flex-direction: column; }
+.abl-item { padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 1.15rem; font-weight: 500; color: #E0E0E0; cursor: pointer; transition: background 0.2s; }
+.abl-item.expandable.expanded { background: #24283B; border-bottom: none; }
+
+.abl-expanded-content { margin-top: 10px; }
+.abl-exp-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.abl-exp-header .word { font-size: 1.4rem; font-weight: 700; color: #EBB04D; }
+.abl-exp-header .phonetic { font-size: 0.9rem; color: rgba(255,255,255,0.5); font-weight: 400; }
+.abl-exp-meanings { line-height: 1.6; font-size: 0.95rem; color: #E0E0E0; font-weight: 400; }
+.abl-exp-meanings .pos { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-right: 8px; }
+.abl-exp-actions { display: flex; justify-content: flex-end; gap: 20px; color: rgba(255,255,255,0.4); margin-top: 10px; font-size: 1.1rem; }
+
+.abl-bottom-float-bar { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); width: 90%; background: rgba(36, 40, 59, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 12px 20px; display: flex; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.4); z-index: 10; }
+.float-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255,255,255,0.5); font-size: 0.7rem; cursor: pointer; }
+.float-btn i { font-size: 1.2rem; }
+.float-btn.active { color: #EBB04D; font-weight: 500; }
+
+/* ================= 新增视图：沉浸刷题页 (Immersive Brush View) ================= */
+.ibv-header { display: flex; justify-content: space-between; align-items: center; padding: 50px 20px 15px; color: rgba(255,255,255,0.7); }
+.ibv-left { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+.ibv-left .count { font-size: 0.9rem; }
+.ibv-right { display: flex; align-items: center; gap: 20px; font-size: 1.1rem; }
+.tag-fam { font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.4); padding: 2px 6px; border-radius: 4px; }
+
+.ibv-content { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 120px; }
+.ibv-word-section { margin-bottom: 25px; }
+.ibv-word-section .word { font-size: 2.8rem; font-weight: 700; color: #EBB04D; letter-spacing: 0.5px; margin-bottom: 10px; }
+.ibv-word-section .phonetic { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: rgba(255,255,255,0.5); }
+
+.ibv-meaning-section { height: 60px; margin-bottom: 30px; }
+.skeleton-wrapper { display: flex; flex-direction: column; gap: 10px; }
+.skeleton-line { height: 16px; background: rgba(255,255,255,0.08); border-radius: 8px; }
+.real-meaning { font-size: 1rem; color: #E0E0E0; line-height: 1.6; animation: slideFadeUp 0.3s ease forwards; }
+.real-meaning .pos { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-right: 8px; }
+
+.ibv-card { background: #24283B; border-radius: 16px; padding: 20px; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.sentence-card .en { font-size: 1.05rem; line-height: 1.5; color: #E0E0E0; margin-bottom: 10px; }
+.sentence-card .zh { font-size: 0.9rem; color: rgba(255,255,255,0.5); animation: slideFadeUp 0.3s ease forwards; }
+.corner-btn { position: absolute; bottom: 15px; right: 15px; color: rgba(255,255,255,0.4); font-size: 1.1rem; }
+
+.phrase-card { animation: slideFadeUp 0.4s ease forwards; padding-bottom: 60px; }
+.phrase-list .p-item { display: flex; gap: 15px; align-items: baseline; margin-bottom: 10px; }
+.p-item .en { color: #E0E0E0; font-size: 0.95rem; }
+.p-item .zh { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+.more-link { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 15px; display: flex; align-items: center; gap: 5px; }
+.card-tabs { position: absolute; bottom: 0; left: 0; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); padding: 12px 20px; display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(255,255,255,0.4); }
+.card-tabs .tabs-left { display: flex; gap: 15px; }
+.card-tabs .tabs-left span.active { color: #E0E0E0; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px; }
+.card-tabs .tabs-right { display: flex; gap: 15px; }
+
+.ibv-footer { position: absolute; bottom: 0; left: 0; width: 100%; padding: 0 24px 30px; background: linear-gradient(transparent, #1A1D27 40%); display: flex; flex-direction: column; align-items: center; }
+.ibv-footer .hint-text { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-bottom: 20px; transition: opacity 0.3s; }
+.nav-buttons { display: flex; justify-content: space-between; width: 100%; gap: 20px; }
+.nav-btn { flex: 1; background: #2A2E42; border: none; height: 50px; border-radius: 25px; color: #fff; font-size: 1.2rem; cursor: pointer; transition: background 0.2s; }
+.nav-btn:active { background: #383B55; }
+
+@keyframes slideFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
